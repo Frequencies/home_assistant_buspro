@@ -29,6 +29,7 @@ DEFAULT_DIMMABLE = True
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional("running_time", default=DEFAULT_DEVICE_RUNNING_TIME): cv.positive_int,
     vol.Optional("dimmable", default=DEFAULT_DIMMABLE): cv.boolean,
+    vol.Optional("object_id"): cv.string,
     vol.Required(CONF_NAME): cv.string,
 })
 
@@ -64,7 +65,8 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         _LOGGER.debug("Adding light '{}' with address {} and channel number {}".format(name, device_address, channel_number))
 
         light = Light(hdl, device_address, channel_number, name)
-        devices.append(BusproLight(hass, light, device_running_time, dimmable))
+        object_id = device_config["object_id"]
+        devices.append(BusproLight(hass, light, device_running_time, dimmable, object_id))
 
     async_add_entites(devices)
 
@@ -73,11 +75,12 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproLight(LightEntity):
     """Representation of a Buspro light."""
 
-    def __init__(self, hass, device, running_time, dimmable):
+    def __init__(self, hass, device, running_time, dimmable, object_id=None):
         self._hass = hass
         self._device = device
         self._running_time = running_time
         self._dimmable = dimmable
+        self._object_id = object_id
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self.async_register_callbacks()
@@ -136,3 +139,10 @@ class BusproLight(LightEntity):
     def unique_id(self):
         """Return the unique id."""
         return self._device.device_identifier
+    
+    @property
+    def entity_id(self):
+        """Return the custom entity ID if object_id is provided."""
+        if self._object_id:
+            return f"light.{self._object_id}"
+        return super().entity_id  # Fallback to default if no object_id
