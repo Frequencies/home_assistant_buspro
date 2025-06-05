@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import generate_entity_id
 
 # from homeassistant.helpers.entity import Entity
 from ..buspro import DATA_BUSPRO
@@ -53,8 +54,11 @@ HDL_TO_HA_PRESET = {
     4: PRESET_AWAY,     # Away
 }
 
+DEFAULT_OBJECT_ID = ""
+
 CONF_PRESET_MODES = "preset_modes"
 CONF_RELAY_ADDRESS = "relay_address"
+CONF_OBJECT_ID = "object_id"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES):
@@ -66,6 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                     cv.ensure_list, [vol.In(HA_PRESET_TO_HDL)]
                 ),
                 vol.Optional(CONF_RELAY_ADDRESS, default=''): cv.string,
+                vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
             })
         ])
 })
@@ -101,7 +106,11 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
             relay_channel_number = int(relay_address2[2])
             relay_sensor = Sensor(hdl, relay_device_address, channel_number=relay_channel_number)
 
-        devices.append(BusproClimate(hass, climate, preset_modes, relay_sensor))
+        object_id = device_config[CONF_OBJECT_ID]
+        if object_id == DEFAULT_OBJECT_ID:
+            object_id = name
+        
+        devices.append(BusproClimate(hass, climate, preset_modes, relay_sensor, object_id))
 
     async_add_entites(devices)
 
@@ -110,7 +119,7 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproClimate(ClimateEntity):
     """Representation of a Buspro switch."""
 
-    def __init__(self, hass, device, preset_modes, relay_sensor):
+    def __init__(self, hass, device, preset_modes, relay_sensor, object_id):
         self._hass = hass
         self._device = device
         self._target_temperature = self._device.target_temperature
@@ -127,6 +136,7 @@ class BusproClimate(ClimateEntity):
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
 
         self.async_register_callbacks()
+        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
 
     async def async_turn_off(self) -> None:
         await self.async_set_hvac_mode(HVACMode.OFF)

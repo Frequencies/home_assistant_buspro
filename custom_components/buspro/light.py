@@ -17,6 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (CONF_NAME, CONF_DEVICES)
 from homeassistant.core import callback
+from homeassistant.helpers.entity import generate_entity_id
 
 from ..buspro import DATA_BUSPRO
 
@@ -25,10 +26,14 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_DEVICE_RUNNING_TIME = 0
 DEFAULT_PLATFORM_RUNNING_TIME = 0
 DEFAULT_DIMMABLE = True
+DEFAULT_OBJECT_ID = ""
+
+CONF_OBJECT_ID = "object_id"
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional("running_time", default=DEFAULT_DEVICE_RUNNING_TIME): cv.positive_int,
     vol.Optional("dimmable", default=DEFAULT_DIMMABLE): cv.boolean,
+    vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
     vol.Required(CONF_NAME): cv.string,
 })
 
@@ -64,7 +69,12 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         _LOGGER.debug("Adding light '{}' with address {} and channel number {}".format(name, device_address, channel_number))
 
         light = Light(hdl, device_address, channel_number, name)
-        devices.append(BusproLight(hass, light, device_running_time, dimmable))
+
+        object_id = device_config[CONF_OBJECT_ID]
+        if object_id == DEFAULT_OBJECT_ID:
+            object_id = name
+
+        devices.append(BusproLight(hass, light, device_running_time, dimmable, object_id))
 
     async_add_entites(devices)
 
@@ -73,14 +83,16 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproLight(LightEntity):
     """Representation of a Buspro light."""
 
-    def __init__(self, hass, device, running_time, dimmable):
+    def __init__(self, hass, device, running_time, dimmable, object_id):
         self._hass = hass
         self._device = device
         self._running_time = running_time
         self._dimmable = dimmable
+        self._object_id = object_id
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self.async_register_callbacks()
+        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):

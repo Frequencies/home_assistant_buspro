@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import generate_entity_id
 
 from ..buspro import DATA_BUSPRO
 
@@ -31,8 +32,12 @@ DEFAULT_CONF_UNIT_OF_MEASUREMENT = ""
 DEFAULT_CONF_DEVICE_CLASS = "None"
 DEFAULT_CONF_SCAN_INTERVAL = 0
 DEFAULT_CONF_OFFSET = 0
+DEFAULT_OBJECT_ID = ""
+
 CONF_DEVICE = "device"
 CONF_OFFSET = "offset"
+CONF_OBJECT_ID = "object_id"
+
 SCAN_INTERVAL = timedelta(minutes=2)
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Optional(CONF_DEVICE, default=None): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_CONF_SCAN_INTERVAL): cv.string,
                 vol.Optional(CONF_OFFSET, default=DEFAULT_CONF_OFFSET): cv.string,
+                vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
             })
         ])
 })
@@ -87,8 +93,11 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
             name, device_address, sensor_type))
 
         sensor = Sensor(hdl, device_address, device=device, name=name)
+        object_id = device_config[CONF_OBJECT_ID]
+        if object_id == DEFAULT_OBJECT_ID:
+            object_id = name
 
-        devices.append(BusproSensor(hass, sensor, sensor_type, interval, offset))
+        devices.append(BusproSensor(hass, sensor, sensor_type, interval, offset, object_id))
 
     async_add_entites(devices)
 
@@ -97,7 +106,7 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproSensor(Entity):
     """Representation of a Buspro switch."""
 
-    def __init__(self, hass, device, sensor_type, scan_interval, offset):
+    def __init__(self, hass, device, sensor_type, scan_interval, offset, object_id):
         self._hass = hass
         self._device = device
         self._sensor_type = sensor_type
@@ -109,6 +118,7 @@ class BusproSensor(Entity):
         self._should_poll = False
         if scan_interval > 0:
             self._should_poll = True
+        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):
