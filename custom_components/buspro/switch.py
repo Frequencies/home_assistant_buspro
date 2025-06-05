@@ -12,13 +12,18 @@ import voluptuous as vol
 from homeassistant.components.switch import SwitchEntity, PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, CONF_DEVICES)
 from homeassistant.core import callback
+from homeassistant.helpers.entity import generate_entity_id
 
 from ..buspro import DATA_BUSPRO
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_OBJECT_ID = ""
+CONF_OBJECT_ID = "object_id"
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -45,7 +50,11 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 
         switch = Switch(hdl, device_address, channel_number, name)
 
-        devices.append(BusproSwitch(hass, switch))
+        object_id = device_config[CONF_OBJECT_ID]
+        if object_id == DEFAULT_OBJECT_ID:
+            object_id = name
+
+        devices.append(BusproSwitch(hass, switch, object_id))
 
     async_add_entites(devices)
 
@@ -54,10 +63,11 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproSwitch(SwitchEntity):
     """Representation of a Buspro switch."""
 
-    def __init__(self, hass, device):
+    def __init__(self, hass, device, object_id):
         self._hass = hass
         self._device = device
         self.async_register_callbacks()
+        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):

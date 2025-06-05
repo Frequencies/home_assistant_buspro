@@ -28,10 +28,12 @@ DEFAULT_PLATFORM_RUNNING_TIME = 0
 DEFAULT_DIMMABLE = True
 DEFAULT_OBJECT_ID = ""
 
+CONF_OBJECT_ID = "object_id"
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional("running_time", default=DEFAULT_DEVICE_RUNNING_TIME): cv.positive_int,
     vol.Optional("dimmable", default=DEFAULT_DIMMABLE): cv.boolean,
-    vol.Optional("object_id", default=DEFAULT_OBJECT_ID): cv.string,
+    vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
     vol.Required(CONF_NAME): cv.string,
 })
 
@@ -68,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 
         light = Light(hdl, device_address, channel_number, name)
 
-        object_id = device_config["object_id"]
+        object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:
             object_id = name
 

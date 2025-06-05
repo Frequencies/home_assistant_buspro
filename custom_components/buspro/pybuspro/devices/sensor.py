@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 # from ..helpers.generics import Generics
 from .control import _ReadSensorStatus, _ReadStatusOfUniversalSwitch, _ReadStatusOfChannels, _ReadFloorHeatingStatus, \
@@ -6,6 +7,7 @@ from .control import _ReadSensorStatus, _ReadStatusOfUniversalSwitch, _ReadStatu
 from .device import Device
 from ..helpers.enums import *
 
+_LOGGER = logging.getLogger(__name__)
 
 class Sensor(Device):
     def __init__(self, buspro, device_address, universal_switch_number=None, channel_number=None, device=None,
@@ -109,6 +111,9 @@ class Sensor(Device):
                 self._call_device_updated()
 
         elif telegram.operate_code == OperateCode.ReadStatusOfChannelsResponse:
+            if self._channel_number is None:
+                _LOGGER.warning("Sensor channel number is not set, ignoring telegram")
+                return
             if self._channel_number <= telegram.payload[0]:
                 self._channel_status = telegram.payload[self._channel_number]
                 self._call_device_updated()

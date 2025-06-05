@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_CONF_DEVICE_CLASS = "None"
 DEFAULT_CONF_SCAN_INTERVAL = 0
+DEFAULT_OBJECT_ID = ""
 
 CONF_MOTION = 'motion'
 CONF_DRY_CONTACT_1 = 'dry_contact_1'
@@ -37,6 +38,7 @@ CONF_DRY_CONTACT_2 = 'dry_contact_2'
 CONF_UNIVERSAL_SWITCH = 'universal_switch'
 CONF_SINGLE_CHANNEL = 'single_channel'
 CONF_DRY_CONTACT = 'dry_contact'
+CONF_OBJECT_ID = "object_id"
 
 SENSOR_TYPES = {
     CONF_MOTION,
@@ -56,6 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
                 vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_CONF_SCAN_INTERVAL): cv.string,
+                vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
             })
         ])
 })
@@ -109,8 +112,12 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 
         sensor = Sensor(hdl, device_address, universal_switch_number=universal_switch_number,
                         channel_number=channel_number, switch_number=switch_number, name=name)
+        
+        object_id = device_config[CONF_OBJECT_ID]
+        if object_id == DEFAULT_OBJECT_ID:
+            object_id = name
 
-        devices.append(BusproBinarySensor(hass, sensor, sensor_type, device_class, interval))
+        devices.append(BusproBinarySensor(hass, sensor, sensor_type, device_class, interval, object_id))
 
     async_add_entites(devices)
 
@@ -119,7 +126,7 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproBinarySensor(BinarySensorEntity):
     """Representation of a Buspro switch."""
 
-    def __init__(self, hass, device, sensor_type, device_class, scan_interval):
+    def __init__(self, hass, device, sensor_type, device_class, scan_interval, object_id):
         self._hass = hass
         self._device = device
         self._device_class = device_class
@@ -130,6 +137,7 @@ class BusproBinarySensor(BinarySensorEntity):
             self._should_poll = True
 
         self.async_register_callbacks()
+        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):

@@ -35,6 +35,7 @@ light:
     + **name** _(string) (Required)_: The name of the device
     + **running_time** _(int) (Optional)_: The running time in seconds for the device. If omitted, the default running time for all devices is used.
     + **dimmable** _(boolean) (Optional)_: Is the device dimmable? Default is True. 
+    + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
 
 #### Switch platform
 
@@ -52,6 +53,7 @@ switch:
 + **devices** _(Required)_: A list of devices to set up
   + **X.X.X** _(Required)_: The address of the device on the format `<subnet ID>.<device ID>.<channel number>`
     + **name** _(string) (Required)_: The name of the device
+    + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
 
 #### Sensor platform
 
@@ -80,6 +82,7 @@ sensor:
      + temperature
      + illuminance
   + **unit_of_measurement** _(string) (Optional)_: text to be displayed as unit of measurement
+  + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
   + **device_class** _(string) (Optional)_: HASS device class e.g., "temperature" 
   (https://www.home-assistant.io/components/sensor/)
   + **device** _(string) (Optional)_: The type of sensor device:
@@ -108,6 +111,7 @@ binary_sensor:
   + **address** _(string) (Required)_: The address of the sensor device on the format `<subnet ID>.<device ID>`. If 
   'type' = 'universal_switch' universal switch number must be appended to the address. 
   + **name** _(string) (Required)_: The name of the device
+  + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
   + **type** _(string) (Required)_: Type of sensor to monitor. 
     + Available sensors: 
       + motion 
@@ -139,6 +143,7 @@ climate:
 + **devices** _(Required)_: A list of devices to set up
   + **address** _(string) (Required)_: The address of the sensor device on the format `<subnet ID>.<device ID>`
   + **name** _(string) (Required)_: The name of the device
+  + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
   + **preset_modes** _(list) (Optional)_: List of supported preset modes. Preset mode selection is disabled if not set. Possible values are shown in table below. Corresponding modes must be enabled in HDL (Floor Heating > Working Settings > Mode).
     
 | HA preset mode | HDL mode |
