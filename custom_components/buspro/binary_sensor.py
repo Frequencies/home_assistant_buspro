@@ -22,6 +22,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.entity import generate_entity_id
 
 from datetime import timedelta
 from ..buspro import DATA_BUSPRO
