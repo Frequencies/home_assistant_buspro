@@ -63,13 +63,13 @@ To use your Buspro sensor in your installation, add the following to your config
 sensor:
   - platform: buspro
     devices:
-      - address: 1.74
+      - address: "1.74"
         name: Living Room
         type: temperature
         unit_of_measurement: °C
         device_class: temperature
         device: dlp
-      - address: 1.74
+      - address: "1.74"
         name: Front Door
         type: illuminance
         unit_of_measurement: lux
@@ -96,14 +96,14 @@ To use your Buspro binary sensor in your installation, add the following to your
 binary_sensor:
   - platform: buspro
     devices:
-      - address: 1.74
+      - address: "1.74"
         name: Living Room
         type: motion
         device_class: motion
-      - address: 1.74.100
+      - address: "1.74.100"
         name: Front Door
         type: universal_switch
-      - address: 1.75.3
+      - address: "1.75.3"
         name: Kitchen switch
         type: single_channel
 ```
@@ -130,14 +130,14 @@ To use your Buspro panel climate control in your installation, add the following
 climate:
   - platform: buspro
     devices:
-      - address: 1.74
+      - address: "1.74"
         name: Living Room
         preset_modes: 
           - none
           - away
           - home
           - sleep
-      - address: 1.74
+      - address: "1.74"
         name: Front Door
 ```
 + **devices** _(Required)_: A list of devices to set up
