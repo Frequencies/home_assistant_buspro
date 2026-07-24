@@ -23,6 +23,7 @@ class Sensor(Device):
         self._switch_number = switch_number
         
         self._current_temperature = None
+        self._current_humidity = None
         self._brightness = None
         self._motion_sensor = None
         self._sonic = None
@@ -51,6 +52,7 @@ class Sensor(Device):
 
         elif telegram.operate_code == OperateCode.ReadSensorsInOneStatusResponse:
             self._current_temperature = telegram.payload[1]
+            self._current_humidity = telegram.payload[4]
             self._motion_sensor = telegram.payload[7]
             self._dry_contact_1_status = telegram.payload[8]
             self._dry_contact_2_status = telegram.payload[9]
@@ -172,6 +174,10 @@ class Sensor(Device):
         if self._brightness is None:
             return 0
         return self._brightness
+
+    @property
+    def humidity(self):
+        return self._current_humidity
 
     @property
     def movement(self):

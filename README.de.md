@@ -84,6 +84,10 @@ sensor:
         name: Front Door
         type: illuminance
         unit_of_measurement: lux
+      - address: "1.75"
+        name: Hall
+        type: humidity
+        unit_of_measurement: "%"
 ```
 + **Geräte** _(Erforderlich)_: Eine Liste der einzurichtenden Geräte
   + **Adresse** _(Zeichenfolge) (Erforderlich)_: Die Adresse des Sensorgeräts im Format „<Subnetz-ID>.<Geräte-ID>“.
@@ -92,6 +96,7 @@ sensor:
     + Verfügbare Sensoren:
      + Temperatur
      + Beleuchtungsstärke
+     + Luftfeuchtigkeit
   + **unit_of_measurement** _(string) (Optional)_: Text, der als Maßeinheit angezeigt werden soll
   + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
   + **device_class** _(string) (Optional)_: HASS-Geräteklasse, z. B. „temperature“

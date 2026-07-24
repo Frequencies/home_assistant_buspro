@@ -84,6 +84,10 @@ sensor:
         name: Front Door
         type: illuminance
         unit_of_measurement: lux
+      - address: "1.75"
+        name: Hall
+        type: humidity
+        unit_of_measurement: "%"
 ```
 + **apparaten** _(vereist)_: een lijst met apparaten die moeten worden ingesteld
   + **adres** _(string) (vereist)_: het adres van het sensorapparaat in de indeling `<subnet-ID>.<apparaat-ID>`
@@ -92,6 +96,7 @@ sensor:
     + Beschikbare sensoren:
      + temperatuur
      + verlichtingssterkte
+     + luchtvochtigheid
   + **unit_of_measurement** _(string) (Optioneel)_: tekst die moet worden weergegeven als meeteenheid
   + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
   + **device_class** _(string) (Optioneel)_: HASS-apparaatklasse, bijvoorbeeld 'temperatuur'

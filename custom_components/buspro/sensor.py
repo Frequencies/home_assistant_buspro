@@ -45,6 +45,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {
     ILLUMINANCE,
     TEMPERATURE,
+    "humidity",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -114,6 +115,7 @@ class BusproSensor(Entity):
         self._offset = offset
         self._temperature = None
         self._brightness = None
+        self._humidity = None
 
         self._should_poll = False
         if scan_interval > 0:
@@ -130,6 +132,7 @@ class BusproSensor(Entity):
             if self._hass is not None:
                 self._temperature = self._device.temperature
                 self._brightness = self._device.brightness
+                self._humidity = self._device.humidity
                 self.async_write_ha_state()
 
         self._device.register_device_updated_cb(after_update_callback)
@@ -157,6 +160,9 @@ class BusproSensor(Entity):
 
         if self._sensor_type == ILLUMINANCE:
             return connected and self._brightness is not None
+        
+        if self._sensor_type == "humidity":
+            return connected and self._humidity is not None
 
     @property
     def state(self):
@@ -166,6 +172,9 @@ class BusproSensor(Entity):
 
         if self._sensor_type == ILLUMINANCE:
             return self._brightness
+        
+        if self._sensor_type == "humidity":
+            return self._humidity
 
     @property
     def _current_temperature(self):
@@ -185,6 +194,8 @@ class BusproSensor(Entity):
             return "temperature"
         if self._sensor_type == ILLUMINANCE:
             return "illuminance"
+        if self._sensor_type == "humidity":
+            return "humidity"
         return None
 
     @property
@@ -194,6 +205,8 @@ class BusproSensor(Entity):
             return "°C"
         if self._sensor_type == ILLUMINANCE:
             return "lux"
+        if self._sensor_type == "humidity":
+            return "%"
         return ""
 
     @property
@@ -201,6 +214,16 @@ class BusproSensor(Entity):
         """Return the state attributes."""
         attributes = {}
         attributes['state_class'] = "measurement"
+        if self._humidity is not None:
+            attributes['humidity'] = self._humidity
+        if self._device.movement is not None:
+            attributes['movement'] = self._device.movement
+        if self._device._sonic is not None:
+            attributes['sonic'] = self._device._sonic
+        if self._device._dry_contact_1_status is not None:
+            attributes['dry_contact_1'] = self._device.dry_contact_1_is_on
+        if self._device._dry_contact_2_status is not None:
+            attributes['dry_contact_2'] = self._device.dry_contact_2_is_on
         return attributes
 
     @property
