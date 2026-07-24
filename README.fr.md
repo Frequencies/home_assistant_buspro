@@ -177,6 +177,33 @@ S'il est omis, « module » est automatiquement sélectionné lorsque « canal �
 |     sleep      |  Night   |
 
 
+#### Plateforme des volets
+
+Pour utiliser vos volets Buspro dans votre installation, ajoutez ce qui suit à votre fichier `configuration.yaml` :
+
+```yaml
+cover:
+  - platform: buspro
+    devices:
+      1.89.1:
+        name: Living Room Curtain
+        invert: false
+        object_id: living_room_curtain
+```
++ **devices** _(Obligatoire)_: Mappage des canaux de rideaux Buspro
+  + **clé** _(string)_: `<ID sous-réseau>.<ID appareil>.<canal>`
+  + **name** _(string) (Obligatoire)_: Nom affiché
+  + **invert** _(bool) (Optionnel)_: Inverse le sens ouverture/fermeture. Valeur par défaut `false`.
+  + **object_id** _(string) (Optionnel)_: `object_id` de l'entité. Généré automatiquement à partir du nom.
+
+Fonctionnalités prises en charge :
+- open
+- close
+- stop
+- open_tilt
+- close_tilt
+- stop_tilt
+
 ---
 ## Services
 

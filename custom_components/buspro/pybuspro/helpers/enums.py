@@ -115,6 +115,10 @@ class OperateCode(Enum):
     ControlPanelACResponse = b'\xE3\xD9'
     ReadPanelAC = b'\xE3\xDA'
     ReadPanelACResponse = b'\xE3\xDB'
+    CurtainSwitchControl = b'\xE3\xE0'
+    CurtainSwitchControlResponse = b'\xE3\xE1'
+    ReadStatusofCurtainSwitch = b'\xE3\xE2'
+    ReadStatusofCurtainSwitchResponse = b'\xE3\xE3'
 
     ReadDryContactStatus = b'\x15\xCE'
     ReadDryContactStatusResponse = b'\x15\xCF'

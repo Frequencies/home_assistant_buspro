@@ -177,6 +177,33 @@ climate:
 |     sleep      |  Night   |
 
 
+#### Платформа штор (Cover)
+
+Чтобы использовать шторы Buspro в вашей установке, добавьте следующее в файл `configuration.yaml`:
+
+```yaml
+cover:
+  - platform: buspro
+    devices:
+      1.89.1:
+        name: Living Room Curtain
+        invert: false
+        object_id: living_room_curtain
+```
++ **devices** _(обязательно)_: сопоставление каналов штор Buspro
+  + **ключ** _(string)_: `<ID подсети>.<ID устройства>.<канал>`
+  + **name** _(string) (обязательно)_: отображаемое имя
+  + **invert** _(bool) (необязательно)_: инвертировать направление открытия/закрытия. По умолчанию `false`.
+  + **object_id** _(string) (необязательно)_: `object_id` сущности. По умолчанию генерируется из имени.
+
+Поддерживаемые функции:
+- open
+- close
+- stop
+- open_tilt
+- close_tilt
+- stop_tilt
+
 ---
 ## Услуги
 

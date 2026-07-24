@@ -177,6 +177,33 @@ Wenn es weggelassen wird, wird „Modul“ automatisch ausgewählt, wenn „Kana
 |     sleep      |  Night   |
 
 
+#### Cover-Plattform
+
+Um Ihre Buspro-Abdeckungen in Ihrer Installation zu verwenden, fügen Sie Folgendes zu Ihrer `configuration.yaml`-Datei hinzu:
+
+```yaml
+cover:
+  - platform: buspro
+    devices:
+      1.89.1:
+        name: Living Room Curtain
+        invert: false
+        object_id: living_room_curtain
+```
++ **devices** _(Erforderlich)_: Zuordnung der Buspro-Vorhangkanäle
+  + **Schlüssel** _(string)_: `<Subnetz-ID>.<Geräte-ID>.<Kanal>`
+  + **name** _(string) (Erforderlich)_: Anzeigename
+  + **invert** _(bool) (Optional)_: Öffnen/Schließen-Richtung umkehren. Standardwert ist `false`.
+  + **object_id** _(string) (Optional)_: Entity-`object_id`. Standardmäßig automatisch aus dem Namen generiert.
+
+Unterstützte Funktionen:
+- öffnen
+- schließen
+- stopp
+- öffnen_tilt
+- schließen_tilt
+- stopp_tilt
+
 ---
 ## Dienstleistungen
 

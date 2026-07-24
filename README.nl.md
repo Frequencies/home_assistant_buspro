@@ -177,6 +177,33 @@ Indien dit wordt weggelaten, wordt `module` automatisch geselecteerd wanneer `ch
 |     sleep      |  Night   |
 
 
+#### Coverplatform
+
+Om je Buspro-covers in je installatie te gebruiken, voeg je het volgende toe aan je `configuration.yaml`-bestand:
+
+```yaml
+cover:
+  - platform: buspro
+    devices:
+      1.89.1:
+        name: Living Room Curtain
+        invert: false
+        object_id: living_room_curtain
+```
++ **devices** _(Vereist)_: Toewijzing van Buspro-gordijnkanalen
+  + **sleutel** _(string)_: `<subnet-ID>.<device-ID>.<kanaal>`
+  + **name** _(string) (Vereist)_: Weergavenaam
+  + **invert** _(bool) (Optioneel)_: Draait open/sluit-richting om. Standaard `false`.
+  + **object_id** _(string) (Optioneel)_: Entity-`object_id`. Standaard automatisch gegenereerd op basis van naam.
+
+Ondersteunde functies:
+- open
+- close
+- stop
+- open_tilt
+- close_tilt
+- stop_tilt
+
 ---
 ## Diensten
 

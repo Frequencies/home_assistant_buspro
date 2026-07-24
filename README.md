@@ -177,6 +177,33 @@ climate:
 |     sleep      |  Night   |
 
 
+#### Cover platform
+
+To use your Buspro covers in your installation, add the following to your configuration.yaml file:
+
+```yaml
+cover:
+  - platform: buspro
+    devices:
+      1.89.1:
+        name: Living Room Curtain
+        invert: false
+        object_id: living_room_curtain
+```
++ **devices** _(Required)_: Mapping of Buspro curtain channels
+  + **key** _(string)_: `<subnet ID>.<device ID>.<channel>`
+  + **name** _(string) (Required)_: Friendly name
+  + **invert** _(bool) (Optional)_: Invert open/close direction. Default `false`.
+  + **object_id** _(string) (Optional)_: Entity object_id. Default is auto-generated from name.
+
+Supported features:
+- open
+- close
+- stop
+- open_tilt
+- close_tilt
+- stop_tilt
+
 ---
 ## Services
 

@@ -177,6 +177,33 @@ Si se omite, "módulo" se selecciona automáticamente cuando se proporciona "can
 |     sleep      |  Night   |
 
 
+#### Plataforma de persianas
+
+Para usar tus persianas Buspro en tu instalación, añade lo siguiente a tu archivo `configuration.yaml`:
+
+```yaml
+cover:
+  - platform: buspro
+    devices:
+      1.89.1:
+        name: Living Room Curtain
+        invert: false
+        object_id: living_room_curtain
+```
++ **devices** _(Obligatorio)_: Mapa de canales de cortina Buspro
+  + **clave** _(string)_: `<ID de subred>.<ID de dispositivo>.<canal>`
+  + **name** _(string) (Obligatorio)_: Nombre visible
+  + **invert** _(bool) (Opcional)_: Invierte la dirección abrir/cerrar. Valor predeterminado `false`.
+  + **object_id** _(string) (Opcional)_: `object_id` de la entidad. Se genera automáticamente a partir del nombre.
+
+Funciones compatibles:
+- open
+- close
+- stop
+- open_tilt
+- close_tilt
+- stop_tilt
+
 ---
 ## Servicios
 

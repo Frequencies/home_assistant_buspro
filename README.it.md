@@ -177,6 +177,33 @@ Se omesso, `module` viene selezionato automaticamente quando viene fornito `chan
 |     sleep      |  Night   |
 
 
+#### Piattaforma tende
+
+Per usare le tende Buspro nella tua installazione, aggiungi quanto segue al file `configuration.yaml`:
+
+```yaml
+cover:
+  - platform: buspro
+    devices:
+      1.89.1:
+        name: Living Room Curtain
+        invert: false
+        object_id: living_room_curtain
+```
++ **devices** _(Obbligatorio)_: Mappatura dei canali tenda Buspro
+  + **chiave** _(string)_: `<ID subnet>.<ID dispositivo>.<canale>`
+  + **name** _(string) (Obbligatorio)_: Nome visualizzato
+  + **invert** _(bool) (Opzionale)_: Inverte la direzione apertura/chiusura. Valore predefinito `false`.
+  + **object_id** _(string) (Opzionale)_: `object_id` dell'entità. Predefinito auto-generato dal nome.
+
+Funzionalità supportate:
+- open
+- close
+- stop
+- open_tilt
+- close_tilt
+- stop_tilt
+
 ---
 ## Servizi
 
