@@ -55,6 +55,14 @@ class _Control:
             operate_code = OperateCode.ReadFloorHeatingModuleStatus
             payload = [control.channel_number]
 
+        elif type(control) == _ReadFloorHeatingTemperatureNew:
+            operate_code = OperateCode.ReadFloorHeatingTemperatureNew
+            payload = [control.channel_number]
+
+        elif type(control) == _ReadFloorHeatingTemperatureLegacy:
+            operate_code = OperateCode.ReadFloorHeatingTemperatureLegacy
+            payload = [control.channel_number]
+
         elif type(control) == _ReadDryContactStatus:
             operate_code = OperateCode.ReadDryContactStatus
             payload = [1, control.switch_number]
@@ -68,6 +76,12 @@ class _Control:
             payload = [control.channel_number, control.work, control.temperature_type, control.mode,
                        control.normal_temperature, control.day_temperature, control.night_temperature,
                        control.away_temperature, control.valve, control.watering_time]
+        elif type(control) == _ReadPanelAC:
+            operate_code = OperateCode.ReadPanelAC
+            payload = [control.command]
+        elif type(control) == _ControlPanelAC:
+            operate_code = OperateCode.ControlPanelAC
+            payload = [control.command, control.mode]
 
         else:
             return None
@@ -162,6 +176,18 @@ class _ReadFloorHeatingModuleStatus(_Control):
         self.channel_number = None
 
 
+class _ReadFloorHeatingTemperatureNew(_Control):
+    def __init__(self, buspro):
+        super().__init__(buspro)
+        self.channel_number = None
+
+
+class _ReadFloorHeatingTemperatureLegacy(_Control):
+    def __init__(self, buspro):
+        super().__init__(buspro)
+        self.channel_number = None
+
+
 class _ControlFloorHeatingStatus(_Control):
     def __init__(self, buspro):
         super().__init__(buspro)
@@ -189,6 +215,19 @@ class _ControlFloorHeatingModuleStatus(_Control):
         self.away_temperature = None
         self.valve = None
         self.watering_time = None
+
+
+class _ReadPanelAC(_Control):
+    def __init__(self, buspro):
+        super().__init__(buspro)
+        self.command = None
+
+
+class _ControlPanelAC(_Control):
+    def __init__(self, buspro):
+        super().__init__(buspro)
+        self.command = None
+        self.mode = None
 
 
 class _ReadDryContactStatus(_Control):

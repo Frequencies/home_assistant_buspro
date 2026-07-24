@@ -131,24 +131,32 @@ climate:
   - platform: buspro
     devices:
       - address: "1.74"
+        name: Bedroom AC
+        type: ac
+      - address: "1.74"
         name: Living Room
+        type: floor_heating
+        floor_heating_device_type: dlp
         preset_modes: 
           - none
           - away
           - home
           - sleep
-      - address: "1.74"
-        name: Front Door
       - address: "1.90"
+        type: floor_heating
+        floor_heating_device_type: module
         channel: 1
         name: Floor Heating Zone 1
 ```
 + **devices** _(Required)_: A list of devices to set up
   + **address** _(string) (Required)_: The address of the sensor device on the format `<subnet ID>.<device ID>`
   + **name** _(string) (Required)_: The name of the device
+  + **type** _(string) (Optional)_: `ac` or `floor_heating`. Default is `floor_heating`.
+  + **floor_heating_device_type** _(string) (Optional)_: `dlp` or `module`.
+    If omitted, `module` is auto-selected when `channel` is provided, otherwise `dlp`.
   + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
   + **preset_modes** _(list) (Optional)_: List of supported preset modes. Preset mode selection is disabled if not set. Possible values are shown in table below. Corresponding modes must be enabled in HDL (Floor Heating > Working Settings > Mode).
-  + **channel** _(int) (Optional)_: Floor heating module channel (`1..6`).  
+  + **channel** _(int) (Optional)_: Floor heating module channel (`1..6`) for `floor_heating_device_type: module`.
     
 | HA preset mode | HDL mode |
 |:--------------:|:--------:|

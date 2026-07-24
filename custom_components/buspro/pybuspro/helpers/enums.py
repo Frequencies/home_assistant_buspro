@@ -58,6 +58,23 @@ class TemperatureMode(Enum):
     Timer = 5
 
 
+class WorkType(Enum):
+    Heating = 0
+    Cooling = 1
+    HeatingPower = 2
+    CoolingPower = 3
+
+
+class ClimateDeviceType(Enum):
+    AC = "ac"
+    FloorHeating = "floor_heating"
+
+
+class FloorHeatingDeviceType(Enum):
+    DLP = "dlp"
+    Module = "module"
+
+
 class OperateCode(Enum):
     NotSet = b'\x00'
 
@@ -89,6 +106,15 @@ class OperateCode(Enum):
     ControlFloorHeatingModuleStatusResponse = b'\x1C\x5D'
     ReadFloorHeatingModuleStatus = b'\x1C\x5E'
     ReadFloorHeatingModuleStatusResponse = b'\x1C\x5F'
+    ReadFloorHeatingTemperatureNew = b'\x19\x48'
+    ReadFloorHeatingTemperatureNewResponse = b'\x19\x49'
+    ReadFloorHeatingTemperatureLegacy = b'\xE3\xE7'
+    ReadFloorHeatingTemperatureLegacyResponse = b'\xE3\xE8'
+
+    ControlPanelAC = b'\xE3\xD8'
+    ControlPanelACResponse = b'\xE3\xD9'
+    ReadPanelAC = b'\xE3\xDA'
+    ReadPanelACResponse = b'\xE3\xDB'
 
     ReadDryContactStatus = b'\x15\xCE'
     ReadDryContactStatusResponse = b'\x15\xCF'
