@@ -6,7 +6,9 @@
         "description": "Voer het IP-adres en poortnummer van de gateway in.",
         "data": {
           "host": "Host-IP-adres",
-          "port": "Poortnummer"
+          "port": "Poortnummer",
+          "send_port": "UDP-verzendpoort",
+          "receive_port": "UDP-ontvangstpoort"
         }
       }
     },

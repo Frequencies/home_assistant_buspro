@@ -6,7 +6,9 @@
         "description": "Enter IP address and port number of the gateway.",
         "data": {
           "host": "Host IP address",
-          "port": "Port number"
+          "port": "Port number",
+          "send_port": "UDP send port",
+          "receive_port": "UDP receive port"
         }
       }
     },

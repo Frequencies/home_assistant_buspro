@@ -6,7 +6,9 @@
         "description": "Geben Sie die IP-Adresse und die Portnummer des Gateways ein.",
         "data": {
           "host": "Host-IP-Adresse",
-          "port": "Portnummer"
+          "port": "Portnummer",
+          "send_port": "UDP-Sendeport",
+          "receive_port": "UDP-Empfangsport"
         }
       }
     },

@@ -14,6 +14,10 @@ from homeassistant.const import (
     CONF_PORT, 
     CONF_NAME,
 )
+from .const import (
+    CONF_SEND_PORT,
+    CONF_RECEIVE_PORT,
+)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -66,7 +70,9 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.port,
-        vol.Optional(CONF_NAME, default=DEFAULT_CONF_NAME): cv.string
+        vol.Optional(CONF_NAME, default=DEFAULT_CONF_NAME): cv.string,
+        vol.Optional(CONF_SEND_PORT): cv.port,
+        vol.Optional(CONF_RECEIVE_PORT): cv.port,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -77,8 +83,10 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
+    send_port = config[DOMAIN].get(CONF_SEND_PORT, port)
+    receive_port = config[DOMAIN].get(CONF_RECEIVE_PORT, port)
 
-    hass.data[DATA_BUSPRO] = BusproModule(hass, host, port)
+    hass.data[DATA_BUSPRO] = BusproModule(hass, host, port, send_port, receive_port)
     await hass.data[DATA_BUSPRO].start()
 
     hass.data[DATA_BUSPRO].register_services()
@@ -91,8 +99,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     host = config_entry.data.get(CONF_HOST, "")
     port = config_entry.data.get(CONF_PORT, 1)
+    send_port = config_entry.data.get(CONF_SEND_PORT, port)
+    receive_port = config_entry.data.get(CONF_RECEIVE_PORT, port)
 
-    hass.data[DOMAIN] = BusproModule(hass, host, port)
+    hass.data[DOMAIN] = BusproModule(hass, host, port, send_port, receive_port)
     await hass.data[DOMAIN].start()
 
     hass.data[DOMAIN].register_services()
@@ -102,12 +112,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 class BusproModule:
     """Representation of Buspro Object."""
 
-    def __init__(self, hass, host, port):
+    def __init__(self, hass, host, port, send_port=None, receive_port=None):
         """Initialize of Buspro module."""
         self.hass = hass
         self.connected = False
         self.hdl = None
-        self.gateway_address_send_receive = ((host, port), ('', port))
+        if send_port is None:
+            send_port = port
+        if receive_port is None:
+            receive_port = port
+        self.gateway_address_send_receive = ((host, send_port), ('', receive_port))
         self.init_hdl()
 
     def init_hdl(self):

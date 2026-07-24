@@ -6,7 +6,9 @@
         "description": "Inserisci l'indirizzo IP e il numero di porta del gateway.",
         "data": {
           "host": "Indirizzo IP host",
-          "port": "Numero di porta"
+          "port": "Numero di porta",
+          "send_port": "Porta UDP di invio",
+          "receive_port": "Porta UDP di ricezione"
         }
       }
     },

@@ -6,7 +6,9 @@
         "description": "Introduzca la dirección IP y el número de puerto de la puerta de enlace.",
         "data": {
           "host": "Dirección IP del host",
-          "port": "Número de puerto"
+          "port": "Número de puerto",
+          "send_port": "Puerto UDP de envío",
+          "receive_port": "Puerto UDP de recepción"
         }
       }
     },

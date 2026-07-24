@@ -18,7 +18,9 @@ import homeassistant.helpers.config_validation as cv
 from .const import (
     DOMAIN,
     CONF_HOST,
-    CONF_PORT
+    CONF_PORT,
+    CONF_SEND_PORT,
+    CONF_RECEIVE_PORT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +49,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             	#vol.Required(CONF_HOST, default=host): cv.string,
             	#vol.Required(CONF_PORT, default=port): cv.port
             	vol.Required(CONF_HOST): cv.string,
-            	vol.Required(CONF_PORT): cv.port
+            	vol.Required(CONF_PORT): cv.port,
+                vol.Optional(CONF_SEND_PORT): cv.port,
+                vol.Optional(CONF_RECEIVE_PORT): cv.port,
             }),
             errors=errors
         )

@@ -6,7 +6,9 @@
         "description": "Saisissez l'adresse IP et le numéro de port de la passerelle.",
         "data": {
           "host": "Adresse IP de l'hôte",
-          "port": "Numéro de port"
+          "port": "Numéro de port",
+          "send_port": "Port UDP d'envoi",
+          "receive_port": "Port UDP de réception"
         }
       }
     },

@@ -6,7 +6,9 @@
         "description": "Tast inn IP-adresse og portnummer til gateway.",
         "data": {
           "host": "IP-adresse",
-          "port": "Portnummer"
+          "port": "Portnummer",
+          "send_port": "UDP sendeport",
+          "receive_port": "UDP mottaksport"
         }
       }
     },
