@@ -39,12 +39,15 @@ light:
       1.89.2:
         name: Front Door Light
         dimmable: False
+        ack_retry_enabled: True
 ```
 + **running_time** _(int) (Optioneel)_: standaard looptijd in seconden voor alle apparaten. De looptijd is 0 seconden als deze niet is ingesteld.
++ **ack_retry_enabled** _(boolean) (Optioneel)_: Schakelt eenmalige herpoging van een opdracht in als binnen 0,8 s geen ACK wordt ontvangen. Standaard is `True`.
 + **apparaten** _(vereist)_: een lijst met apparaten die moeten worden ingesteld
   + **X.X.X** _(Vereist)_: Het adres van het apparaat in de notatie `<subnet-ID>.<apparaat-ID>.<kanaalnummer>`
     + **naam** _(string) (vereist)_: de naam van het apparaat
     + **running_time** _(int) (Optioneel)_: de looptijd in seconden voor het apparaat. Als u dit weglaat, wordt de standaardlooptijd voor alle apparaten gebruikt.
+    + **ack_retry_enabled** _(boolean) (Optioneel)_: Overschrijving per apparaat voor ACK-herpoging.
     + **dimbaar** _(boolean) (Optioneel)_: Is het apparaat dimbaar? Standaard is Waar.
     + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
 

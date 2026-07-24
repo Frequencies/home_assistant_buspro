@@ -7,7 +7,15 @@ from ..helpers.generics import Generics
 
 
 class Light(Device):
-    def __init__(self, buspro, device_address, channel_number, name="", delay_read_current_state_seconds=0):
+    def __init__(
+        self,
+        buspro,
+        device_address,
+        channel_number,
+        name="",
+        delay_read_current_state_seconds=0,
+        ack_retry_enabled=True,
+    ):
         super().__init__(buspro, device_address, name)
         # device_address = (subnet_id, device_id, channel_number)
 
@@ -16,6 +24,7 @@ class Light(Device):
         self._channel = channel_number
         self._brightness = 0
         self._previous_brightness = None
+        self._ack_retry_enabled = bool(ack_retry_enabled)
         self._ack_task = None
         self._awaiting_ack = False
         self.register_telegram_received_cb(self._telegram_received_cb)
@@ -87,7 +96,8 @@ class Light(Device):
         self._set_previous_brightness(self._brightness)
 
         await self._send_single_channel_control(intensity, running_time_seconds)
-        self._start_ack_watch(intensity, running_time_seconds)
+        if self._ack_retry_enabled:
+            self._start_ack_watch(intensity, running_time_seconds)
 
     async def _send_single_channel_control(self, intensity, running_time_seconds):
         generics = Generics()

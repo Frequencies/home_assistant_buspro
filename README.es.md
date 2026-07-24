@@ -39,12 +39,15 @@ light:
       1.89.2:
         name: Front Door Light
         dimmable: False
+        ack_retry_enabled: True
 ```
 + **running_time** _(int) (Opcional)_: tiempo de ejecución predeterminado en segundos para todos los dispositivos. El tiempo de ejecución es de 0 segundos si no se configura.
++ **ack_retry_enabled** _(boolean) (Opcional)_: Habilita un reintento unico del comando si no se recibe ACK en 0,8 s. Valor predeterminado: `True`.
 + **dispositivos** _(Obligatorio)_: una lista de dispositivos para configurar
   + **X.X.X** _(Obligatorio)_: La dirección del dispositivo en el formato `<ID de subred>.<ID de dispositivo>.<número de canal>`
     + **nombre** _(cadena) (Obligatorio)_: El nombre del dispositivo
     + **running_time** _(int) (Opcional)_: El tiempo de ejecución en segundos para el dispositivo. Si se omite, se utiliza el tiempo de ejecución predeterminado para todos los dispositivos.
+    + **ack_retry_enabled** _(boolean) (Opcional)_: Anulacion por dispositivo para el reintento ACK.
     + **regulable** _(booleano) (Opcional)_: ¿El dispositivo es regulable? El valor predeterminado es Verdadero.
     + **object_id** _(cadena) (Opcional)_: dispositivo object_id. El valor predeterminado se genera automáticamente a partir del nombre del dispositivo.
 

@@ -39,12 +39,15 @@ light:
       1.89.2:
         name: Front Door Light
         dimmable: False
+        ack_retry_enabled: True
 ```
 + **running_time** _(int) (Optional)_: Standardlaufzeit in Sekunden für alle Geräte. Die Laufzeit beträgt 0 Sekunden, wenn nicht eingestellt.
++ **ack_retry_enabled** _(boolean) (Optional)_: Aktiviert einen einmaligen Befehls-Retry, wenn innerhalb von 0,8 s kein ACK empfangen wird. Standard ist `True`.
 + **Geräte** _(Erforderlich)_: Eine Liste der einzurichtenden Geräte
   + **X.X.X** _(Erforderlich)_: Die Adresse des Geräts im Format „<Subnetz-ID>.<Geräte-ID>.<Kanalnummer>“.
     + **Name** _(string) (Erforderlich)_: Der Name des Geräts
     + **running_time** _(int) (Optional)_: Die Laufzeit in Sekunden für das Gerät. Wenn es weggelassen wird, wird die Standardlaufzeit für alle Geräte verwendet.
+    + **ack_retry_enabled** _(boolean) (Optional)_: Geräte-spezifische Überschreibung für ACK-Retry.
     + **dimmbar** _(boolean) (Optional)_: Ist das Gerät dimmbar? Der Standardwert ist True.
     + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
 

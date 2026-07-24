@@ -30,18 +30,22 @@ DEFAULT_DEVICE_RUNNING_TIME = 0
 DEFAULT_PLATFORM_RUNNING_TIME = 0
 DEFAULT_DIMMABLE = True
 DEFAULT_OBJECT_ID = ""
+DEFAULT_ACK_RETRY = True
 
 CONF_OBJECT_ID = "object_id"
+CONF_ACK_RETRY = "ack_retry_enabled"
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional("running_time", default=DEFAULT_DEVICE_RUNNING_TIME): cv.positive_int,
     vol.Optional("dimmable", default=DEFAULT_DIMMABLE): cv.boolean,
+    vol.Optional(CONF_ACK_RETRY, default=DEFAULT_ACK_RETRY): cv.boolean,
     vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
     vol.Required(CONF_NAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional("running_time", default=DEFAULT_PLATFORM_RUNNING_TIME): cv.positive_int,
+    vol.Optional(CONF_ACK_RETRY, default=DEFAULT_ACK_RETRY): cv.boolean,
     vol.Required(CONF_DEVICES): {cv.string: DEVICE_SCHEMA},
 })
 
@@ -55,11 +59,13 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
     hdl = hass.data[DATA_BUSPRO].hdl
     devices = []
     platform_running_time = int(config["running_time"])
+    platform_ack_retry = bool(config[CONF_ACK_RETRY])
 
     for address, device_config in config[CONF_DEVICES].items():
         name = device_config[CONF_NAME]
         device_running_time = int(device_config["running_time"])
         dimmable = bool(device_config["dimmable"])
+        ack_retry_enabled = bool(device_config.get(CONF_ACK_RETRY, platform_ack_retry))
 
         if device_running_time == 0:
             device_running_time = platform_running_time
@@ -71,7 +77,13 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         channel_number = int(address2[2])
         _LOGGER.debug("Adding light '{}' with address {} and channel number {}".format(name, device_address, channel_number))
 
-        light = Light(hdl, device_address, channel_number, name)
+        light = Light(
+            hdl,
+            device_address,
+            channel_number,
+            name,
+            ack_retry_enabled=ack_retry_enabled,
+        )
 
         object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:

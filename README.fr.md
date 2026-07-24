@@ -39,12 +39,15 @@ light:
       1.89.2:
         name: Front Door Light
         dimmable: False
+        ack_retry_enabled: True
 ```
 + **running_time** _(int) (Facultatif)_ : durée d'exécution par défaut en secondes pour tous les appareils. Le temps d'exécution est de 0 seconde s'il n'est pas défini.
++ **ack_retry_enabled** _(boolean) (Optionnel)_: Active une nouvelle tentative unique si aucun ACK n'est recu sous 0,8 s. Par defaut : `True`.
 + **appareils** _(obligatoire)_ : une liste d'appareils à configurer
   + **X.X.X** _(Obligatoire)_ : L'adresse de l'appareil au format `<subnet ID>.<device ID>.<channel number>`
     + **name** _(string)(Obligatoire)_ : Le nom de l'appareil
     + **running_time** _(int) (Facultatif)_ : la durée d'exécution en secondes de l'appareil. En cas d'omission, la durée d'exécution par défaut de tous les appareils est utilisée.
+    + **ack_retry_enabled** _(boolean) (Optionnel)_: Remplacement par appareil du comportement de nouvelle tentative ACK.
     + **dimmable** _(booléen) (Facultatif)_ : L'appareil est-il dimmable ? La valeur par défaut est True.
     + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
 
