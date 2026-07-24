@@ -139,12 +139,16 @@ climate:
           - sleep
       - address: "1.74"
         name: Front Door
+      - address: "1.90"
+        channel: 1
+        name: Floor Heating Zone 1
 ```
 + **devices** _(Required)_: A list of devices to set up
   + **address** _(string) (Required)_: The address of the sensor device on the format `<subnet ID>.<device ID>`
   + **name** _(string) (Required)_: The name of the device
   + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
   + **preset_modes** _(list) (Optional)_: List of supported preset modes. Preset mode selection is disabled if not set. Possible values are shown in table below. Corresponding modes must be enabled in HDL (Floor Heating > Working Settings > Mode).
+  + **channel** _(int) (Optional)_: Floor heating module channel (`1..6`).  
     
 | HA preset mode | HDL mode |
 |:--------------:|:--------:|

@@ -59,6 +59,7 @@ DEFAULT_OBJECT_ID = ""
 CONF_PRESET_MODES = "preset_modes"
 CONF_RELAY_ADDRESS = "relay_address"
 CONF_OBJECT_ID = "object_id"
+CONF_CHANNEL = "channel"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES):
@@ -71,6 +72,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 ),
                 vol.Optional(CONF_RELAY_ADDRESS, default=''): cv.string,
                 vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
+                vol.Optional(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=6)),
             })
         ])
 })
@@ -90,13 +92,14 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         address = device_config[CONF_ADDRESS]
         name = device_config[CONF_NAME]
         preset_modes = device_config[CONF_PRESET_MODES]
+        channel_number = device_config.get(CONF_CHANNEL)
 
         address2 = address.split('.')
         device_address = (int(address2[0]), int(address2[1]))
 
         _LOGGER.debug("Adding climate '{}' with address {}".format(name, device_address))
 
-        climate = Climate(hdl, device_address, name)
+        climate = Climate(hdl, device_address, name, channel_number=channel_number)
 
         relay_sensor = None
         relay_address = device_config[CONF_RELAY_ADDRESS]

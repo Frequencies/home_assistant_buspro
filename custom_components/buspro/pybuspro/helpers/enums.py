@@ -85,6 +85,10 @@ class OperateCode(Enum):
     ReadFloorHeatingStatusResponse = b'\x19\x45'
     ControlFloorHeatingStatus = b'\x19\x46'
     ControlFloorHeatingStatusResponse = b'\x19\x47'
+    ControlFloorHeatingModuleStatus = b'\x1C\x5C'
+    ControlFloorHeatingModuleStatusResponse = b'\x1C\x5D'
+    ReadFloorHeatingModuleStatus = b'\x1C\x5E'
+    ReadFloorHeatingModuleStatusResponse = b'\x1C\x5F'
 
     ReadDryContactStatus = b'\x15\xCE'
     ReadDryContactStatusResponse = b'\x15\xCF'

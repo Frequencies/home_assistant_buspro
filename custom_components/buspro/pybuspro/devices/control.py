@@ -51,6 +51,10 @@ class _Control:
             operate_code = OperateCode.ReadFloorHeatingStatus
             payload = []
 
+        elif type(control) == _ReadFloorHeatingModuleStatus:
+            operate_code = OperateCode.ReadFloorHeatingModuleStatus
+            payload = [control.channel_number]
+
         elif type(control) == _ReadDryContactStatus:
             operate_code = OperateCode.ReadDryContactStatus
             payload = [1, control.switch_number]
@@ -59,6 +63,11 @@ class _Control:
             operate_code = OperateCode.ControlFloorHeatingStatus
             payload = [control.temperature_type, control.status, control.mode, control.normal_temperature,
                        control.day_temperature, control.night_temperature, control.away_temperature]
+        elif type(control) == _ControlFloorHeatingModuleStatus:
+            operate_code = OperateCode.ControlFloorHeatingModuleStatus
+            payload = [control.channel_number, control.work, control.temperature_type, control.mode,
+                       control.normal_temperature, control.day_temperature, control.night_temperature,
+                       control.away_temperature, control.valve, control.watering_time]
 
         else:
             return None
@@ -147,6 +156,12 @@ class _ReadFloorHeatingStatus(_Control):
         # no more properties
 
 
+class _ReadFloorHeatingModuleStatus(_Control):
+    def __init__(self, buspro):
+        super().__init__(buspro)
+        self.channel_number = None
+
+
 class _ControlFloorHeatingStatus(_Control):
     def __init__(self, buspro):
         super().__init__(buspro)
@@ -158,6 +173,22 @@ class _ControlFloorHeatingStatus(_Control):
         self.day_temperature = None
         self.night_temperature = None
         self.away_temperature = None
+
+
+class _ControlFloorHeatingModuleStatus(_Control):
+    def __init__(self, buspro):
+        super().__init__(buspro)
+
+        self.channel_number = None
+        self.work = None
+        self.temperature_type = None
+        self.mode = None
+        self.normal_temperature = None
+        self.day_temperature = None
+        self.night_temperature = None
+        self.away_temperature = None
+        self.valve = None
+        self.watering_time = None
 
 
 class _ReadDryContactStatus(_Control):
