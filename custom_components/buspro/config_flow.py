@@ -35,12 +35,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         
         if user_input is not None:
-            try:
-                return self.async_create_entry(title="Buspro", data=user_input)
-                    
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            return self.async_create_entry(title="Buspro", data=user_input)
 
         return self.async_show_form(
             step_id="user",

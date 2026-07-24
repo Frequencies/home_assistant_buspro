@@ -28,10 +28,13 @@ class Device(object):
 
     def unregister_device_updated_cb(self, device_updated_cb):
         """Unregister device updated callback."""
-        self.device_updated_cbs.remove(device_updated_cb)
+        try:
+            self.device_updated_cbs.remove(device_updated_cb)
+        except ValueError:
+            pass
 
     async def _device_updated(self):
-        for device_updated_cb in self.device_updated_cbs:
+        for device_updated_cb in list(self.device_updated_cbs):
             await device_updated_cb(self)
 
     async def _send_telegram(self, telegram):

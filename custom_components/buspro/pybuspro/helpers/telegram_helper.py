@@ -1,4 +1,4 @@
-import traceback
+import logging
 from struct import *
 
 from .enums import DeviceType
@@ -8,10 +8,11 @@ from ..devices.control import *
 
 
 class TelegramHelper:
+    _LOGGER = logging.getLogger(__name__)
 
     def build_telegram_from_udp_data(self, data, address):
         if not data:
-            print("build_telegram_from_udp_data: not data")
+            self._LOGGER.debug("build_telegram_from_udp_data: no data")
             return None
 
         try:
@@ -49,12 +50,12 @@ class TelegramHelper:
 
             crc_check_pass = self._check_crc(telegram)
             if not crc_check_pass:
-                print("crc check failed")
+                self._LOGGER.debug("Telegram CRC check failed")
                 return None
 
             return telegram
-        except Exception as e:
-            print("error building telegram: {}".format(traceback.format_exc()))
+        except Exception:
+            self._LOGGER.exception("Error building telegram from UDP data")
             return None
 
     @staticmethod

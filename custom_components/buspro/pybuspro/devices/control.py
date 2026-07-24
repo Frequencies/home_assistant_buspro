@@ -6,6 +6,9 @@ from ..helpers.enums import OperateCode
 
 _LOGGER = logging.getLogger(__name__)
 _last_queries = {}
+_LAST_QUERIES_MAX = 4096
+_LAST_QUERIES_PRUNE_INTERVAL = 60.0
+_last_queries_prune_at = 0.0
 
 
 class _Control:
@@ -103,6 +106,7 @@ class _Control:
         return self.build_telegram_from_control(self)
 
     async def send(self):
+        global _last_queries_prune_at
         telegram = self.telegram
         if telegram is None:
             return
@@ -123,6 +127,13 @@ class _Control:
 
         if telegram.operate_code in query_codes:
             now = time.time()
+            if now >= _last_queries_prune_at:
+                _last_queries_prune_at = now + _LAST_QUERIES_PRUNE_INTERVAL
+                if len(_last_queries) > _LAST_QUERIES_MAX:
+                    # Drop oldest entries to keep dedup memory bounded.
+                    remove_count = len(_last_queries) - _LAST_QUERIES_MAX
+                    for key, _ in sorted(_last_queries.items(), key=lambda item: item[1])[:remove_count]:
+                        _last_queries.pop(key, None)
             key = (telegram.target_address, telegram.operate_code, tuple(telegram.payload or []))
             last_sent = _last_queries.get(key, 0.0)
             if now - last_sent < 4.0:

@@ -1,6 +1,7 @@
 """Buspro climate platform."""
 
 import logging
+import asyncio
 from typing import Optional, List
 from datetime import timedelta
 
@@ -131,8 +132,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         devices.append(BusproFloorHeatingClimate(hass, device, preset_modes, relay_sensor, object_id))
 
     async_add_entities(devices)
-    for device in devices:
-        await device.async_update()
+    if devices:
+        sem = asyncio.Semaphore(5)
+
+        async def _refresh(device):
+            async with sem:
+                await device.async_update()
+
+        await asyncio.gather(*(_refresh(device) for device in devices))
 
 
 class _BusproClimateBase(ClimateEntity):
@@ -141,6 +148,10 @@ class _BusproClimateBase(ClimateEntity):
         self._device = device
         self._relay_sensor = relay_sensor
         self._relay_sensor_is_on = relay_sensor.single_channel_is_on if relay_sensor is not None else None
+        self._device_update_cb = None
+        self._relay_sensor_update_cb = None
+        self._unsub_start_poll = None
+        self._unsub_poll_interval = None
         self.async_register_callbacks()
         self.entity_id = generate_entity_id("climate.{}", object_id, None, hass)
 
@@ -149,9 +160,11 @@ class _BusproClimateBase(ClimateEntity):
 
         @callback
         def _start_polling(_now):
-            event.async_track_time_interval(hass, self.async_update, self._polling_interval)
+            self._unsub_poll_interval = event.async_track_time_interval(
+                self._hass, self.async_update, self._polling_interval
+            )
 
-        event.async_call_later(hass, stagger, _start_polling)
+        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
 
     @callback
     def async_register_callbacks(self):
@@ -159,6 +172,7 @@ class _BusproClimateBase(ClimateEntity):
             self._device = device
             self.async_write_ha_state()
 
+        self._device_update_cb = after_update_callback
         self._device.register_device_updated_cb(after_update_callback)
 
         if self._relay_sensor is not None:
@@ -166,7 +180,29 @@ class _BusproClimateBase(ClimateEntity):
                 self._relay_sensor_is_on = device.single_channel_is_on
                 self.async_write_ha_state()
 
+            self._relay_sensor_update_cb = after_relay_sensor_update_callback
             self._relay_sensor.register_device_updated_cb(after_relay_sensor_update_callback)
+
+    async def async_will_remove_from_hass(self):
+        if self._unsub_start_poll is not None:
+            self._unsub_start_poll()
+            self._unsub_start_poll = None
+        if self._unsub_poll_interval is not None:
+            self._unsub_poll_interval()
+            self._unsub_poll_interval = None
+        if self._device_update_cb is not None:
+            try:
+                self._device.unregister_device_updated_cb(self._device_update_cb)
+            except ValueError:
+                pass
+            self._device_update_cb = None
+        if self._relay_sensor is not None and self._relay_sensor_update_cb is not None:
+            try:
+                self._relay_sensor.unregister_device_updated_cb(self._relay_sensor_update_cb)
+            except ValueError:
+                pass
+            self._relay_sensor_update_cb = None
+        await super().async_will_remove_from_hass()
 
     @property
     def should_poll(self):

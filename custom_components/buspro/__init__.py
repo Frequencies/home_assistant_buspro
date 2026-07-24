@@ -76,6 +76,32 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
+def _entry_modules(hass: HomeAssistant) -> dict:
+    data = hass.data.setdefault(DOMAIN, {})
+    return data.setdefault("entry_modules", {})
+
+
+def _set_active_module(hass: HomeAssistant, module):
+    if module is not None:
+        hass.data[DATA_BUSPRO] = module
+    elif DATA_BUSPRO in hass.data:
+        del hass.data[DATA_BUSPRO]
+
+
+def _get_any_module(hass: HomeAssistant):
+    modules = _entry_modules(hass)
+    if modules:
+        return next(iter(modules.values()))
+    return hass.data.get(DOMAIN, {}).get("yaml_module")
+
+
+def _has_any_module(hass: HomeAssistant) -> bool:
+    if _entry_modules(hass):
+        return True
+    return hass.data.get(DOMAIN, {}).get("yaml_module") is not None
+
+
 async def async_setup(hass: HomeAssistant, config: dict):
     """Setup the Buspro component. """
     if DOMAIN not in config:
@@ -86,26 +112,41 @@ async def async_setup(hass: HomeAssistant, config: dict):
     send_port = config[DOMAIN].get(CONF_SEND_PORT, port)
     receive_port = config[DOMAIN].get(CONF_RECEIVE_PORT, port)
 
-    hass.data[DATA_BUSPRO] = BusproModule(hass, host, port, send_port, receive_port)
-    await hass.data[DATA_BUSPRO].start()
-
-    hass.data[DATA_BUSPRO].register_services()
+    module = BusproModule(hass, host, port, send_port, receive_port)
+    hass.data.setdefault(DOMAIN, {})["yaml_module"] = module
+    _set_active_module(hass, module)
+    await module.start()
+    module.register_services(force=True)
 
     return True
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Setup the Buspro component. """
-    hass.data.setdefault(DOMAIN, {})
-
     host = config_entry.data.get(CONF_HOST, "")
     port = config_entry.data.get(CONF_PORT, 1)
     send_port = config_entry.data.get(CONF_SEND_PORT, port)
     receive_port = config_entry.data.get(CONF_RECEIVE_PORT, port)
 
-    hass.data[DOMAIN] = BusproModule(hass, host, port, send_port, receive_port)
-    await hass.data[DOMAIN].start()
+    module = BusproModule(hass, host, port, send_port, receive_port)
+    _entry_modules(hass)[config_entry.entry_id] = module
+    _set_active_module(hass, module)
+    await module.start()
+    module.register_services(force=True)
 
-    hass.data[DOMAIN].register_services()
+    return True
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    module = _entry_modules(hass).pop(config_entry.entry_id, None)
+    if module is not None:
+        await module.stop(None)
+
+    next_module = _get_any_module(hass)
+    _set_active_module(hass, next_module)
+
+    if not _has_any_module(hass):
+        BusproModule.unregister_services(hass)
+    elif next_module is not None:
+        next_module.register_services(force=True)
 
     return True
 
@@ -122,6 +163,7 @@ class BusproModule:
         if receive_port is None:
             receive_port = port
         self.gateway_address_send_receive = ((host, send_port), ('', receive_port))
+        self._stop_listener = None
         self.init_hdl()
 
     def init_hdl(self):
@@ -134,13 +176,17 @@ class BusproModule:
     async def start(self):
         """Start Buspro object. Connect to tunneling device."""
         await self.hdl.start(state_updater=False)
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
+        self._stop_listener = self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
         self.connected = True
 
     # noinspection PyUnusedLocal
     async def stop(self, event):
         """Stop Buspro object. Disconnect from tunneling device."""
+        if self._stop_listener is not None:
+            self._stop_listener()
+            self._stop_listener = None
         await self.hdl.stop()
+        self.connected = False
 
     async def service_activate_scene(self, call):
         """Service for activatign a __scene"""
@@ -177,7 +223,11 @@ class BusproModule:
         else:
             await universal_switch.set_off()
 
-    def register_services(self):
+    def register_services(self, force=False):
+        if force:
+            self.unregister_services(self.hass)
+        elif self.hass.services.has_service(DOMAIN, SERVICE_BUSPRO_ACTIVATE_SCENE):
+            return
 
         """ activate_scene """
         self.hass.services.async_register(
@@ -196,6 +246,16 @@ class BusproModule:
             DOMAIN, SERVICE_BUSPRO_UNIVERSAL_SWITCH,
             self.service_set_universal_switch,
             schema=SERVICE_BUSPRO_UNIVERSAL_SWITCH_SCHEMA)
+
+    @staticmethod
+    def unregister_services(hass: HomeAssistant):
+        for service in (
+            SERVICE_BUSPRO_ACTIVATE_SCENE,
+            SERVICE_BUSPRO_SEND_MESSAGE,
+            SERVICE_BUSPRO_UNIVERSAL_SWITCH,
+        ):
+            if hass.services.has_service(DOMAIN, service):
+                hass.services.async_remove(DOMAIN, service)
 
     '''
     def telegram_received_cb(self, telegram):

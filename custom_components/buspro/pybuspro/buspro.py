@@ -79,6 +79,9 @@ class Buspro:
         self.started = False
 
     def _callback_all_messages(self, telegram):
+        if telegram is None:
+            return
+
         if self.telegram_logger.isEnabledFor(logging.DEBUG):
             self.telegram_logger.debug(telegram)
 
