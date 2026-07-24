@@ -2,8 +2,10 @@
 
 import logging
 from typing import Optional, List
+from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.event as event
 import voluptuous as vol
 from homeassistant.components.climate import (
     PLATFORM_SCHEMA,
@@ -129,6 +131,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         devices.append(BusproFloorHeatingClimate(hass, device, preset_modes, relay_sensor, object_id))
 
     async_add_entities(devices)
+    for device in devices:
+        await device.async_update()
 
 
 class _BusproClimateBase(ClimateEntity):
@@ -139,6 +143,15 @@ class _BusproClimateBase(ClimateEntity):
         self._relay_sensor_is_on = relay_sensor.single_channel_is_on if relay_sensor is not None else None
         self.async_register_callbacks()
         self.entity_id = generate_entity_id("climate.{}", object_id, None, hass)
+
+        self._polling_interval = timedelta(minutes=60)
+        stagger = hash(str(self._device._device_address)) % 300
+
+        @callback
+        def _start_polling(_now):
+            event.async_track_time_interval(hass, self.async_update, self._polling_interval)
+
+        event.async_call_later(hass, stagger, _start_polling)
 
     @callback
     def async_register_callbacks(self):
@@ -158,6 +171,11 @@ class _BusproClimateBase(ClimateEntity):
     @property
     def should_poll(self):
         return False
+
+    async def async_update(self, *args):
+        await self._device.read_status()
+        if self._relay_sensor is not None:
+            await self._relay_sensor.read_status()
 
     @property
     def name(self):

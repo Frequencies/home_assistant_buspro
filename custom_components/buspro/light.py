@@ -6,8 +6,11 @@ https://home-assistant.io/components/...
 """
 
 import logging
+import time
+from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.event as event
 import voluptuous as vol
 from homeassistant.components.light import (
     LightEntity, 
@@ -89,10 +92,21 @@ class BusproLight(LightEntity):
         self._running_time = running_time
         self._dimmable = dimmable
         self._object_id = object_id
+        self._optimistic_brightness = None
+        self._optimistic_timeout = 0.0
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self.async_register_callbacks()
         self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
+
+        self._polling_interval = timedelta(minutes=60)
+        stagger = hash(str(self._device._device_address)) % 300
+
+        @callback
+        def _start_polling(_now):
+            event.async_track_time_interval(hass, self.async_update, self._polling_interval)
+
+        event.async_call_later(hass, stagger, _start_polling)
 
     @callback
     def async_register_callbacks(self):
@@ -110,6 +124,9 @@ class BusproLight(LightEntity):
         """No polling needed within Buspro."""
         return False
 
+    async def async_update(self, *args):
+        await self._device.read_status()
+
     @property
     def name(self):
         """Return the display name of this light."""
@@ -123,12 +140,20 @@ class BusproLight(LightEntity):
     @property
     def brightness(self):
         """Return the brightness of the light."""
+        if self._optimistic_brightness is not None:
+            if time.time() <= self._optimistic_timeout:
+                return self._optimistic_brightness
+            self._optimistic_brightness = None
         brightness = self._device.current_brightness / 100 * 255
         return brightness
 
     @property
     def is_on(self):
         """Return true if light is on."""
+        if self._optimistic_brightness is not None:
+            if time.time() <= self._optimistic_timeout:
+                return self._optimistic_brightness > 0
+            self._optimistic_brightness = None
         return self._device.is_on
 
     async def async_turn_on(self, **kwargs):
@@ -138,11 +163,17 @@ class BusproLight(LightEntity):
         if not self.is_on and self._device.previous_brightness is not None and brightness == 100:
             brightness = self._device.previous_brightness
 
+        self._optimistic_brightness = int(brightness / 100 * 255)
+        self._optimistic_timeout = time.time() + 2.0
         await self._device.set_brightness(brightness, self._running_time)
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
+        self._optimistic_brightness = 0
+        self._optimistic_timeout = time.time() + 2.0
         await self._device.set_off(self._running_time)
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):
