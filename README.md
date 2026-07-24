@@ -1,4 +1,15 @@
 # HDL Buspro
+## Languages
+
+[![English](https://flagcdn.com/24x18/gb.png) English](README.md) |
+[![Deutsch](https://flagcdn.com/24x18/de.png) Deutsch](README.de.md) |
+[![Français](https://flagcdn.com/24x18/fr.png) Français](README.fr.md) |
+[![Nederlands](https://flagcdn.com/24x18/nl.png) Nederlands](README.nl.md) |
+[![Español](https://flagcdn.com/24x18/es.png) Español](README.es.md) |
+[![Italiano](https://flagcdn.com/24x18/it.png) Italiano](README.it.md) |
+[![Русский](https://flagcdn.com/24x18/ru.png) Русский](README.ru.md) |
+[![Українська](https://flagcdn.com/24x18/ua.png) Українська](README.uk.md) |
+[![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md)
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 

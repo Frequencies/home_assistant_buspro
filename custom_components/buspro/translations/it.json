@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurazione gateway Buspro",
+        "description": "Inserisci l'indirizzo IP e il numero di porta del gateway.",
+        "data": {
+          "host": "Indirizzo IP host",
+          "port": "Numero di porta"
+        }
+      }
+    },
+    "error": {
+      "unknown": "Si è verificato un errore."
+    }
+  }
+}

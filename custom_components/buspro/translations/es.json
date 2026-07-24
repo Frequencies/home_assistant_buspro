@@ -1,0 +1,17 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configuración de la puerta de enlace Buspro",
+        "description": "Introduzca la dirección IP y el número de puerto de la puerta de enlace.",
+        "data": {
+          "host": "Dirección IP del host",
+          "port": "Número de puerto"
+        }
+      }
+    },
+    "error": {
+      "unknown": "Se produjo un error."
+    }
+  }
+}
