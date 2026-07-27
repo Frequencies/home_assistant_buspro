@@ -34,6 +34,7 @@ DEFAULT_OBJECT_ID = ""
 DEFAULT_ACK_RETRY = True
 
 CONF_OBJECT_ID = "object_id"
+CONF_UNIQUE_ID = "unique_id"
 CONF_ACK_RETRY = "ack_retry_enabled"
 
 DEVICE_SCHEMA = vol.Schema({
@@ -41,6 +42,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional("dimmable", default=DEFAULT_DIMMABLE): cv.boolean,
     vol.Optional(CONF_ACK_RETRY, default=DEFAULT_ACK_RETRY): cv.boolean,
     vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Required(CONF_NAME): cv.string,
 })
 
@@ -89,8 +91,9 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:
             object_id = name
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
-        devices.append(BusproLight(hass, light, device_running_time, dimmable, object_id))
+        devices.append(BusproLight(hass, light, device_running_time, dimmable, object_id, unique_id))
 
     async_add_entites(devices)
     if devices:
@@ -107,12 +110,13 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproLight(LightEntity):
     """Representation of a Buspro light."""
 
-    def __init__(self, hass, device, running_time, dimmable, object_id):
+    def __init__(self, hass, device, running_time, dimmable, object_id, unique_id=None):
         self._hass = hass
         self._device = device
         self._running_time = running_time
         self._dimmable = dimmable
         self._object_id = object_id
+        self._configured_unique_id = unique_id
         self._optimistic_brightness = None
         self._optimistic_timeout = 0.0
         self._attr_color_mode = ColorMode.BRIGHTNESS
@@ -220,4 +224,4 @@ class BusproLight(LightEntity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return self._device.device_identifier
+        return self._configured_unique_id or self._device.device_identifier

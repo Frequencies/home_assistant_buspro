@@ -50,6 +50,7 @@ light:
     + **ack_retry_enabled** _(boolean) (Optional)_: Per-device override for ACK retry.
     + **dimmable** _(boolean) (Optional)_: Is the device dimmable? Default is True. 
     + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
+    + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
 
 #### Switch platform
 
@@ -68,6 +69,7 @@ switch:
   + **X.X.X** _(Required)_: The address of the device on the format `<subnet ID>.<device ID>.<channel number>`
     + **name** _(string) (Required)_: The name of the device
     + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
+    + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
 
 #### Sensor platform
 
@@ -102,6 +104,7 @@ sensor:
      + humidity
   + **unit_of_measurement** _(string) (Optional)_: text to be displayed as unit of measurement
   + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
+  + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
   + **device_class** _(string) (Optional)_: HASS device class e.g., "temperature" 
   (https://www.home-assistant.io/components/sensor/)
   + **device** _(string) (Optional)_: The type of sensor device:
@@ -131,6 +134,7 @@ binary_sensor:
   'type' = 'universal_switch' universal switch number must be appended to the address. 
   + **name** _(string) (Required)_: The name of the device
   + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
+  + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
   + **type** _(string) (Required)_: Type of sensor to monitor. 
     + Available sensors: 
       + motion 
@@ -165,6 +169,7 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        unique_id: "hdl_climate_floorheat_zone_1"
         min_temp: 22
         max_temp: 32
         precision: 1
@@ -177,6 +182,7 @@ climate:
   + **floor_heating_device_type** _(string) (Optional)_: `dlp` or `module`.
     If omitted, `module` is auto-selected when `channel` is provided, otherwise `dlp`.
   + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
+  + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
   + **preset_modes** _(list) (Optional)_: List of supported preset modes. Preset mode selection is disabled if not set. Possible values are shown in table below. Corresponding modes must be enabled in HDL (Floor Heating > Working Settings > Mode).
   + **channel** _(int) (Optional)_: Floor heating module channel (`1..6`) for `floor_heating_device_type: module`.
   + **min_temp** _(float) (Optional)_: Minimum target temperature shown in Home Assistant UI.
@@ -209,6 +215,7 @@ cover:
   + **name** _(string) (Required)_: Friendly name
   + **invert** _(bool) (Optional)_: Invert open/close direction. Default `false`.
   + **object_id** _(string) (Optional)_: Entity object_id. Default is auto-generated from name.
+  + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
 
 Supported features:
 - open

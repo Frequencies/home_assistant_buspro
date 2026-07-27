@@ -50,6 +50,7 @@ light:
     + **ack_retry_enabled** _(boolean) (Optioneel)_: Overschrijving per apparaat voor ACK-herpoging.
     + **dimbaar** _(boolean) (Optioneel)_: Is het apparaat dimbaar? Standaard is Waar.
     + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
+    + **unique_id** _(string) (Optioneel)_: Stabiele unieke entity-id voor het Home Assistant entiteitenregister.
 
 #### Van platform wisselen
 
@@ -68,6 +69,7 @@ switch:
   + **X.X.X** _(Vereist)_: Het adres van het apparaat in de notatie `<subnet-ID>.<apparaat-ID>.<kanaalnummer>`
     + **naam** _(string) (vereist)_: de naam van het apparaat
     + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
+    + **unique_id** _(string) (Optioneel)_: Stabiele unieke entity-id voor het Home Assistant entiteitenregister.
 
 #### Sensorplatform
 
@@ -102,6 +104,7 @@ sensor:
      + luchtvochtigheid
   + **unit_of_measurement** _(string) (Optioneel)_: tekst die moet worden weergegeven als meeteenheid
   + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
+  + **unique_id** _(string) (Optioneel)_: Stabiele unieke entity-id voor het Home Assistant entiteitenregister.
   + **device_class** _(string) (Optioneel)_: HASS-apparaatklasse, bijvoorbeeld 'temperatuur'
 (https://www.home-assistant.io/components/sensor/)
   + **apparaat** _(string) (Optioneel)_: Het type sensorapparaat:
@@ -131,6 +134,7 @@ binary_sensor:
 'type' = 'universal_switch' universeel schakelaarnummer moet aan het adres worden toegevoegd.
   + **naam** _(string) (vereist)_: de naam van het apparaat
   + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
+  + **unique_id** _(string) (Optioneel)_: Stabiele unieke entity-id voor het Home Assistant entiteitenregister.
   + **type** _(string) (vereist)_: type sensor dat moet worden bewaakt.
     + Beschikbare sensoren:
       + beweging
@@ -165,6 +169,7 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        unique_id: "hdl_climate_floorheat_zone_1"
         min_temp: 22
         max_temp: 32
         precision: 1
@@ -177,6 +182,7 @@ climate:
   + **floor_heating_device_type** _(string) (Optioneel)_: `dlp` of `module`.
 Indien dit wordt weggelaten, wordt `module` automatisch geselecteerd wanneer `channel` wordt opgegeven, anders `dlp`.
   + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
+  + **unique_id** _(string) (Optioneel)_: Stabiele unieke entity-id voor het Home Assistant entiteitenregister.
   + **preset_modes** _(list) (Optioneel)_: Lijst met ondersteunde vooraf ingestelde modi. De selectie van de vooraf ingestelde modus is uitgeschakeld als deze niet is ingesteld. Mogelijke waarden worden weergegeven in onderstaande tabel. De overeenkomstige modi moeten zijn ingeschakeld in HDL (Vloerverwarming > Werkinstellingen > Modus).
   + **channel** _(int) (Optioneel)_: Kanaal vloerverwarmingsmodule (`1..6`) voor `floor_heat_device_type: module`.
   + **min_temp** _(float) (Optioneel)_: Minimale doeltemperatuur die in de Home Assistant-interface wordt getoond.
@@ -209,6 +215,7 @@ cover:
   + **name** _(string) (Vereist)_: Weergavenaam
   + **invert** _(bool) (Optioneel)_: Draait open/sluit-richting om. Standaard `false`.
   + **object_id** _(string) (Optioneel)_: Entity-`object_id`. Standaard automatisch gegenereerd op basis van naam.
+  + **unique_id** _(string) (Optioneel)_: Stabiele unieke entity-id voor het Home Assistant entiteitenregister.
 
 Ondersteunde functies:
 - open

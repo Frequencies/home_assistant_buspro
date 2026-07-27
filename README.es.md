@@ -50,6 +50,7 @@ light:
     + **ack_retry_enabled** _(boolean) (Opcional)_: Anulacion por dispositivo para el reintento ACK.
     + **regulable** _(booleano) (Opcional)_: ¿El dispositivo es regulable? El valor predeterminado es Verdadero.
     + **object_id** _(cadena) (Opcional)_: dispositivo object_id. El valor predeterminado se genera automáticamente a partir del nombre del dispositivo.
+    + **unique_id** _(cadena) (Opcional)_: Identificador único estable de la entidad para el registro de entidades de Home Assistant.
 
 #### Cambiar de plataforma
 
@@ -68,6 +69,7 @@ switch:
   + **X.X.X** _(Obligatorio)_: La dirección del dispositivo en el formato `<ID de subred>.<ID de dispositivo>.<número de canal>`
     + **nombre** _(cadena) (Obligatorio)_: El nombre del dispositivo
     + **object_id** _(cadena) (Opcional)_: dispositivo object_id. El valor predeterminado se genera automáticamente a partir del nombre del dispositivo.
+    + **unique_id** _(cadena) (Opcional)_: Identificador único estable de la entidad para el registro de entidades de Home Assistant.
 
 #### Plataforma de sensores
 
@@ -102,6 +104,7 @@ sensor:
      + humedad
   + **unidad_de_medida** _(cadena) (Opcional)_: texto que se mostrará como unidad de medida
   + **object_id** _(cadena) (Opcional)_: dispositivo object_id. El valor predeterminado se genera automáticamente a partir del nombre del dispositivo.
+  + **unique_id** _(cadena) (Opcional)_: Identificador único estable de la entidad para el registro de entidades de Home Assistant.
   + **device_class** _(cadena) (Opcional)_: clase de dispositivo HASS, por ejemplo, "temperatura"
 (https://www.home-assistant.io/components/sensor/)
   + **dispositivo** _(cadena) (Opcional)_: El tipo de dispositivo sensor:
@@ -131,6 +134,7 @@ binary_sensor:
 Se debe agregar el número de interruptor universal 'type' = 'universal_switch' a la dirección.
   + **nombre** _(cadena) (Obligatorio)_: El nombre del dispositivo
   + **object_id** _(cadena) (Opcional)_: dispositivo object_id. El valor predeterminado se genera automáticamente a partir del nombre del dispositivo.
+  + **unique_id** _(cadena) (Opcional)_: Identificador único estable de la entidad para el registro de entidades de Home Assistant.
   + **tipo** _(cadena) (Obligatorio)_: Tipo de sensor a monitorear.
     + Sensores disponibles:
       + movimiento
@@ -165,6 +169,7 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        unique_id: "hdl_climate_floorheat_zone_1"
         min_temp: 22
         max_temp: 32
         precision: 1
@@ -177,6 +182,7 @@ climate:
   + **tipo_de_dispositivo_de_calefacción_de_piso** _(cadena) (Opcional)_: `dlp` o `módulo`.
 Si se omite, "módulo" se selecciona automáticamente cuando se proporciona "canal", en caso contrario, "dlp".
   + **object_id** _(cadena) (Opcional)_: dispositivo object_id. El valor predeterminado se genera automáticamente a partir del nombre del dispositivo.
+  + **unique_id** _(cadena) (Opcional)_: Identificador único estable de la entidad para el registro de entidades de Home Assistant.
   + **preset_modes** _(lista) (Opcional)_: Lista de modos preestablecidos admitidos. La selección del modo preestablecido está deshabilitada si no está configurada. Los valores posibles se muestran en la siguiente tabla. Los modos correspondientes deben estar habilitados en HDL (Calefacción por suelo radiante > Configuración de trabajo > Modo).
   + **canal** _(int) (Opcional)_: Canal del módulo de calefacción por suelo radiante (`1..6`) para `floor_heating_device_type: module`.
   + **min_temp** _(float) (Opcional)_: Temperatura objetivo mínima mostrada en la interfaz de Home Assistant.
@@ -209,6 +215,7 @@ cover:
   + **name** _(string) (Obligatorio)_: Nombre visible
   + **invert** _(bool) (Opcional)_: Invierte la dirección abrir/cerrar. Valor predeterminado `false`.
   + **object_id** _(string) (Opcional)_: `object_id` de la entidad. Se genera automáticamente a partir del nombre.
+  + **unique_id** _(cadena) (Opcional)_: Identificador único estable de la entidad para el registro de entidades de Home Assistant.
 
 Funciones compatibles:
 - open

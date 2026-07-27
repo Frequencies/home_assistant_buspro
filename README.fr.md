@@ -50,6 +50,7 @@ light:
     + **ack_retry_enabled** _(boolean) (Optionnel)_: Remplacement par appareil du comportement de nouvelle tentative ACK.
     + **dimmable** _(booléen) (Facultatif)_ : L'appareil est-il dimmable ? La valeur par défaut est True.
     + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
+    + **unique_id** _(string) (Facultatif)_ : Identifiant unique stable de l’entité pour le registre des entités Home Assistant.
 
 #### Changer de plateforme
 
@@ -68,6 +69,7 @@ switch:
   + **X.X.X** _(Obligatoire)_ : L'adresse de l'appareil au format `<subnet ID>.<device ID>.<channel number>`
     + **name** _(string)(Obligatoire)_ : Le nom de l'appareil
     + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
+    + **unique_id** _(string) (Facultatif)_ : Identifiant unique stable de l’entité pour le registre des entités Home Assistant.
 
 #### Plateforme de capteurs
 
@@ -102,6 +104,7 @@ sensor:
      + humidité
   + **unit_of_measurement** _(string) (Facultatif)_ : texte à afficher comme unité de mesure
   + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
+  + **unique_id** _(string) (Facultatif)_ : Identifiant unique stable de l’entité pour le registre des entités Home Assistant.
   + **device_class** _(string) (Facultatif)_ : classe d'appareil HASS, par exemple "température"
 (https://www.home-assistant.io/components/sensor/)
   + **device** _(string) (Facultatif)_ : Le type de capteur :
@@ -131,6 +134,7 @@ binary_sensor:
 'type' = 'universal_switch' Le numéro du commutateur universel doit être ajouté à l'adresse.
   + **name** _(string)(Obligatoire)_ : Le nom de l'appareil
   + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
+  + **unique_id** _(string) (Facultatif)_ : Identifiant unique stable de l’entité pour le registre des entités Home Assistant.
   + **type** _(chaîne) (Obligatoire)_ : Type de capteur à surveiller.
     + Capteurs disponibles :
       + mouvement
@@ -165,6 +169,7 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        unique_id: "hdl_climate_floorheat_zone_1"
         min_temp: 22
         max_temp: 32
         precision: 1
@@ -177,6 +182,7 @@ climate:
   + **floor_heating_device_type** _(string) (Facultatif)_ : `dlp` ou `module`.
 S'il est omis, « module » est automatiquement sélectionné lorsque « canal » est fourni, sinon « dlp ».
   + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
+  + **unique_id** _(string) (Facultatif)_ : Identifiant unique stable de l’entité pour le registre des entités Home Assistant.
   + **preset_modes** _(list) (Facultatif)_ : Liste des modes prédéfinis pris en charge. La sélection du mode prédéfini est désactivée si elle n’est pas définie. Les valeurs possibles sont indiquées dans le tableau ci-dessous. Les modes correspondants doivent être activés dans HDL (Chauffage au sol > Paramètres de travail > Mode).
   + **canal** _(int) (Facultatif)_ : canal du module de chauffage par le sol (`1..6`) pour `floor_heating_device_type : module`.
   + **min_temp** _(float) (Facultatif)_ : Température cible minimale affichée dans l’interface Home Assistant.
@@ -209,6 +215,7 @@ cover:
   + **name** _(string) (Obligatoire)_: Nom affiché
   + **invert** _(bool) (Optionnel)_: Inverse le sens ouverture/fermeture. Valeur par défaut `false`.
   + **object_id** _(string) (Optionnel)_: `object_id` de l'entité. Généré automatiquement à partir du nom.
+  + **unique_id** _(string) (Facultatif)_ : Identifiant unique stable de l’entité pour le registre des entités Home Assistant.
 
 Fonctionnalités prises en charge :
 - open

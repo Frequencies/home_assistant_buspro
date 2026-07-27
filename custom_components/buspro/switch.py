@@ -20,10 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OBJECT_ID = ""
 CONF_OBJECT_ID = "object_id"
+CONF_UNIQUE_ID = "unique_id"
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -53,8 +55,9 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:
             object_id = name
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
-        devices.append(BusproSwitch(hass, switch, object_id))
+        devices.append(BusproSwitch(hass, switch, object_id, unique_id))
 
     async_add_entites(devices)
 
@@ -63,9 +66,10 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproSwitch(SwitchEntity):
     """Representation of a Buspro switch."""
 
-    def __init__(self, hass, device, object_id):
+    def __init__(self, hass, device, object_id, unique_id=None):
         self._hass = hass
         self._device = device
+        self._configured_unique_id = unique_id
         self.async_register_callbacks()
         self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
 
@@ -113,4 +117,4 @@ class BusproSwitch(SwitchEntity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return self._device.device_identifier
+        return self._configured_unique_id or self._device.device_identifier

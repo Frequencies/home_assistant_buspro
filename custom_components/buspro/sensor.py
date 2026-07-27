@@ -37,6 +37,7 @@ DEFAULT_OBJECT_ID = ""
 CONF_DEVICE = "device"
 CONF_OFFSET = "offset"
 CONF_OBJECT_ID = "object_id"
+CONF_UNIQUE_ID = "unique_id"
 
 SCAN_INTERVAL = timedelta(minutes=2)
 
@@ -61,6 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_CONF_SCAN_INTERVAL): cv.string,
                 vol.Optional(CONF_OFFSET, default=DEFAULT_CONF_OFFSET): cv.string,
                 vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
+                vol.Optional(CONF_UNIQUE_ID): cv.string,
             })
         ])
 })
@@ -97,8 +99,9 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:
             object_id = name
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
-        devices.append(BusproSensor(hass, sensor, sensor_type, interval, offset, object_id))
+        devices.append(BusproSensor(hass, sensor, sensor_type, interval, offset, object_id, unique_id))
 
     async_add_entites(devices)
 
@@ -107,10 +110,11 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproSensor(Entity):
     """Representation of a Buspro switch."""
 
-    def __init__(self, hass, device, sensor_type, scan_interval, offset, object_id):
+    def __init__(self, hass, device, sensor_type, scan_interval, offset, object_id, unique_id=None):
         self._hass = hass
         self._device = device
         self._sensor_type = sensor_type
+        self._configured_unique_id = unique_id
         self.async_register_callbacks()
         self._offset = offset
         self._temperature = None
@@ -229,4 +233,4 @@ class BusproSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return f"{self._device.device_identifier}-{self._sensor_type}"
+        return self._configured_unique_id or f"{self._device.device_identifier}-{self._sensor_type}"

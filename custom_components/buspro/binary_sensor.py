@@ -40,6 +40,7 @@ CONF_UNIVERSAL_SWITCH = 'universal_switch'
 CONF_SINGLE_CHANNEL = 'single_channel'
 CONF_DRY_CONTACT = 'dry_contact'
 CONF_OBJECT_ID = "object_id"
+CONF_UNIQUE_ID = "unique_id"
 
 SENSOR_TYPES = {
     CONF_MOTION,
@@ -60,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_CONF_DEVICE_CLASS): cv.string,
                 vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_CONF_SCAN_INTERVAL): cv.string,
                 vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
+                vol.Optional(CONF_UNIQUE_ID): cv.string,
             })
         ])
 })
@@ -117,8 +119,9 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:
             object_id = name
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
-        devices.append(BusproBinarySensor(hass, sensor, sensor_type, device_class, interval, object_id))
+        devices.append(BusproBinarySensor(hass, sensor, sensor_type, device_class, interval, object_id, unique_id))
 
     async_add_entites(devices)
 
@@ -127,11 +130,12 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproBinarySensor(BinarySensorEntity):
     """Representation of a Buspro switch."""
 
-    def __init__(self, hass, device, sensor_type, device_class, scan_interval, object_id):
+    def __init__(self, hass, device, sensor_type, device_class, scan_interval, object_id, unique_id=None):
         self._hass = hass
         self._device = device
         self._device_class = device_class
         self._sensor_type = sensor_type
+        self._configured_unique_id = unique_id
         
         self._should_poll = False
         if scan_interval > 0:
@@ -178,7 +182,7 @@ class BusproBinarySensor(BinarySensorEntity):
     @property
     def unique_id(self):
         """Return the unique id."""
-        return self._device.device_identifier
+        return self._configured_unique_id or self._device.device_identifier
 
     @property
     def is_on(self):

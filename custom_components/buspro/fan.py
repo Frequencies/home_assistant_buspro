@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components.fan import FanEntity, FanEntityFeature, PLATFORM_SCHEMA
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers.entity import generate_entity_id
 
 from ..buspro import DATA_BUSPRO
 
@@ -23,13 +24,18 @@ DEFAULT_DEVICE_RUNNING_TIME = 0
 DEFAULT_PLATFORM_RUNNING_TIME = 0
 DEFAULT_DIMMABLE = True
 DEFAULT_ACK_RETRY = True
+DEFAULT_OBJECT_ID = ""
 CONF_ACK_RETRY = "ack_retry_enabled"
+CONF_OBJECT_ID = "object_id"
+CONF_UNIQUE_ID = "unique_id"
 
 DEVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("running_time", default=DEFAULT_DEVICE_RUNNING_TIME): cv.positive_int,
         vol.Optional("dimmable", default=DEFAULT_DIMMABLE): cv.boolean,
         vol.Optional(CONF_ACK_RETRY, default=DEFAULT_ACK_RETRY): cv.boolean,
+        vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Required(CONF_NAME): cv.string,
     }
 )
@@ -80,7 +86,11 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
             name,
             ack_retry_enabled=ack_retry_enabled,
         )
-        devices.append(BusproFan(hass, fan_device, device_running_time, dimmable))
+        object_id = device_config[CONF_OBJECT_ID]
+        if object_id == DEFAULT_OBJECT_ID:
+            object_id = name
+        unique_id = device_config.get(CONF_UNIQUE_ID)
+        devices.append(BusproFan(hass, fan_device, device_running_time, dimmable, object_id, unique_id))
 
     async_add_entites(devices)
     if devices:
@@ -96,11 +106,12 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproFan(FanEntity):
     """Representation of a Buspro fan."""
 
-    def __init__(self, hass, device, running_time, dimmable):
+    def __init__(self, hass, device, running_time, dimmable, object_id, unique_id=None):
         self._hass = hass
         self._device = device
         self._running_time = running_time
         self._dimmable = dimmable
+        self._configured_unique_id = unique_id
         self._optimistic_percentage = None
         self._optimistic_timeout = 0.0
         self._device_update_cb = None
@@ -119,6 +130,7 @@ class BusproFan(FanEntity):
             )
 
         self.async_register_callbacks()
+        self.entity_id = generate_entity_id("fan.{}", object_id, None, hass)
 
         self._polling_interval = timedelta(minutes=60)
         stagger = hash(str(self._device._device_address)) % 300
@@ -224,4 +236,4 @@ class BusproFan(FanEntity):
 
     @property
     def unique_id(self):
-        return self._device.device_identifier
+        return self._configured_unique_id or self._device.device_identifier

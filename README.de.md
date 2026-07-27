@@ -50,6 +50,7 @@ light:
     + **ack_retry_enabled** _(boolean) (Optional)_: Geräte-spezifische Überschreibung für ACK-Retry.
     + **dimmbar** _(boolean) (Optional)_: Ist das Gerät dimmbar? Der Standardwert ist True.
     + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
+    + **unique_id** _(string) (Optional)_: Stabile eindeutige Kennung der Entität für die Home Assistant-Entitätsregistrierung.
 
 #### Plattform wechseln
 
@@ -68,6 +69,7 @@ switch:
   + **X.X.X** _(Erforderlich)_: Die Adresse des Geräts im Format „<Subnetz-ID>.<Geräte-ID>.<Kanalnummer>“.
     + **Name** _(string) (Erforderlich)_: Der Name des Geräts
     + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
+    + **unique_id** _(string) (Optional)_: Stabile eindeutige Kennung der Entität für die Home Assistant-Entitätsregistrierung.
 
 #### Sensorplattform
 
@@ -102,6 +104,7 @@ sensor:
      + Luftfeuchtigkeit
   + **unit_of_measurement** _(string) (Optional)_: Text, der als Maßeinheit angezeigt werden soll
   + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
+  + **unique_id** _(string) (Optional)_: Stabile eindeutige Kennung der Entität für die Home Assistant-Entitätsregistrierung.
   + **device_class** _(string) (Optional)_: HASS-Geräteklasse, z. B. „temperature“
 (https://www.home-assistant.io/components/sensor/)
   + **Gerät** _(string) (Optional)_: Der Typ des Sensorgeräts:
@@ -131,6 +134,7 @@ binary_sensor:
 'type' = 'universal_switch' Die universelle Switch-Nummer muss an die Adresse angehängt werden.
   + **Name** _(string) (Erforderlich)_: Der Name des Geräts
   + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
+  + **unique_id** _(string) (Optional)_: Stabile eindeutige Kennung der Entität für die Home Assistant-Entitätsregistrierung.
   + **Typ** _(string) (Erforderlich)_: Typ des zu überwachenden Sensors.
     + Verfügbare Sensoren:
       + Bewegung
@@ -165,6 +169,7 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        unique_id: "hdl_climate_floorheat_zone_1"
         min_temp: 22
         max_temp: 32
         precision: 1
@@ -177,6 +182,7 @@ climate:
   + **floor_heating_device_type** _(string) (Optional)_: „dlp“ oder „module“.
 Wenn es weggelassen wird, wird „Modul“ automatisch ausgewählt, wenn „Kanal“ bereitgestellt wird, andernfalls „dlp“.
   + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
+  + **unique_id** _(string) (Optional)_: Stabile eindeutige Kennung der Entität für die Home Assistant-Entitätsregistrierung.
   + **preset_modes** _(list) (Optional)_: Liste der unterstützten voreingestellten Modi. Die Auswahl des Voreinstellungsmodus ist deaktiviert, wenn sie nicht festgelegt ist. Mögliche Werte sind in der folgenden Tabelle aufgeführt. Entsprechende Modi müssen in HDL (Fußbodenheizung > Arbeitseinstellungen > Modus) aktiviert sein.
   + **channel** _(int) (Optional)_: Fußbodenheizungsmodulkanal (`1..6`) für `floor_heating_device_type: module`.
   + **min_temp** _(float) (Optional)_: Minimale Solltemperatur, die in der Home Assistant UI angezeigt wird.
@@ -209,6 +215,7 @@ cover:
   + **name** _(string) (Erforderlich)_: Anzeigename
   + **invert** _(bool) (Optional)_: Öffnen/Schließen-Richtung umkehren. Standardwert ist `false`.
   + **object_id** _(string) (Optional)_: Entity-`object_id`. Standardmäßig automatisch aus dem Namen generiert.
+  + **unique_id** _(string) (Optional)_: Stabile eindeutige Kennung der Entität für die Home Assistant-Entitätsregistrierung.
 
 Unterstützte Funktionen:
 - öffnen

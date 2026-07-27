@@ -50,6 +50,7 @@ light:
     + **ack_retry_enabled** _(boolean) (Facoltativo)_: Override per dispositivo per il retry ACK.
     + **dimmerabile** _(booleano) (facoltativo)_: il dispositivo è dimmerabile? L'impostazione predefinita è Vero.
     + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
+    + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
 
 #### Cambia piattaforma
 
@@ -68,6 +69,7 @@ switch:
   + **X.X.X** _(Obbligatorio)_: l'indirizzo del dispositivo nel formato "<ID subnet>.<ID dispositivo>.<numero canale>"
     + **name** _(string) (Obbligatorio)_: il nome del dispositivo
     + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
+    + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
 
 #### Piattaforma di sensori
 
@@ -102,6 +104,7 @@ sensor:
      + umidità
   + **unità_di_misura** _(stringa) (Facoltativo)_: testo da visualizzare come unità di misura
   + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
+  + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
   + **classe_dispositivo** _(stringa) (facoltativo)_: classe del dispositivo HASS, ad esempio "temperatura"
 (https://www.home-assistant.io/components/sensor/)
   + **dispositivo** _(stringa) (facoltativo)_: il tipo di dispositivo sensore:
@@ -131,6 +134,7 @@ binary_sensor:
 'type' = 'universal_switch' il numero dello switch universale deve essere aggiunto all'indirizzo.
   + **name** _(string) (Obbligatorio)_: il nome del dispositivo
   + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
+  + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
   + **type** _(string) (Obbligatorio)_: Tipo di sensore da monitorare.
     + Sensori disponibili:
       + movimento
@@ -165,6 +169,7 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        unique_id: "hdl_climate_floorheat_zone_1"
         min_temp: 22
         max_temp: 32
         precision: 1
@@ -177,6 +182,7 @@ climate:
   + **tipo_dispositivo_riscaldamento_a_pavimento** _(stringa) (facoltativo)_: `dlp` o `modulo`.
 Se omesso, `module` viene selezionato automaticamente quando viene fornito `channel`, altrimenti `dlp`.
   + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
+  + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
   + **preset_modes** _(list) (Facoltativo)_: elenco delle modalità preimpostate supportate. La selezione della modalità preimpostata è disabilitata se non impostata. I valori possibili sono mostrati nella tabella seguente. Le modalità corrispondenti devono essere abilitate in HDL (Riscaldamento a pavimento > Impostazioni di lavoro > Modalità).
   + **canale** _(int) (facoltativo)_: canale del modulo di riscaldamento a pavimento (`1..6`) per `tipo_dispositivo_di_riscaldamento_a_pavimento: modulo`.
   + **min_temp** _(float) (Facoltativo)_: Temperatura target minima mostrata nell’interfaccia di Home Assistant.
@@ -209,6 +215,7 @@ cover:
   + **name** _(string) (Obbligatorio)_: Nome visualizzato
   + **invert** _(bool) (Opzionale)_: Inverte la direzione apertura/chiusura. Valore predefinito `false`.
   + **object_id** _(string) (Opzionale)_: `object_id` dell'entità. Predefinito auto-generato dal nome.
+  + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
 
 Funzionalità supportate:
 - open
