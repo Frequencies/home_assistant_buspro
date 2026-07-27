@@ -106,6 +106,7 @@ sensor:
   + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
   + **unique_id** _(string) (Optioneel)_: Stabiele unieke entity-id voor het Home Assistant entiteitenregister.
   + **device_class** _(string) (Optioneel)_: HASS-apparaatklasse, bijvoorbeeld 'temperatuur'
+  + **scan_interval** _(int) (Optioneel)_: Pollinginterval in seconden. Als dit ontbreekt of `0` is, verlopen updates alleen via Buspro-berichten.
 (https://www.home-assistant.io/components/sensor/)
   + **apparaat** _(string) (Optioneel)_: Het type sensorapparaat:
     + dlp
@@ -142,7 +143,12 @@ binary_sensor:
       + droog_contact_2
       + universele_schakelaar
       + enkel_kanaal
+      + dry_contact
+    + Opmerkingen over adresformaat:
+      + `motion`, `dry_contact_1`, `dry_contact_2`: `<subnet ID>.<device ID>`
+      + `universal_switch`, `single_channel`, `dry_contact`: `<subnet ID>.<device ID>.<number>`
   + **device_class** _(string) (Optioneel)_: HASS-apparaatklasse, bijvoorbeeld 'motion'
+  + **scan_interval** _(int) (Optioneel)_: Pollinginterval in seconden. Als dit ontbreekt of `0` is, verlopen updates alleen via Buspro-berichten.
 (https://www.home-assistant.io/components/binary_sensor/)
 
 #### Klimaatplatform
@@ -181,6 +187,7 @@ climate:
   + **type** _(string) (Optioneel)_: `ac` of `floor_heat`. Standaard is `vloerverwarming`.
   + **floor_heating_device_type** _(string) (Optioneel)_: `dlp` of `module`.
 Indien dit wordt weggelaten, wordt `module` automatisch geselecteerd wanneer `channel` wordt opgegeven, anders `dlp`.
+  + **relay_address** _(string) (Optioneel)_: Relaikanaaladres in formaat `<subnet ID>.<device ID>.<channel>`. Wordt gebruikt als externe relaisstatus-terugkoppeling voor HVAC-actie.
   + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
   + **unique_id** _(string) (Optioneel)_: Stabiele unieke entity-id voor het Home Assistant entiteitenregister.
   + **preset_modes** _(list) (Optioneel)_: Lijst met ondersteunde vooraf ingestelde modi. De selectie van de vooraf ingestelde modus is uitgeschakeld als deze niet is ingesteld. Mogelijke waarden worden weergegeven in onderstaande tabel. De overeenkomstige modi moeten zijn ingeschakeld in HDL (Vloerverwarming > Werkinstellingen > Modus).
@@ -224,6 +231,52 @@ Ondersteunde functies:
 - open_tilt
 - close_tilt
 - stop_tilt
+
+---
+## Migratieopmerkingen
+
+Als je upgrade vanaf een oudere versie van deze integratie, controleer dan het volgende:
+
+- **Climate breaking changes v1.7.1 -> v2.0.0**
+  - Het climate-model is opgesplitst:
+    - `type: ac` maakt nu AC-climategedrag aan.
+    - `type: floor_heating` maakt nu vloerverwarmingsgedrag aan.
+    - Als `type` ontbreekt, is de standaard `floor_heating`.
+  - Nieuwe typering voor vloerverwarming:
+    - `floor_heating_device_type: dlp | module` is toegevoegd.
+    - Als `channel` is ingesteld en `floor_heating_device_type` ontbreekt, wordt het type automatisch `module`.
+    - Voor `floor_heating_device_type: module` is `channel` (`1..6`) verplicht, anders wordt de entiteit niet aangemaakt.
+  - HVAC-modusgedrag is gewijzigd:
+    - AC-entiteiten bieden `COOL/OFF`.
+    - Vloerverwarmingsentiteiten bieden `HEAT/OFF` (`COOL` is extra beschikbaar voor `module`).
+  - Vereiste actie:
+    - Stel `type` expliciet in per climate-entiteit.
+    - Voeg `floor_heating_device_type` en `channel` toe voor vloerverwarmingsmodules.
+    - Controleer automatiseringen/scripts die uitgaan van oude climate-modussemantiek.
+
+---
+
+#### Ventilatorplatform
+
+Om je Buspro-ventilator te gebruiken, voeg dit toe aan `configuration.yaml`:
+
+```yaml
+fan:
+  - platform: buspro
+    running_time: 3
+    ack_retry_enabled: true
+    devices:
+      1.89.3:
+        name: Slaapkamer Ventilator
+        dimmable: true
+      1.89.4:
+        name: Badkamer Ventilator
+        dimmable: false
+```
++ **running_time** _(int) (Optioneel)_: Standaard looptijd in seconden.
++ **ack_retry_enabled** _(boolean) (Optioneel)_: Eenmalige retry zonder ACK na 0,8s.
++ **devices** _(Verplicht)_: Lijst apparaten in formaat `<subnet>.<device>.<channel>`.
+
 
 ---
 ## Diensten

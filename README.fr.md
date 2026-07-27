@@ -106,6 +106,7 @@ sensor:
   + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
   + **unique_id** _(string) (Facultatif)_ : Identifiant unique stable de l’entité pour le registre des entités Home Assistant.
   + **device_class** _(string) (Facultatif)_ : classe d'appareil HASS, par exemple "température"
+  + **scan_interval** _(int) (Optionnel)_: Intervalle de polling en secondes. Si omis ou `0`, les mises a jour reposent uniquement sur les messages Buspro.
 (https://www.home-assistant.io/components/sensor/)
   + **device** _(string) (Facultatif)_ : Le type de capteur :
     + dlp
@@ -142,7 +143,12 @@ binary_sensor:
       + sec_contact_2
       + commutateur_universel
       + canal_single
+      + dry_contact
+    + Notes sur le format d'adresse :
+      + `motion`, `dry_contact_1`, `dry_contact_2`: `<subnet ID>.<device ID>`
+      + `universal_switch`, `single_channel`, `dry_contact`: `<subnet ID>.<device ID>.<number>`
   + **device_class** _(string) (Facultatif)_ : classe de périphérique HASS, par exemple "motion"
+  + **scan_interval** _(int) (Optionnel)_: Intervalle de polling en secondes. Si omis ou `0`, les mises a jour reposent uniquement sur les messages Buspro.
 (https://www.home-assistant.io/components/binary_sensor/)
 
 #### Plateforme climatique
@@ -181,6 +187,7 @@ climate:
   + **tapez** _(string) (Facultatif)_ : `ac` ou `floor_heating`. La valeur par défaut est « floor_heating ».
   + **floor_heating_device_type** _(string) (Facultatif)_ : `dlp` ou `module`.
 S'il est omis, « module » est automatiquement sélectionné lorsque « canal » est fourni, sinon « dlp ».
+  + **relay_address** _(string) (Optionnel)_: Adresse du canal relais au format `<subnet ID>.<device ID>.<channel>`. Utilisee comme retour d'etat relais externe pour l'action HVAC.
   + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
   + **unique_id** _(string) (Facultatif)_ : Identifiant unique stable de l’entité pour le registre des entités Home Assistant.
   + **preset_modes** _(list) (Facultatif)_ : Liste des modes prédéfinis pris en charge. La sélection du mode prédéfini est désactivée si elle n’est pas définie. Les valeurs possibles sont indiquées dans le tableau ci-dessous. Les modes correspondants doivent être activés dans HDL (Chauffage au sol > Paramètres de travail > Mode).
@@ -224,6 +231,52 @@ Fonctionnalités prises en charge :
 - open_tilt
 - close_tilt
 - stop_tilt
+
+---
+## Notes De Migration
+
+Si vous mettez à jour depuis une version plus ancienne de cette intégration, vérifiez les points suivants:
+
+- **Changements incompatibles climate v1.7.1 -> v2.0.0**
+  - Le modèle climate a été scindé:
+    - `type: ac` crée désormais un comportement climate AC.
+    - `type: floor_heating` crée désormais un comportement de chauffage au sol.
+    - Si `type` est omis, la valeur par défaut est `floor_heating`.
+  - Nouvelle typologie chauffage au sol:
+    - `floor_heating_device_type: dlp | module` a été introduit.
+    - Si `channel` est renseigné et que `floor_heating_device_type` est omis, le type devient automatiquement `module`.
+    - Pour `floor_heating_device_type: module`, `channel` (`1..6`) est obligatoire, sinon l'entité n'est pas créée.
+  - Le comportement des modes HVAC a changé:
+    - Les entités AC exposent `COOL/OFF`.
+    - Les entités chauffage au sol exposent `HEAT/OFF` (`COOL` est également disponible pour `module`).
+  - Action requise:
+    - Définir explicitement `type` pour chaque entité climate.
+    - Ajouter `floor_heating_device_type` et `channel` pour les modules de chauffage au sol.
+    - Vérifier les automatisations/scripts qui supposent l'ancienne sémantique des modes climate.
+
+---
+
+#### Plateforme Ventilateur
+
+Pour utiliser votre ventilateur Buspro, ajoutez ceci dans `configuration.yaml`:
+
+```yaml
+fan:
+  - platform: buspro
+    running_time: 3
+    ack_retry_enabled: true
+    devices:
+      1.89.3:
+        name: Ventilateur Chambre
+        dimmable: true
+      1.89.4:
+        name: Ventilateur Salle de bain
+        dimmable: false
+```
++ **running_time** _(int) (Optionnel)_: Temps d'execution par defaut en secondes.
++ **ack_retry_enabled** _(boolean) (Optionnel)_: Retry unique sans ACK apres 0,8s.
++ **devices** _(Obligatoire)_: Liste d'appareils au format `<subnet>.<device>.<channel>`.
+
 
 ---
 ## Services

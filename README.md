@@ -93,6 +93,7 @@ sensor:
         name: Hall
         type: humidity
         unit_of_measurement: "%"
+        scan_interval: 30
 ```
 + **devices** _(Required)_: A list of devices to set up
   + **address** _(string) (Required)_: The address of the sensor device on the format `<subnet ID>.<device ID>`
@@ -105,7 +106,8 @@ sensor:
   + **unit_of_measurement** _(string) (Optional)_: text to be displayed as unit of measurement
   + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
   + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
-  + **device_class** _(string) (Optional)_: HASS device class e.g., "temperature" 
+  + **device_class** _(string) (Optional)_: Valid HASS sensor device class (e.g., "temperature"). If omitted, a default is selected from sensor type.
+  + **scan_interval** _(int) (Optional)_: Polling interval in seconds. If omitted or `0`, updates rely on Buspro messages.
   (https://www.home-assistant.io/components/sensor/)
   + **device** _(string) (Optional)_: The type of sensor device:
     + dlp 
@@ -128,6 +130,7 @@ binary_sensor:
       - address: "1.75.3"
         name: Kitchen switch
         type: single_channel
+        scan_interval: 15
 ```
 + **devices** _(Required)_: A list of devices to set up
   + **address** _(string) (Required)_: The address of the sensor device on the format `<subnet ID>.<device ID>`. If 
@@ -142,7 +145,12 @@ binary_sensor:
       + dry_contact_2
       + universal_switch
       + single_channel
-  + **device_class** _(string) (Optional)_: HASS device class e.g., "motion" 
+      + dry_contact
+    + Address format notes:
+      + `motion`, `dry_contact_1`, `dry_contact_2`: `<subnet ID>.<device ID>`
+      + `universal_switch`, `single_channel`, `dry_contact`: `<subnet ID>.<device ID>.<number>`
+  + **device_class** _(string) (Optional)_: Valid HASS binary sensor device class (e.g., "motion"). If omitted, no device class is forced.
+  + **scan_interval** _(int) (Optional)_: Polling interval in seconds. If omitted or `0`, updates rely on Buspro messages.
   (https://www.home-assistant.io/components/binary_sensor/)
 
 #### Climate platform
@@ -181,6 +189,7 @@ climate:
   + **type** _(string) (Optional)_: `ac` or `floor_heating`. Default is `floor_heating`.
   + **floor_heating_device_type** _(string) (Optional)_: `dlp` or `module`.
     If omitted, `module` is auto-selected when `channel` is provided, otherwise `dlp`.
+  + **relay_address** _(string) (Optional)_: Relay channel address in format `<subnet ID>.<device ID>.<channel>`. Used as external relay-state feedback for HVAC action.
   + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
   + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
   + **preset_modes** _(list) (Optional)_: List of supported preset modes. Preset mode selection is disabled if not set. Possible values are shown in table below. Corresponding modes must be enabled in HDL (Floor Heating > Working Settings > Mode).
@@ -224,6 +233,65 @@ Supported features:
 - open_tilt
 - close_tilt
 - stop_tilt
+
+#### Fan platform
+
+To use your Buspro fan in your installation, add the following to your configuration.yaml file:
+
+```yaml
+fan:
+  - platform: buspro
+    running_time: 3
+    ack_retry_enabled: true
+    devices:
+      1.89.3:
+        name: Bedroom Fan
+        dimmable: true
+      1.89.4:
+        name: Bathroom Fan
+        dimmable: false
+```
++ **running_time** _(int) (Optional)_: Default running time in seconds for all devices. Running time is `0` if not set.
++ **ack_retry_enabled** _(boolean) (Optional)_: Enables one-time command retry when no ACK is received within 0.8s. Default is `True`.
++ **devices** _(Required)_: A list of devices to set up
+  + **X.X.X** _(Required)_: The address of the device on format `<subnet ID>.<device ID>.<channel number>`
+    + **name** _(string) (Required)_: The name of the device
+    + **running_time** _(int) (Optional)_: Per-device running time in seconds. If omitted, platform default is used.
+    + **ack_retry_enabled** _(boolean) (Optional)_: Per-device override for ACK retry.
+    + **dimmable** _(boolean) (Optional)_: Whether fan speed is controllable (percentage mode). Default is `True`.
+    + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name.
+    + **unique_id** _(string) (Optional)_: Stable entity unique_id for Home Assistant entity registry.
+
+---
+## Migration notes
+
+If you are upgrading from an earlier version of this integration, check the following:
+
+- **v1.7.1 -> v2.0.0 climate breaking changes**
+  - Climate model was split:
+    - `type: ac` now creates AC climate behavior.
+    - `type: floor_heating` now creates floor-heating behavior.
+    - If `type` is omitted, default is `floor_heating`.
+  - New floor-heating device typing:
+    - `floor_heating_device_type: dlp | module` was introduced.
+    - If `channel` is provided and `floor_heating_device_type` is omitted, device type auto-switches to `module`.
+    - For `floor_heating_device_type: module`, `channel` is required (`1..6`), otherwise entity setup is skipped.
+  - HVAC mode behavior changed:
+    - AC entities expose `COOL/OFF`.
+    - Floor-heating entities expose `HEAT/OFF` (`COOL` is additionally available for module type).
+  - Action required:
+    - Explicitly set `type` for each climate entity during migration.
+    - Add `floor_heating_device_type` and `channel` for floor-heating module devices.
+    - Re-check automations/scripts that assumed old climate mode semantics.
+
+- Entity domain correction:
+  - Switch entities now use `switch.*` IDs (previously some were created as `light.*`).
+  - Sensor entities now use `sensor.*` IDs (previously some were created as `light.*`).
+  - Binary sensor entities now use `binary_sensor.*` IDs (previously some were created as `light.*`).
+- Update dashboards, automations, scripts, and helpers that referenced old entity IDs.
+- `sensor` and `binary_sensor` now validate:
+  - `scan_interval` as positive integer seconds (`0` keeps message-driven updates).
+  - `device_class` as a valid Home Assistant class (invalid values are ignored for binary sensors).
 
 ---
 ## Services

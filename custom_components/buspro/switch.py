@@ -70,8 +70,9 @@ class BusproSwitch(SwitchEntity):
         self._hass = hass
         self._device = device
         self._configured_unique_id = unique_id
+        self._device_update_cb = None
         self.async_register_callbacks()
-        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
+        self.entity_id = generate_entity_id("switch.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):
@@ -82,7 +83,17 @@ class BusproSwitch(SwitchEntity):
             """Call after device was updated."""
             self.async_write_ha_state()
 
+        self._device_update_cb = after_update_callback
         self._device.register_device_updated_cb(after_update_callback)
+
+    async def async_will_remove_from_hass(self):
+        if self._device_update_cb is not None:
+            try:
+                self._device.unregister_device_updated_cb(self._device_update_cb)
+            except ValueError:
+                pass
+            self._device_update_cb = None
+        await super().async_will_remove_from_hass()
 
     @property
     def should_poll(self):

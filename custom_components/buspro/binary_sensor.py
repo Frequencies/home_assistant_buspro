@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, 
     BinarySensorEntity,
+    BinarySensorDeviceClass,
 )
 from homeassistant.const import (
     CONF_NAME, 
@@ -29,7 +30,7 @@ from ..buspro import DATA_BUSPRO
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_CONF_DEVICE_CLASS = "None"
+DEFAULT_CONF_DEVICE_CLASS = None
 DEFAULT_CONF_SCAN_INTERVAL = 0
 DEFAULT_OBJECT_ID = ""
 
@@ -58,8 +59,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 vol.Required(CONF_ADDRESS): cv.string,
                 vol.Required(CONF_NAME): cv.string,
                 vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
-                vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_CONF_DEVICE_CLASS): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_CONF_SCAN_INTERVAL): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_CONF_DEVICE_CLASS): vol.Any(None, cv.string),
+                vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_CONF_SCAN_INTERVAL): cv.positive_int,
                 vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
                 vol.Optional(CONF_UNIQUE_ID): cv.string,
             })
@@ -90,9 +91,7 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         if scan_interval is not None:
             interval = int(scan_interval)
             
-        if interval > 0:
-            SCAN_INTERVAL = timedelta(seconds=interval)
-            
+
         address2 = address.split('.')
         device_address = (int(address2[0]), int(address2[1]))
 
@@ -133,16 +132,17 @@ class BusproBinarySensor(BinarySensorEntity):
     def __init__(self, hass, device, sensor_type, device_class, scan_interval, object_id, unique_id=None):
         self._hass = hass
         self._device = device
-        self._device_class = device_class
         self._sensor_type = sensor_type
         self._configured_unique_id = unique_id
+        self._device_update_cb = None
+        self._attr_device_class = self._resolve_device_class(device_class)
         
         self._should_poll = False
         if scan_interval > 0:
             self._should_poll = True
 
         self.async_register_callbacks()
-        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
+        self.entity_id = generate_entity_id("binary_sensor.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):
@@ -153,7 +153,27 @@ class BusproBinarySensor(BinarySensorEntity):
             """Call after device was updated."""
             self.async_write_ha_state()
 
+        self._device_update_cb = after_update_callback
         self._device.register_device_updated_cb(after_update_callback)
+
+    async def async_will_remove_from_hass(self):
+        if self._device_update_cb is not None:
+            try:
+                self._device.unregister_device_updated_cb(self._device_update_cb)
+            except ValueError:
+                pass
+            self._device_update_cb = None
+        await super().async_will_remove_from_hass()
+
+    @staticmethod
+    def _resolve_device_class(device_class):
+        if not device_class:
+            return None
+        try:
+            return BinarySensorDeviceClass(device_class)
+        except ValueError:
+            # Keep unknown values out of HA device_class enum.
+            return None
 
     @property
     def should_poll(self):
@@ -161,8 +181,8 @@ class BusproBinarySensor(BinarySensorEntity):
         return self._should_poll
 
     async def async_update(self):
-        if self._sensor_type == CONF_UNIVERSAL_SWITCH:
-            await self._device.read_sensor_status()
+        # Polling (when enabled by scan_interval) must refresh all binary sensor types.
+        await self._device.read_sensor_status()
 
     @property
     def name(self):
@@ -177,7 +197,7 @@ class BusproBinarySensor(BinarySensorEntity):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return self._device_class
+        return self._attr_device_class
 
     @property
     def unique_id(self):
@@ -201,3 +221,4 @@ class BusproBinarySensor(BinarySensorEntity):
             return self._device.single_channel_is_on
         if self._sensor_type == CONF_DRY_CONTACT:
             return self._device.switch_status
+        return None

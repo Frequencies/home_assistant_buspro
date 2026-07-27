@@ -106,6 +106,7 @@ sensor:
   + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
   + **unique_id** _(string) (Optional)_: Stabile eindeutige Kennung der Entität für die Home Assistant-Entitätsregistrierung.
   + **device_class** _(string) (Optional)_: HASS-Geräteklasse, z. B. „temperature“
+  + **scan_interval** _(int) (Optional)_: Abfrageintervall in Sekunden. Wenn weggelassen oder `0`, erfolgen Updates nur über Buspro-Meldungen.
 (https://www.home-assistant.io/components/sensor/)
   + **Gerät** _(string) (Optional)_: Der Typ des Sensorgeräts:
     + dlp
@@ -142,7 +143,12 @@ binary_sensor:
       + dry_contact_2
       + universal_switch
       + single_channel
+      + dry_contact
+    + Hinweise zum Adressformat:
+      + `motion`, `dry_contact_1`, `dry_contact_2`: `<subnet ID>.<device ID>`
+      + `universal_switch`, `single_channel`, `dry_contact`: `<subnet ID>.<device ID>.<number>`
   + **device_class** _(string) (Optional)_: HASS-Geräteklasse, z. B. „motion“
+  + **scan_interval** _(int) (Optional)_: Abfrageintervall in Sekunden. Wenn weggelassen oder `0`, erfolgen Updates nur über Buspro-Meldungen.
 (https://www.home-assistant.io/components/binary_sensor/)
 
 #### Klimaplattform
@@ -181,6 +187,7 @@ climate:
   + **Typ** _(string) (Optional)_: „ac“ oder „floor_heating“. Der Standardwert ist „floor_heating“.
   + **floor_heating_device_type** _(string) (Optional)_: „dlp“ oder „module“.
 Wenn es weggelassen wird, wird „Modul“ automatisch ausgewählt, wenn „Kanal“ bereitgestellt wird, andernfalls „dlp“.
+  + **relay_address** _(string) (Optional)_: Relaiskanal-Adresse im Format `<Subnetz-ID>.<Geräte-ID>.<Kanal>`. Wird als externes Relais-Statusfeedback für die HVAC-Aktion verwendet.
   + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
   + **unique_id** _(string) (Optional)_: Stabile eindeutige Kennung der Entität für die Home Assistant-Entitätsregistrierung.
   + **preset_modes** _(list) (Optional)_: Liste der unterstützten voreingestellten Modi. Die Auswahl des Voreinstellungsmodus ist deaktiviert, wenn sie nicht festgelegt ist. Mögliche Werte sind in der folgenden Tabelle aufgeführt. Entsprechende Modi müssen in HDL (Fußbodenheizung > Arbeitseinstellungen > Modus) aktiviert sein.
@@ -224,6 +231,52 @@ Unterstützte Funktionen:
 - öffnen_tilt
 - schließen_tilt
 - stopp_tilt
+
+---
+## Migrationshinweise
+
+Wenn du von einer älteren Version dieser Integration aktualisierst, beachte bitte Folgendes:
+
+- **Klima-Breaking-Changes v1.7.1 -> v2.0.0**
+  - Das Klimamodell wurde aufgeteilt:
+    - `type: ac` erzeugt jetzt AC-Klima-Verhalten.
+    - `type: floor_heating` erzeugt jetzt Fußbodenheizungs-Verhalten.
+    - Wenn `type` fehlt, ist der Standard `floor_heating`.
+  - Neue Typisierung für Fußbodenheizung:
+    - `floor_heating_device_type: dlp | module` wurde eingeführt.
+    - Wenn `channel` gesetzt ist und `floor_heating_device_type` fehlt, wird der Typ automatisch zu `module`.
+    - Bei `floor_heating_device_type: module` ist `channel` (`1..6`) erforderlich, sonst wird die Entität nicht erstellt.
+  - HVAC-Modus-Verhalten wurde geändert:
+    - AC-Entitäten bieten `COOL/OFF`.
+    - Fußbodenheizungs-Entitäten bieten `HEAT/OFF` (`COOL` zusätzlich für `module`).
+  - Erforderliche Aktion:
+    - `type` für jede Klima-Entität explizit setzen.
+    - Für Fußbodenheizungs-Module `floor_heating_device_type` und `channel` ergänzen.
+    - Automationen/Skripte prüfen, die von alter Klima-Modus-Semantik ausgehen.
+
+---
+
+#### Lüfterplattform
+
+Um Ihren Buspro-Lüfter zu verwenden, fügen Sie Folgendes in `configuration.yaml` ein:
+
+```yaml
+fan:
+  - platform: buspro
+    running_time: 3
+    ack_retry_enabled: true
+    devices:
+      1.89.3:
+        name: Schlafzimmer Lüfter
+        dimmable: true
+      1.89.4:
+        name: Bad Lüfter
+        dimmable: false
+```
++ **running_time** _(int) (Optional)_: Standardlaufzeit in Sekunden.
++ **ack_retry_enabled** _(boolean) (Optional)_: Einmaliger Retry ohne ACK nach 0,8s.
++ **devices** _(Erforderlich)_: Liste der Geräte im Format `<subnet>.<device>.<channel>`.
+
 
 ---
 ## Dienstleistungen

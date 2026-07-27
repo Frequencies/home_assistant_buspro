@@ -105,6 +105,7 @@ sensor:
   + **unità_di_misura** _(stringa) (Facoltativo)_: testo da visualizzare come unità di misura
   + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
   + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
+  + **scan_interval** _(int) (Opzionale)_: Intervallo di polling in secondi. Se omesso o `0`, gli aggiornamenti dipendono solo dai messaggi Buspro.
   + **classe_dispositivo** _(stringa) (facoltativo)_: classe del dispositivo HASS, ad esempio "temperatura"
 (https://www.home-assistant.io/components/sensor/)
   + **dispositivo** _(stringa) (facoltativo)_: il tipo di dispositivo sensore:
@@ -142,9 +143,13 @@ binary_sensor:
       + contatto_secco_2
       + interruttore_universale
       + canale_singolo
+      + dry_contact
+    + Note sul formato indirizzo:
+      + `motion`, `dry_contact_1`, `dry_contact_2`: `<subnet ID>.<device ID>`
+      + `universal_switch`, `single_channel`, `dry_contact`: `<subnet ID>.<device ID>.<number>`
   + **classe_dispositivo** _(stringa) (facoltativo)_: classe del dispositivo HASS, ad esempio "movimento"
+  + **scan_interval** _(int) (Opzionale)_: Intervallo di polling in secondi. Se omesso o `0`, gli aggiornamenti dipendono solo dai messaggi Buspro.
 (https://www.home-assistant.io/components/binary_sensor/)
-
 #### Piattaforma climatica
 
 Per utilizzare il controllo climatico del pannello Buspro nella tua installazione, aggiungi quanto segue al file Configuration.yaml:
@@ -181,6 +186,7 @@ climate:
   + **tipo** _(stringa) (facoltativo)_: `ac` o `floor_heating`. L'impostazione predefinita è "riscaldamento_pavimento".
   + **tipo_dispositivo_riscaldamento_a_pavimento** _(stringa) (facoltativo)_: `dlp` o `modulo`.
 Se omesso, `module` viene selezionato automaticamente quando viene fornito `channel`, altrimenti `dlp`.
+  + **relay_address** _(string) (Opzionale)_: Indirizzo del canale rele nel formato `<subnet ID>.<device ID>.<channel>`. Usato come feedback esterno dello stato rele per l'azione HVAC.
   + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
   + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
   + **preset_modes** _(list) (Facoltativo)_: elenco delle modalità preimpostate supportate. La selezione della modalità preimpostata è disabilitata se non impostata. I valori possibili sono mostrati nella tabella seguente. Le modalità corrispondenti devono essere abilitate in HDL (Riscaldamento a pavimento > Impostazioni di lavoro > Modalità).
@@ -224,6 +230,52 @@ Funzionalità supportate:
 - open_tilt
 - close_tilt
 - stop_tilt
+
+---
+## Note Di Migrazione
+
+Se stai aggiornando da una versione precedente di questa integrazione, controlla quanto segue:
+
+- **Breaking change climate v1.7.1 -> v2.0.0**
+  - Il modello climate è stato suddiviso:
+    - `type: ac` ora crea il comportamento climate AC.
+    - `type: floor_heating` ora crea il comportamento del riscaldamento a pavimento.
+    - Se `type` è omesso, il valore predefinito è `floor_heating`.
+  - Nuova tipizzazione per il riscaldamento a pavimento:
+    - È stato introdotto `floor_heating_device_type: dlp | module`.
+    - Se `channel` è impostato e `floor_heating_device_type` è omesso, il tipo passa automaticamente a `module`.
+    - Per `floor_heating_device_type: module`, `channel` (`1..6`) è obbligatorio, altrimenti l'entità non viene creata.
+  - È cambiato il comportamento delle modalità HVAC:
+    - Le entità AC espongono `COOL/OFF`.
+    - Le entità di riscaldamento a pavimento espongono `HEAT/OFF` (`COOL` disponibile anche per `module`).
+  - Azione richiesta:
+    - Imposta esplicitamente `type` per ogni entità climate.
+    - Aggiungi `floor_heating_device_type` e `channel` per i moduli di riscaldamento a pavimento.
+    - Verifica automazioni/script che assumono la vecchia semantica delle modalità climate.
+
+---
+
+#### Piattaforma Ventilatore
+
+Per usare il ventilatore Buspro, aggiungi quanto segue in `configuration.yaml`:
+
+```yaml
+fan:
+  - platform: buspro
+    running_time: 3
+    ack_retry_enabled: true
+    devices:
+      1.89.3:
+        name: Ventilatore Camera
+        dimmable: true
+      1.89.4:
+        name: Ventilatore Bagno
+        dimmable: false
+```
++ **running_time** _(int) (Opzionale)_: Tempo di esecuzione predefinito in secondi.
++ **ack_retry_enabled** _(boolean) (Opzionale)_: Un retry senza ACK dopo 0,8s.
++ **devices** _(Obbligatorio)_: Lista dispositivi nel formato `<subnet>.<device>.<channel>`.
+
 
 ---
 ## Servizi

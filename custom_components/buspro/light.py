@@ -190,8 +190,8 @@ class BusproLight(LightEntity):
             if time.time() <= self._optimistic_timeout:
                 return self._optimistic_brightness
             self._optimistic_brightness = None
-        brightness = self._device.current_brightness / 100 * 255
-        return brightness
+        brightness = int(round(self._device.current_brightness / 100 * 255))
+        return max(0, min(255, brightness))
 
     @property
     def is_on(self):

@@ -243,7 +243,7 @@ class _BusproClimateBase(ClimateEntity):
     async def async_update(self, *args):
         await self._device.read_status()
         if self._relay_sensor is not None:
-            await self._relay_sensor.read_status()
+            await self._relay_sensor.read_sensor_status()
 
     @property
     def name(self):

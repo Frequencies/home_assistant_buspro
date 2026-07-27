@@ -106,6 +106,7 @@ sensor:
   + **object_id** _(cadena) (Opcional)_: dispositivo object_id. El valor predeterminado se genera automáticamente a partir del nombre del dispositivo.
   + **unique_id** _(cadena) (Opcional)_: Identificador único estable de la entidad para el registro de entidades de Home Assistant.
   + **device_class** _(cadena) (Opcional)_: clase de dispositivo HASS, por ejemplo, "temperatura"
+  + **scan_interval** _(int) (Opcional)_: Intervalo de sondeo en segundos. Si se omite o es `0`, las actualizaciones dependen solo de mensajes Buspro.
 (https://www.home-assistant.io/components/sensor/)
   + **dispositivo** _(cadena) (Opcional)_: El tipo de dispositivo sensor:
     + dlp
@@ -142,7 +143,12 @@ Se debe agregar el número de interruptor universal 'type' = 'universal_switch' 
       + contacto_seco_2
       + interruptor_universal
       + canal único
+      + dry_contact
+    + Notas sobre formato de direccion:
+      + `motion`, `dry_contact_1`, `dry_contact_2`: `<subnet ID>.<device ID>`
+      + `universal_switch`, `single_channel`, `dry_contact`: `<subnet ID>.<device ID>.<number>`
   + **device_class** _(cadena) (Opcional)_: clase de dispositivo HASS, por ejemplo, "movimiento"
+  + **scan_interval** _(int) (Opcional)_: Intervalo de sondeo en segundos. Si se omite o es `0`, las actualizaciones dependen solo de mensajes Buspro.
 (https://www.home-assistant.io/components/binary_sensor/)
 
 #### Plataforma climática
@@ -181,6 +187,7 @@ climate:
   + **tipo** _(cadena) (Opcional)_: `ac` o `floor_heating`. El valor predeterminado es `floor_heating`.
   + **tipo_de_dispositivo_de_calefacción_de_piso** _(cadena) (Opcional)_: `dlp` o `módulo`.
 Si se omite, "módulo" se selecciona automáticamente cuando se proporciona "canal", en caso contrario, "dlp".
+  + **relay_address** _(string) (Opcional)_: Direccion del canal de rele en formato `<subnet ID>.<device ID>.<channel>`. Se usa como retroalimentacion externa del estado del rele para la accion HVAC.
   + **object_id** _(cadena) (Opcional)_: dispositivo object_id. El valor predeterminado se genera automáticamente a partir del nombre del dispositivo.
   + **unique_id** _(cadena) (Opcional)_: Identificador único estable de la entidad para el registro de entidades de Home Assistant.
   + **preset_modes** _(lista) (Opcional)_: Lista de modos preestablecidos admitidos. La selección del modo preestablecido está deshabilitada si no está configurada. Los valores posibles se muestran en la siguiente tabla. Los modos correspondientes deben estar habilitados en HDL (Calefacción por suelo radiante > Configuración de trabajo > Modo).
@@ -224,6 +231,52 @@ Funciones compatibles:
 - open_tilt
 - close_tilt
 - stop_tilt
+
+---
+## Notas De Migración
+
+Si actualizas desde una versión anterior de esta integración, revisa lo siguiente:
+
+- **Cambios incompatibles de climate v1.7.1 -> v2.0.0**
+  - El modelo de climate se dividió:
+    - `type: ac` ahora crea comportamiento de climate AC.
+    - `type: floor_heating` ahora crea comportamiento de suelo radiante.
+    - Si se omite `type`, el valor por defecto es `floor_heating`.
+  - Nuevo tipado de suelo radiante:
+    - Se introdujo `floor_heating_device_type: dlp | module`.
+    - Si se define `channel` y se omite `floor_heating_device_type`, el tipo cambia automáticamente a `module`.
+    - Para `floor_heating_device_type: module`, `channel` (`1..6`) es obligatorio; si falta, la entidad no se crea.
+  - Cambio en el comportamiento de modos HVAC:
+    - Las entidades AC exponen `COOL/OFF`.
+    - Las entidades de suelo radiante exponen `HEAT/OFF` (`COOL` también disponible para `module`).
+  - Acción requerida:
+    - Define `type` explícitamente para cada entidad climate.
+    - Agrega `floor_heating_device_type` y `channel` para módulos de suelo radiante.
+    - Revisa automatizaciones/scripts que asuman la semántica antigua de modos climate.
+
+---
+
+#### Plataforma De Ventilador
+
+Para usar su ventilador Buspro, agregue lo siguiente en `configuration.yaml`:
+
+```yaml
+fan:
+  - platform: buspro
+    running_time: 3
+    ack_retry_enabled: true
+    devices:
+      1.89.3:
+        name: Ventilador Dormitorio
+        dimmable: true
+      1.89.4:
+        name: Ventilador Bano
+        dimmable: false
+```
++ **running_time** _(int) (Opcional)_: Tiempo de ejecucion por defecto en segundos.
++ **ack_retry_enabled** _(boolean) (Opcional)_: Reintento unico sin ACK tras 0,8s.
++ **devices** _(Obligatorio)_: Lista de dispositivos con formato `<subnet>.<device>.<channel>`.
+
 
 ---
 ## Servicios
