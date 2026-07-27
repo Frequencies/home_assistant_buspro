@@ -22,6 +22,7 @@ from homeassistant.components.light import (
 from homeassistant.const import (CONF_NAME, CONF_DEVICES)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from ..buspro import DATA_BUSPRO
 
@@ -107,7 +108,7 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 
 
 # noinspection PyAbstractClass
-class BusproLight(LightEntity):
+class BusproLight(RestoreEntity, LightEntity):
     """Representation of a Buspro light."""
 
     def __init__(self, hass, device, running_time, dimmable, object_id, unique_id=None):
@@ -201,6 +202,21 @@ class BusproLight(LightEntity):
                 return self._optimistic_brightness > 0
             self._optimistic_brightness = None
         return self._device.is_on
+
+    async def async_added_to_hass(self):
+        """Restore last known brightness so turn_on after restart keeps previous level."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+
+        brightness_255 = last_state.attributes.get(ATTR_BRIGHTNESS)
+        if brightness_255 is None:
+            return
+
+        brightness_100 = max(1, min(100, int(brightness_255 / 255 * 100)))
+        self._device.restore_previous_brightness(brightness_100)
 
     async def async_turn_on(self, **kwargs):
         """Instruct the light to turn on."""

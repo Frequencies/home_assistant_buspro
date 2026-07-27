@@ -134,6 +134,9 @@ class Light(Device):
         if self.supports_brightness and brightness > 0:
             self._previous_brightness = brightness
 
+    def restore_previous_brightness(self, brightness):
+        self._set_previous_brightness(brightness)
+
     def _call_read_current_status_of_channels(self, run_from_init=False):
         async def read_current_status_of_channels():
             if run_from_init:

@@ -15,6 +15,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature, PLATFORM_S
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from ..buspro import DATA_BUSPRO
 
@@ -103,7 +104,7 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         await asyncio.gather(*(_refresh(device) for device in devices))
 
 
-class BusproFan(FanEntity):
+class BusproFan(RestoreEntity, FanEntity):
     """Representation of a Buspro fan."""
 
     def __init__(self, hass, device, running_time, dimmable, object_id, unique_id=None):
@@ -198,6 +199,21 @@ class BusproFan(FanEntity):
                 return self._optimistic_percentage > 0
             self._optimistic_percentage = None
         return self._device.is_on
+
+    async def async_added_to_hass(self):
+        """Restore last known percentage so turn_on after restart keeps previous level."""
+        await super().async_added_to_hass()
+
+        last_state = await self.async_get_last_state()
+        if not last_state:
+            return
+
+        percentage = last_state.attributes.get("percentage")
+        if percentage is None:
+            return
+
+        brightness_100 = max(1, min(100, int(percentage)))
+        self._device.restore_previous_brightness(brightness_100)
 
     async def async_set_percentage(self, percentage: int) -> None:
         if not self._dimmable:
