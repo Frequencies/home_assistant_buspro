@@ -61,6 +61,9 @@ CONF_OBJECT_ID = "object_id"
 CONF_CHANNEL = "channel"
 CONF_TYPE = "type"
 CONF_FH_DEVICE_TYPE = "floor_heating_device_type"
+CONF_MIN_TEMP = "min_temp"
+CONF_MAX_TEMP = "max_temp"
+CONF_PRECISION = "precision"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES): vol.All(
@@ -80,6 +83,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                     vol.Optional(CONF_RELAY_ADDRESS, default=""): cv.string,
                     vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
                     vol.Optional(CONF_CHANNEL): vol.All(vol.Coerce(int), vol.Range(min=1, max=6)),
+                    vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+                    vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
+                    vol.Optional(CONF_PRECISION): vol.In([1, 0.5, 0.1]),
                 }
             )
         ],
@@ -112,10 +118,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             relay_sensor = Sensor(hdl, relay_device_address, channel_number=relay_channel_number)
 
         object_id = device_config[CONF_OBJECT_ID] or name
+        min_temp = device_config.get(CONF_MIN_TEMP)
+        max_temp = device_config.get(CONF_MAX_TEMP)
+        precision = device_config.get(CONF_PRECISION)
 
         if climate_type == ClimateDeviceType.AC.value:
             device = Climate(hdl, device_address, name)
-            devices.append(BusproACClimate(hass, device, relay_sensor, object_id))
+            devices.append(BusproACClimate(hass, device, relay_sensor, object_id, min_temp, max_temp, precision))
             continue
 
         fh_type_raw = device_config.get(CONF_FH_DEVICE_TYPE)
@@ -129,7 +138,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             continue
 
         device = FloorHeating(hdl, device_address, name, channel_number=channel_number, device_type=fh_type)
-        devices.append(BusproFloorHeatingClimate(hass, device, preset_modes, relay_sensor, object_id))
+        devices.append(BusproFloorHeatingClimate(
+            hass, device, preset_modes, relay_sensor, object_id, min_temp, max_temp, precision
+        ))
 
     async_add_entities(devices)
     if devices:
@@ -143,7 +154,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class _BusproClimateBase(ClimateEntity):
-    def __init__(self, hass, device, relay_sensor, object_id):
+    def __init__(self, hass, device, relay_sensor, object_id, min_temp=None, max_temp=None, precision=None):
         self._hass = hass
         self._device = device
         self._relay_sensor = relay_sensor
@@ -152,6 +163,9 @@ class _BusproClimateBase(ClimateEntity):
         self._relay_sensor_update_cb = None
         self._unsub_start_poll = None
         self._unsub_poll_interval = None
+        self._configured_min_temp = min_temp
+        self._configured_max_temp = max_temp
+        self._configured_precision = precision
         self.async_register_callbacks()
         self.entity_id = generate_entity_id("climate.{}", object_id, None, hass)
 
@@ -231,7 +245,25 @@ class _BusproClimateBase(ClimateEntity):
 
     @property
     def target_temperature_step(self):
-        return 1
+        return self._configured_precision if self._configured_precision is not None else 1
+
+    @property
+    def min_temp(self):
+        if self._configured_min_temp is not None:
+            return self._configured_min_temp
+        return super().min_temp
+
+    @property
+    def max_temp(self):
+        if self._configured_max_temp is not None:
+            return self._configured_max_temp
+        return super().max_temp
+
+    @property
+    def precision(self):
+        if self._configured_precision is not None:
+            return self._configured_precision
+        return super().precision
 
     @property
     def unique_id(self):
@@ -239,8 +271,8 @@ class _BusproClimateBase(ClimateEntity):
 
 
 class BusproACClimate(_BusproClimateBase):
-    def __init__(self, hass, device, relay_sensor, object_id):
-        super().__init__(hass, device, relay_sensor, object_id)
+    def __init__(self, hass, device, relay_sensor, object_id, min_temp=None, max_temp=None, precision=None):
+        super().__init__(hass, device, relay_sensor, object_id, min_temp, max_temp, precision)
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.TURN_OFF
@@ -295,8 +327,8 @@ class BusproACClimate(_BusproClimateBase):
 
 
 class BusproFloorHeatingClimate(_BusproClimateBase):
-    def __init__(self, hass, device, preset_modes, relay_sensor, object_id):
-        super().__init__(hass, device, relay_sensor, object_id)
+    def __init__(self, hass, device, preset_modes, relay_sensor, object_id, min_temp=None, max_temp=None, precision=None):
+        super().__init__(hass, device, relay_sensor, object_id, min_temp, max_temp, precision)
         self._preset_modes = preset_modes
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE

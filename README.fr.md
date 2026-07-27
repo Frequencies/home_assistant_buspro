@@ -165,6 +165,9 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        min_temp: 22
+        max_temp: 32
+        precision: 1
         name: Floor Heating Zone 1
 ```
 + **appareils** _(obligatoire)_ : une liste d'appareils à configurer
@@ -176,6 +179,9 @@ S'il est omis, « module » est automatiquement sélectionné lorsque « canal �
   + **object_id** _(string) (Facultatif)_ : ID_objet de l'appareil. La valeur par défaut est générée automatiquement à partir du nom de l'appareil.
   + **preset_modes** _(list) (Facultatif)_ : Liste des modes prédéfinis pris en charge. La sélection du mode prédéfini est désactivée si elle n’est pas définie. Les valeurs possibles sont indiquées dans le tableau ci-dessous. Les modes correspondants doivent être activés dans HDL (Chauffage au sol > Paramètres de travail > Mode).
   + **canal** _(int) (Facultatif)_ : canal du module de chauffage par le sol (`1..6`) pour `floor_heating_device_type : module`.
+  + **min_temp** _(float) (Facultatif)_ : Température cible minimale affichée dans l’interface Home Assistant.
+  + **max_temp** _(float) (Facultatif)_ : Température cible maximale affichée dans l’interface Home Assistant.
+  + **precision** _(float) (Facultatif)_ : Pas de réglage de la température cible dans l’interface Home Assistant. Valeurs autorisées : `1`, `0.5`, `0.1`.
     
 | HA preset mode | HDL mode |
 |:--------------:|:--------:|

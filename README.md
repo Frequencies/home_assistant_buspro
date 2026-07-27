@@ -165,6 +165,9 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        min_temp: 22
+        max_temp: 32
+        precision: 1
         name: Floor Heating Zone 1
 ```
 + **devices** _(Required)_: A list of devices to set up
@@ -176,6 +179,9 @@ climate:
   + **object_id** _(string) (Optional)_: Device object_id. Default is auto-generated from device name. 
   + **preset_modes** _(list) (Optional)_: List of supported preset modes. Preset mode selection is disabled if not set. Possible values are shown in table below. Corresponding modes must be enabled in HDL (Floor Heating > Working Settings > Mode).
   + **channel** _(int) (Optional)_: Floor heating module channel (`1..6`) for `floor_heating_device_type: module`.
+  + **min_temp** _(float) (Optional)_: Minimum target temperature shown in Home Assistant UI.
+  + **max_temp** _(float) (Optional)_: Maximum target temperature shown in Home Assistant UI.
+  + **precision** _(float) (Optional)_: Target temperature step in Home Assistant UI. Allowed values: `1`, `0.5`, `0.1`.
     
 | HA preset mode | HDL mode |
 |:--------------:|:--------:|

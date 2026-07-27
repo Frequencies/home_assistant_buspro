@@ -165,6 +165,9 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        min_temp: 22
+        max_temp: 32
+        precision: 1
         name: Floor Heating Zone 1
 ```
 + **Geräte** _(Erforderlich)_: Eine Liste der einzurichtenden Geräte
@@ -176,6 +179,9 @@ Wenn es weggelassen wird, wird „Modul“ automatisch ausgewählt, wenn „Kana
   + **object_id** _(string) (Optional)_: Geräteobjekt_id. Die Standardeinstellung wird automatisch aus dem Gerätenamen generiert.
   + **preset_modes** _(list) (Optional)_: Liste der unterstützten voreingestellten Modi. Die Auswahl des Voreinstellungsmodus ist deaktiviert, wenn sie nicht festgelegt ist. Mögliche Werte sind in der folgenden Tabelle aufgeführt. Entsprechende Modi müssen in HDL (Fußbodenheizung > Arbeitseinstellungen > Modus) aktiviert sein.
   + **channel** _(int) (Optional)_: Fußbodenheizungsmodulkanal (`1..6`) für `floor_heating_device_type: module`.
+  + **min_temp** _(float) (Optional)_: Minimale Solltemperatur, die in der Home Assistant UI angezeigt wird.
+  + **max_temp** _(float) (Optional)_: Maximale Solltemperatur, die in der Home Assistant UI angezeigt wird.
+  + **precision** _(float) (Optional)_: Schrittweite der Solltemperatur in der Home Assistant UI. Zulässige Werte: `1`, `0.5`, `0.1`.
     
 | HA preset mode | HDL mode |
 |:--------------:|:--------:|

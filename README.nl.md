@@ -165,6 +165,9 @@ climate:
         type: floor_heating
         floor_heating_device_type: module
         channel: 1
+        min_temp: 22
+        max_temp: 32
+        precision: 1
         name: Floor Heating Zone 1
 ```
 + **apparaten** _(vereist)_: een lijst met apparaten die moeten worden ingesteld
@@ -176,6 +179,9 @@ Indien dit wordt weggelaten, wordt `module` automatisch geselecteerd wanneer `ch
   + **object_id** _(string) (Optioneel)_: Object_id van apparaat. De standaardwaarde wordt automatisch gegenereerd op basis van de apparaatnaam.
   + **preset_modes** _(list) (Optioneel)_: Lijst met ondersteunde vooraf ingestelde modi. De selectie van de vooraf ingestelde modus is uitgeschakeld als deze niet is ingesteld. Mogelijke waarden worden weergegeven in onderstaande tabel. De overeenkomstige modi moeten zijn ingeschakeld in HDL (Vloerverwarming > Werkinstellingen > Modus).
   + **channel** _(int) (Optioneel)_: Kanaal vloerverwarmingsmodule (`1..6`) voor `floor_heat_device_type: module`.
+  + **min_temp** _(float) (Optioneel)_: Minimale doeltemperatuur die in de Home Assistant-interface wordt getoond.
+  + **max_temp** _(float) (Optioneel)_: Maximale doeltemperatuur die in de Home Assistant-interface wordt getoond.
+  + **precision** _(float) (Optioneel)_: Stapgrootte voor de doeltemperatuur in de Home Assistant-interface. Toegestane waarden: `1`, `0.5`, `0.1`.
     
 | HA preset mode | HDL mode |
 |:--------------:|:--------:|
