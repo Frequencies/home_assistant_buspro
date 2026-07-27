@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Buspro-Gateway-Konfiguration",
+        "description": "Geben Sie die IP-Adresse und die Portnummer des Gateways ein.",
+        "data": {
+          "host": "Host-IP-Adresse",
+          "port": "Portnummer",
+          "send_port": "UDP-Sendeport",
+          "receive_port": "UDP-Empfangsport"
+        }
+      }
+    },
+    "error": {
+      "unknown": "Ein Fehler ist aufgetreten."
+    }
+  }
+}

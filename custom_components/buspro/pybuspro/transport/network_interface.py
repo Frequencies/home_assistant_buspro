@@ -1,3 +1,5 @@
+import logging
+
 from .udp_client import UDPClient
 from ..helpers.telegram_helper import TelegramHelper
 # from ..devices.control import Control
@@ -18,6 +20,8 @@ class NetworkInterface:
     def _udp_request_received(self, data, address):
         if self.callback is not None:
             telegram = self._th.build_telegram_from_udp_data(data, address)
+            if telegram is None:
+                return
             self.callback(telegram)
 
     async def _send_message(self, message):
@@ -39,8 +43,11 @@ class NetworkInterface:
 
     async def send_telegram(self, telegram):
         message = self._th.build_send_buffer(telegram)
+        if message is None:
+            return
 
-        gateway_address_send, _ = self.gateway_address_send_receive
-        self.buspro.logger.debug(self._th.build_telegram_from_udp_data(message, gateway_address_send))
+        if self.buspro.logger.isEnabledFor(logging.DEBUG):
+            gateway_address_send, _ = self.gateway_address_send_receive
+            self.buspro.logger.debug(self._th.build_telegram_from_udp_data(message, gateway_address_send))
 
         await self.udp_client.send_message(message)

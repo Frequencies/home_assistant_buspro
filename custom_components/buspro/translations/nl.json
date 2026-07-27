@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Buspro gateway-configuratie",
+        "description": "Voer het IP-adres en poortnummer van de gateway in.",
+        "data": {
+          "host": "Host-IP-adres",
+          "port": "Poortnummer",
+          "send_port": "UDP-verzendpoort",
+          "receive_port": "UDP-ontvangstpoort"
+        }
+      }
+    },
+    "error": {
+      "unknown": "Er is een fout opgetreden."
+    }
+  }
+}

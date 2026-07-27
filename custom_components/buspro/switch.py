@@ -20,10 +20,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_OBJECT_ID = ""
 CONF_OBJECT_ID = "object_id"
+CONF_UNIQUE_ID = "unique_id"
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -53,8 +55,9 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:
             object_id = name
+        unique_id = device_config.get(CONF_UNIQUE_ID)
 
-        devices.append(BusproSwitch(hass, switch, object_id))
+        devices.append(BusproSwitch(hass, switch, object_id, unique_id))
 
     async_add_entites(devices)
 
@@ -63,11 +66,13 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
 class BusproSwitch(SwitchEntity):
     """Representation of a Buspro switch."""
 
-    def __init__(self, hass, device, object_id):
+    def __init__(self, hass, device, object_id, unique_id=None):
         self._hass = hass
         self._device = device
+        self._configured_unique_id = unique_id
+        self._device_update_cb = None
         self.async_register_callbacks()
-        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
+        self.entity_id = generate_entity_id("switch.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):
@@ -78,7 +83,17 @@ class BusproSwitch(SwitchEntity):
             """Call after device was updated."""
             self.async_write_ha_state()
 
+        self._device_update_cb = after_update_callback
         self._device.register_device_updated_cb(after_update_callback)
+
+    async def async_will_remove_from_hass(self):
+        if self._device_update_cb is not None:
+            try:
+                self._device.unregister_device_updated_cb(self._device_update_cb)
+            except ValueError:
+                pass
+            self._device_update_cb = None
+        await super().async_will_remove_from_hass()
 
     @property
     def should_poll(self):
@@ -103,12 +118,14 @@ class BusproSwitch(SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Instruct the switch to turn on."""
         await self._device.set_on()
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
         await self._device.set_off()
+        self.async_write_ha_state()
 
     @property
     def unique_id(self):
         """Return the unique id."""
-        return self._device.device_identifier
+        return self._configured_unique_id or self._device.device_identifier

@@ -1,25 +1,18 @@
 """
-This component provides light support for Buspro.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/...
+This component provides fan support for Buspro.
 """
 
 import logging
 import time
 import asyncio
 from datetime import timedelta
+from typing import Any, Optional
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.event as event
 import voluptuous as vol
-from homeassistant.components.light import (
-    LightEntity, 
-    ColorMode, 
-    PLATFORM_SCHEMA, 
-    ATTR_BRIGHTNESS
-)
-from homeassistant.const import (CONF_NAME, CONF_DEVICES)
+from homeassistant.components.fan import FanEntity, FanEntityFeature, PLATFORM_SCHEMA
+from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -31,33 +24,34 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_DEVICE_RUNNING_TIME = 0
 DEFAULT_PLATFORM_RUNNING_TIME = 0
 DEFAULT_DIMMABLE = True
-DEFAULT_OBJECT_ID = ""
 DEFAULT_ACK_RETRY = True
-
+DEFAULT_OBJECT_ID = ""
+CONF_ACK_RETRY = "ack_retry_enabled"
 CONF_OBJECT_ID = "object_id"
 CONF_UNIQUE_ID = "unique_id"
-CONF_ACK_RETRY = "ack_retry_enabled"
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Optional("running_time", default=DEFAULT_DEVICE_RUNNING_TIME): cv.positive_int,
-    vol.Optional("dimmable", default=DEFAULT_DIMMABLE): cv.boolean,
-    vol.Optional(CONF_ACK_RETRY, default=DEFAULT_ACK_RETRY): cv.boolean,
-    vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
-    vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Required(CONF_NAME): cv.string,
-})
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("running_time", default=DEFAULT_DEVICE_RUNNING_TIME): cv.positive_int,
+        vol.Optional("dimmable", default=DEFAULT_DIMMABLE): cv.boolean,
+        vol.Optional(CONF_ACK_RETRY, default=DEFAULT_ACK_RETRY): cv.boolean,
+        vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Required(CONF_NAME): cv.string,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional("running_time", default=DEFAULT_PLATFORM_RUNNING_TIME): cv.positive_int,
-    vol.Optional(CONF_ACK_RETRY, default=DEFAULT_ACK_RETRY): cv.boolean,
-    vol.Required(CONF_DEVICES): {cv.string: DEVICE_SCHEMA},
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional("running_time", default=DEFAULT_PLATFORM_RUNNING_TIME): cv.positive_int,
+        vol.Optional(CONF_ACK_RETRY, default=DEFAULT_ACK_RETRY): cv.boolean,
+        vol.Required(CONF_DEVICES): {cv.string: DEVICE_SCHEMA},
+    }
+)
 
 
-# noinspection PyUnusedLocal
 async def async_setup_platform(hass, config, async_add_entites, discovery_info=None):
-    """Set up Buspro light devices."""
-    # noinspection PyUnresolvedReferences
+    """Set up Buspro fan devices."""
     from .pybuspro.devices import Light
 
     hdl = hass.data[DATA_BUSPRO].hdl
@@ -76,25 +70,28 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         if dimmable:
             device_running_time = 0
 
-        address2 = address.split('.')
-        device_address = (int(address2[0]), int(address2[1]))
-        channel_number = int(address2[2])
-        _LOGGER.debug("Adding light '{}' with address {} and channel number {}".format(name, device_address, channel_number))
+        address_parts = address.split(".")
+        device_address = (int(address_parts[0]), int(address_parts[1]))
+        channel_number = int(address_parts[2])
+        _LOGGER.debug(
+            "Adding fan '%s' with address %s and channel number %s",
+            name,
+            device_address,
+            channel_number,
+        )
 
-        light = Light(
+        fan_device = Light(
             hdl,
             device_address,
             channel_number,
             name,
             ack_retry_enabled=ack_retry_enabled,
         )
-
         object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:
             object_id = name
         unique_id = device_config.get(CONF_UNIQUE_ID)
-
-        devices.append(BusproLight(hass, light, device_running_time, dimmable, object_id, unique_id))
+        devices.append(BusproFan(hass, fan_device, device_running_time, dimmable, object_id, unique_id))
 
     async_add_entites(devices)
     if devices:
@@ -107,26 +104,34 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
         await asyncio.gather(*(_refresh(device) for device in devices))
 
 
-# noinspection PyAbstractClass
-class BusproLight(RestoreEntity, LightEntity):
-    """Representation of a Buspro light."""
+class BusproFan(RestoreEntity, FanEntity):
+    """Representation of a Buspro fan."""
 
     def __init__(self, hass, device, running_time, dimmable, object_id, unique_id=None):
         self._hass = hass
         self._device = device
         self._running_time = running_time
         self._dimmable = dimmable
-        self._object_id = object_id
         self._configured_unique_id = unique_id
-        self._optimistic_brightness = None
+        self._optimistic_percentage = None
         self._optimistic_timeout = 0.0
-        self._attr_color_mode = ColorMode.BRIGHTNESS
-        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._device_update_cb = None
         self._unsub_start_poll = None
         self._unsub_poll_interval = None
+
+        if self._dimmable:
+            self._attr_supported_features = (
+                FanEntityFeature.SET_SPEED
+                | FanEntityFeature.TURN_ON
+                | FanEntityFeature.TURN_OFF
+            )
+        else:
+            self._attr_supported_features = (
+                FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+            )
+
         self.async_register_callbacks()
-        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
+        self.entity_id = generate_entity_id("fan.{}", object_id, None, hass)
 
         self._polling_interval = timedelta(minutes=60)
         stagger = hash(str(self._device._device_address)) % 300
@@ -141,11 +146,9 @@ class BusproLight(RestoreEntity, LightEntity):
 
     @callback
     def async_register_callbacks(self):
-        """Register callbacks to update hass after device was changed."""
+        """Register callbacks to update state after device changes."""
 
-        # noinspection PyUnusedLocal
         async def after_update_callback(device):
-            """Call after device was updated."""
             self.async_write_ha_state()
 
         self._device_update_cb = after_update_callback
@@ -168,7 +171,6 @@ class BusproLight(RestoreEntity, LightEntity):
 
     @property
     def should_poll(self):
-        """No polling needed within Buspro."""
         return False
 
     async def async_update(self, *args):
@@ -176,68 +178,78 @@ class BusproLight(RestoreEntity, LightEntity):
 
     @property
     def name(self):
-        """Return the display name of this light."""
         return self._device.name
 
     @property
     def available(self):
-        """Return True if entity is available."""
         return self._hass.data[DATA_BUSPRO].connected
 
     @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        if self._optimistic_brightness is not None:
+    def percentage(self) -> Optional[int]:
+        if self._optimistic_percentage is not None:
             if time.time() <= self._optimistic_timeout:
-                return self._optimistic_brightness
-            self._optimistic_brightness = None
-        brightness = int(round(self._device.current_brightness / 100 * 255))
-        return max(0, min(255, brightness))
+                return self._optimistic_percentage
+            self._optimistic_percentage = None
+        return self._device.current_brightness
 
     @property
     def is_on(self):
-        """Return true if light is on."""
-        if self._optimistic_brightness is not None:
+        if self._optimistic_percentage is not None:
             if time.time() <= self._optimistic_timeout:
-                return self._optimistic_brightness > 0
-            self._optimistic_brightness = None
+                return self._optimistic_percentage > 0
+            self._optimistic_percentage = None
         return self._device.is_on
 
     async def async_added_to_hass(self):
-        """Restore last known brightness so turn_on after restart keeps previous level."""
+        """Restore last known percentage so turn_on after restart keeps previous level."""
         await super().async_added_to_hass()
 
         last_state = await self.async_get_last_state()
         if not last_state:
             return
 
-        brightness_255 = last_state.attributes.get(ATTR_BRIGHTNESS)
-        if brightness_255 is None:
+        percentage = last_state.attributes.get("percentage")
+        if percentage is None:
             return
 
-        brightness_100 = max(1, min(100, int(brightness_255 / 255 * 100)))
+        brightness_100 = max(1, min(100, int(percentage)))
         self._device.restore_previous_brightness(brightness_100)
 
-    async def async_turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
-        brightness = int(kwargs.get(ATTR_BRIGHTNESS, 255) / 255 * 100)
+    async def async_set_percentage(self, percentage: int) -> None:
+        if not self._dimmable:
+            return
+        brightness = max(0, min(100, int(percentage)))
+        self._optimistic_percentage = brightness
+        self._optimistic_timeout = time.time() + 2.0
+        await self._device.set_brightness(brightness, self._running_time)
+        self.async_write_ha_state()
 
-        if not self.is_on and self._device.previous_brightness is not None and brightness == 100:
+    async def async_turn_on(
+        self,
+        percentage: Optional[int] = None,
+        preset_mode: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
+        brightness = 100 if percentage is None else max(0, min(100, int(percentage)))
+
+        if (
+            not self.is_on
+            and self._device.previous_brightness is not None
+            and brightness == 100
+        ):
             brightness = self._device.previous_brightness
 
-        self._optimistic_brightness = int(brightness / 100 * 255)
+        self._optimistic_percentage = brightness
         self._optimistic_timeout = time.time() + 2.0
         await self._device.set_brightness(brightness, self._running_time)
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        """Instruct the light to turn off."""
-        self._optimistic_brightness = 0
+        self._optimistic_percentage = 0
         self._optimistic_timeout = time.time() + 2.0
         await self._device.set_off(self._running_time)
         self.async_write_ha_state()
 
     @property
     def unique_id(self):
-        """Return the unique id."""
         return self._configured_unique_id or self._device.device_identifier

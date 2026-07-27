@@ -1,11 +1,21 @@
-﻿from .control import _SingleChannelControl
+﻿import asyncio
+
+from .control import _ReadStatusOfChannels, _SingleChannelControl
 from .device import Device
 from ..helpers.enums import *
 from ..helpers.generics import Generics
 
 
 class Light(Device):
-    def __init__(self, buspro, device_address, channel_number, name="", delay_read_current_state_seconds=0):
+    def __init__(
+        self,
+        buspro,
+        device_address,
+        channel_number,
+        name="",
+        delay_read_current_state_seconds=0,
+        ack_retry_enabled=True,
+    ):
         super().__init__(buspro, device_address, name)
         # device_address = (subnet_id, device_id, channel_number)
 
@@ -14,6 +24,9 @@ class Light(Device):
         self._channel = channel_number
         self._brightness = 0
         self._previous_brightness = None
+        self._ack_retry_enabled = bool(ack_retry_enabled)
+        self._ack_task = None
+        self._awaiting_ack = False
         self.register_telegram_received_cb(self._telegram_received_cb)
         self._call_read_current_status_of_channels(run_from_init=True)
 
@@ -27,6 +40,7 @@ class Light(Device):
             # success = telegram.payload[1]
             brightness = telegram.payload[2]
             if channel == self._channel:
+                self._awaiting_ack = False
                 self._brightness = brightness
                 self._set_previous_brightness(self._brightness)
                 self._call_device_updated()
@@ -50,7 +64,9 @@ class Light(Device):
         await self._set(intensity, running_time_seconds)
 
     async def read_status(self):
-        raise NotImplementedError
+        scc = _ReadStatusOfChannels(self._buspro)
+        scc.subnet_id, scc.device_id = self._device_address
+        await scc.send()
 
     @property
     def device_identifier(self):
@@ -79,6 +95,11 @@ class Light(Device):
         self._brightness = intensity
         self._set_previous_brightness(self._brightness)
 
+        await self._send_single_channel_control(intensity, running_time_seconds)
+        if self._ack_retry_enabled:
+            self._start_ack_watch(intensity, running_time_seconds)
+
+    async def _send_single_channel_control(self, intensity, running_time_seconds):
         generics = Generics()
         (minutes, seconds) = generics.calculate_minutes_seconds(running_time_seconds)
 
@@ -90,6 +111,36 @@ class Light(Device):
         scc.running_time_seconds = seconds
         await scc.send()
 
+    def _start_ack_watch(self, intensity, running_time_seconds):
+        if self._ack_task is not None and not self._ack_task.done():
+            self._ack_task.cancel()
+        self._awaiting_ack = True
+
+        async def _watch():
+            try:
+                await asyncio.sleep(0.8)
+                if not self._awaiting_ack:
+                    return
+                self._awaiting_ack = False
+                if self._brightness != intensity:
+                    return
+                await self._send_single_channel_control(intensity, running_time_seconds)
+            except asyncio.CancelledError:
+                pass
+
+        self._ack_task = asyncio.ensure_future(_watch(), loop=self._buspro.loop)
+
     def _set_previous_brightness(self, brightness):
         if self.supports_brightness and brightness > 0:
             self._previous_brightness = brightness
+
+    def restore_previous_brightness(self, brightness):
+        self._set_previous_brightness(brightness)
+
+    def _call_read_current_status_of_channels(self, run_from_init=False):
+        async def read_current_status_of_channels():
+            if run_from_init:
+                await asyncio.sleep(10)
+            await self.read_status()
+
+        asyncio.ensure_future(read_current_status_of_channels(), loop=self._buspro.loop)

@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Настройка шлюза Buspro",
+        "description": "Введите IP-адрес и номер порта шлюза.",
+        "data": {
+          "host": "IP-адрес хоста",
+          "port": "Номер порта",
+          "send_port": "UDP порт отправки",
+          "receive_port": "UDP порт приема"
+        }
+      }
+    },
+    "error": {
+      "unknown": "Произошла ошибка."
+    }
+  }
+}
