@@ -18,6 +18,15 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _form_schema(default_host=None, default_port=6000, default_send_port=6000, default_receive_port=6000):
+    return vol.Schema({
+        vol.Required(CONF_HOST, default=default_host or ""): cv.string,
+        vol.Required(CONF_PORT, default=default_port): cv.port,
+        vol.Optional(CONF_SEND_PORT, default=default_send_port): cv.port,
+        vol.Optional(CONF_RECEIVE_PORT, default=default_receive_port): cv.port,
+    })
+
+
 async def _async_validate_connectivity(hass, data):
     """Validate Buspro host/port connectivity with protocol handshake."""
     host = data[CONF_HOST]
@@ -86,48 +95,57 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
+        try:
+            if user_input is not None:
+                host = user_input[CONF_HOST].strip()
+                if not host:
+                    errors["base"] = "invalid_host"
+                port = user_input[CONF_PORT]
+                send_port = user_input.get(CONF_SEND_PORT, port)
+                receive_port = user_input.get(CONF_RECEIVE_PORT, port)
 
-        if user_input is not None:
-            host = user_input[CONF_HOST].strip()
-            port = user_input[CONF_PORT]
-            send_port = user_input.get(CONF_SEND_PORT, port)
-            receive_port = user_input.get(CONF_RECEIVE_PORT, port)
+                data = {
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                    CONF_SEND_PORT: send_port,
+                    CONF_RECEIVE_PORT: receive_port,
+                }
 
-            data = {
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_SEND_PORT: send_port,
-                CONF_RECEIVE_PORT: receive_port,
-            }
+                if not errors:
+                    try:
+                        await _async_validate_connectivity(self.hass, data)
+                    except CannotConnect:
+                        errors["base"] = "cannot_connect"
+                    except InvalidHost:
+                        errors["base"] = "invalid_host"
+                    except Exception:  # pragma: no cover - unexpected
+                        _LOGGER.exception("Unexpected exception")
+                        errors["base"] = "unknown"
 
-            try:
-                await _async_validate_connectivity(self.hass, data)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidHost:
-                errors["base"] = "invalid_host"
-            except Exception:  # pragma: no cover - unexpected
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                if not errors:
+                    await self.async_set_unique_id(f"{host.lower()}:{port}")
+                    self._abort_if_unique_id_configured()
 
-            if not errors:
-                await self.async_set_unique_id(f"{host.lower()}:{port}")
-                self._abort_if_unique_id_configured()
+                    return self.async_create_entry(title=f"Buspro ({host})", data=data)
 
-                return self.async_create_entry(title=f"Buspro ({host})", data=data)
-
-        default_port = 6000
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({
-                vol.Required(CONF_HOST): vol.All(cv.string, vol.Length(min=1)),
-                vol.Required(CONF_PORT, default=default_port): cv.port,
-                vol.Optional(CONF_SEND_PORT, default=default_port): cv.port,
-                vol.Optional(CONF_RECEIVE_PORT, default=default_port): cv.port,
-            }),
-            errors=errors,
-        )
+            default_port = 6000
+            return self.async_show_form(
+                step_id="user",
+                data_schema=_form_schema(
+                    default_host="",
+                    default_port=default_port,
+                    default_send_port=default_port,
+                    default_receive_port=default_port,
+                ),
+                errors=errors,
+            )
+        except Exception:  # pragma: no cover - last-resort guard for HA UI stability
+            _LOGGER.exception("Failed to render Buspro user config step")
+            return self.async_show_form(
+                step_id="user",
+                data_schema=_form_schema(),
+                errors={"base": "unknown"},
+            )
 
     async def async_step_reconfigure(self, user_input=None):
         """Handle reconfiguration of an existing entry."""
@@ -142,69 +160,64 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         default_send_port = current.get(CONF_SEND_PORT, default_port)
         default_receive_port = current.get(CONF_RECEIVE_PORT, default_port)
 
-        if user_input is not None:
-            host = user_input[CONF_HOST].strip()
-            port = user_input[CONF_PORT]
-            send_port = user_input.get(CONF_SEND_PORT, port)
-            receive_port = user_input.get(CONF_RECEIVE_PORT, port)
+        try:
+            if user_input is not None:
+                host = user_input[CONF_HOST].strip()
+                port = user_input[CONF_PORT]
+                send_port = user_input.get(CONF_SEND_PORT, port)
+                receive_port = user_input.get(CONF_RECEIVE_PORT, port)
 
-            data = {
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_SEND_PORT: send_port,
-                CONF_RECEIVE_PORT: receive_port,
-            }
+                data = {
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                    CONF_SEND_PORT: send_port,
+                    CONF_RECEIVE_PORT: receive_port,
+                }
 
-            try:
-                await _async_validate_connectivity(self.hass, data)
-            except CannotConnect:
-                return self.async_show_form(
-                    step_id="reconfigure",
-                    data_schema=vol.Schema({
-                        vol.Required(CONF_HOST, default=host): vol.All(cv.string, vol.Length(min=1)),
-                        vol.Required(CONF_PORT, default=port): cv.port,
-                        vol.Optional(CONF_SEND_PORT, default=send_port): cv.port,
-                        vol.Optional(CONF_RECEIVE_PORT, default=receive_port): cv.port,
-                    }),
-                    errors={"base": "cannot_connect"},
-                )
-            except InvalidHost:
-                return self.async_show_form(
-                    step_id="reconfigure",
-                    data_schema=vol.Schema({
-                        vol.Required(CONF_HOST, default=host): vol.All(cv.string, vol.Length(min=1)),
-                        vol.Required(CONF_PORT, default=port): cv.port,
-                        vol.Optional(CONF_SEND_PORT, default=send_port): cv.port,
-                        vol.Optional(CONF_RECEIVE_PORT, default=receive_port): cv.port,
-                    }),
-                    errors={"base": "invalid_host"},
-                )
-            except Exception:  # pragma: no cover - unexpected
-                _LOGGER.exception("Unexpected exception")
-                return self.async_show_form(
-                    step_id="reconfigure",
-                    data_schema=vol.Schema({
-                        vol.Required(CONF_HOST, default=host): vol.All(cv.string, vol.Length(min=1)),
-                        vol.Required(CONF_PORT, default=port): cv.port,
-                        vol.Optional(CONF_SEND_PORT, default=send_port): cv.port,
-                        vol.Optional(CONF_RECEIVE_PORT, default=receive_port): cv.port,
-                    }),
-                    errors={"base": "unknown"},
-                )
+                if not host:
+                    return self.async_show_form(
+                        step_id="reconfigure",
+                        data_schema=_form_schema(host, port, send_port, receive_port),
+                        errors={"base": "invalid_host"},
+                    )
 
-            self.hass.config_entries.async_update_entry(entry, data=data, options={})
-            await self.hass.config_entries.async_reload(entry.entry_id)
-            return self.async_abort(reason="reconfigure_successful")
+                try:
+                    await _async_validate_connectivity(self.hass, data)
+                except CannotConnect:
+                    return self.async_show_form(
+                        step_id="reconfigure",
+                        data_schema=_form_schema(host, port, send_port, receive_port),
+                        errors={"base": "cannot_connect"},
+                    )
+                except InvalidHost:
+                    return self.async_show_form(
+                        step_id="reconfigure",
+                        data_schema=_form_schema(host, port, send_port, receive_port),
+                        errors={"base": "invalid_host"},
+                    )
+                except Exception:  # pragma: no cover - unexpected
+                    _LOGGER.exception("Unexpected exception")
+                    return self.async_show_form(
+                        step_id="reconfigure",
+                        data_schema=_form_schema(host, port, send_port, receive_port),
+                        errors={"base": "unknown"},
+                    )
 
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema({
-                vol.Required(CONF_HOST, default=default_host): vol.All(cv.string, vol.Length(min=1)),
-                vol.Required(CONF_PORT, default=default_port): cv.port,
-                vol.Optional(CONF_SEND_PORT, default=default_send_port): cv.port,
-                vol.Optional(CONF_RECEIVE_PORT, default=default_receive_port): cv.port,
-            }),
-        )
+                self.hass.config_entries.async_update_entry(entry, data=data, options={})
+                await self.hass.config_entries.async_reload(entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=_form_schema(default_host, default_port, default_send_port, default_receive_port),
+            )
+        except Exception:  # pragma: no cover - last-resort guard for HA UI stability
+            _LOGGER.exception("Failed to render Buspro reconfigure step")
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=_form_schema(default_host, default_port, default_send_port, default_receive_port),
+                errors={"base": "unknown"},
+            )
 
 
 class BusproOptionsFlow(config_entries.OptionsFlow):
@@ -221,39 +234,45 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
         default_send_port = current.get(CONF_SEND_PORT, default_port)
         default_receive_port = current.get(CONF_RECEIVE_PORT, default_port)
 
-        if user_input is not None:
-            host = user_input[CONF_HOST].strip()
-            port = user_input[CONF_PORT]
-            send_port = user_input.get(CONF_SEND_PORT, port)
-            receive_port = user_input.get(CONF_RECEIVE_PORT, port)
+        try:
+            if user_input is not None:
+                host = user_input[CONF_HOST].strip()
+                port = user_input[CONF_PORT]
+                send_port = user_input.get(CONF_SEND_PORT, port)
+                receive_port = user_input.get(CONF_RECEIVE_PORT, port)
 
-            data = {
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_SEND_PORT: send_port,
-                CONF_RECEIVE_PORT: receive_port,
-            }
+                data = {
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                    CONF_SEND_PORT: send_port,
+                    CONF_RECEIVE_PORT: receive_port,
+                }
 
-            try:
-                await _async_validate_connectivity(self.hass, data)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidHost:
-                errors["base"] = "invalid_host"
-            except Exception:  # pragma: no cover - unexpected
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                if not host:
+                    errors["base"] = "invalid_host"
+                else:
+                    try:
+                        await _async_validate_connectivity(self.hass, data)
+                    except CannotConnect:
+                        errors["base"] = "cannot_connect"
+                    except InvalidHost:
+                        errors["base"] = "invalid_host"
+                    except Exception:  # pragma: no cover - unexpected
+                        _LOGGER.exception("Unexpected exception")
+                        errors["base"] = "unknown"
 
-            if not errors:
-                return self.async_create_entry(title="", data=data)
+                if not errors:
+                    return self.async_create_entry(title="", data=data)
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema({
-                vol.Required(CONF_HOST, default=default_host): vol.All(cv.string, vol.Length(min=1)),
-                vol.Required(CONF_PORT, default=default_port): cv.port,
-                vol.Optional(CONF_SEND_PORT, default=default_send_port): cv.port,
-                vol.Optional(CONF_RECEIVE_PORT, default=default_receive_port): cv.port,
-            }),
-            errors=errors,
-        )
+            return self.async_show_form(
+                step_id="init",
+                data_schema=_form_schema(default_host, default_port, default_send_port, default_receive_port),
+                errors=errors,
+            )
+        except Exception:  # pragma: no cover - last-resort guard for HA UI stability
+            _LOGGER.exception("Failed to render Buspro options step")
+            return self.async_show_form(
+                step_id="init",
+                data_schema=_form_schema(default_host, default_port, default_send_port, default_receive_port),
+                errors={"base": "unknown"},
+            )
