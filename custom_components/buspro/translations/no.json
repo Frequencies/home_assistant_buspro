@@ -10,10 +10,40 @@
           "send_port": "UDP sendeport",
           "receive_port": "UDP mottaksport"
         }
+      },
+      "reconfigure": {
+        "title": "Konfigurer Buspro-gateway på nytt",
+        "description": "Oppdater IP-adresse og porter for denne Buspro-gatewayen.",
+        "data": {
+          "host": "IP-adresse",
+          "port": "Portnummer",
+          "send_port": "UDP sendeport",
+          "receive_port": "UDP mottaksport"
+        }
       }
     },
     "error": {
-      "unknown": "En feil oppstod."
+      "unknown": "En feil oppstod.",
+      "cannot_connect": "Kunne ikke koble til Buspro-gatewayen.",
+      "invalid_host": "Ugyldig vert."
+    },
+    "abort": {
+      "reconfigure_not_supported": "Omkonfigurering er ikke tilgjengelig for denne oppføringen.",
+      "reconfigure_successful": "Buspro-gatewayen ble konfigurert på nytt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Buspro-alternativer",
+        "description": "Oppdater IP-adresse og porter for denne Buspro-gatewayen.",
+        "data": {
+          "host": "IP-adresse",
+          "port": "Portnummer",
+          "send_port": "UDP sendeport",
+          "receive_port": "UDP mottaksport"
+        }
+      }
     }
   }
 }

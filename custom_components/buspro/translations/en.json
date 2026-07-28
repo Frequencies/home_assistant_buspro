@@ -10,10 +10,40 @@
           "send_port": "UDP send port",
           "receive_port": "UDP receive port"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Buspro gateway",
+        "description": "Update IP address and ports for this Buspro gateway.",
+        "data": {
+          "host": "Host IP address",
+          "port": "Port number",
+          "send_port": "UDP send port",
+          "receive_port": "UDP receive port"
+        }
       }
     },
     "error": {
-      "unknown": "An error occured."
+      "cannot_connect": "Failed to connect to the Buspro gateway.",
+      "invalid_host": "Invalid host.",
+      "unknown": "An error occurred."
+    },
+    "abort": {
+      "reconfigure_not_supported": "Reconfiguration is not available for this entry.",
+      "reconfigure_successful": "Buspro gateway was reconfigured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Buspro options",
+        "description": "Update IP address and ports for this Buspro gateway.",
+        "data": {
+          "host": "Host IP address",
+          "port": "Port number",
+          "send_port": "UDP send port",
+          "receive_port": "UDP receive port"
+        }
+      }
     }
   }
 }

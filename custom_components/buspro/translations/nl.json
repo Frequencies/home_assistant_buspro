@@ -10,10 +10,40 @@
           "send_port": "UDP-verzendpoort",
           "receive_port": "UDP-ontvangstpoort"
         }
+      },
+      "reconfigure": {
+        "title": "Buspro-gateway opnieuw configureren",
+        "description": "Werk het IP-adres en de poorten voor deze Buspro-gateway bij.",
+        "data": {
+          "host": "Host-IP-adres",
+          "port": "Poortnummer",
+          "send_port": "UDP-verzendpoort",
+          "receive_port": "UDP-ontvangstpoort"
+        }
       }
     },
     "error": {
-      "unknown": "Er is een fout opgetreden."
+      "unknown": "Er is een fout opgetreden.",
+      "cannot_connect": "Kan geen verbinding maken met de Buspro-gateway.",
+      "invalid_host": "Ongeldige host."
+    },
+    "abort": {
+      "reconfigure_not_supported": "Herconfiguratie is niet beschikbaar voor deze invoer.",
+      "reconfigure_successful": "Buspro-gateway is opnieuw geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Buspro-opties",
+        "description": "Werk het IP-adres en de poorten voor deze Buspro-gateway bij.",
+        "data": {
+          "host": "Host-IP-adres",
+          "port": "Poortnummer",
+          "send_port": "UDP-verzendpoort",
+          "receive_port": "UDP-ontvangstpoort"
+        }
+      }
     }
   }
 }

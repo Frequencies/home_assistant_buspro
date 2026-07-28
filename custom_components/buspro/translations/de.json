@@ -10,10 +10,40 @@
           "send_port": "UDP-Sendeport",
           "receive_port": "UDP-Empfangsport"
         }
+      },
+      "reconfigure": {
+        "title": "Buspro-Gateway neu konfigurieren",
+        "description": "Aktualisieren Sie IP-Adresse und Ports für dieses Buspro-Gateway.",
+        "data": {
+          "host": "Host-IP-Adresse",
+          "port": "Portnummer",
+          "send_port": "UDP-Sendeport",
+          "receive_port": "UDP-Empfangsport"
+        }
       }
     },
     "error": {
-      "unknown": "Ein Fehler ist aufgetreten."
+      "unknown": "Ein Fehler ist aufgetreten.",
+      "cannot_connect": "Verbindung zum Buspro-Gateway fehlgeschlagen.",
+      "invalid_host": "Ungültiger Host."
+    },
+    "abort": {
+      "reconfigure_not_supported": "Die Neukonfiguration ist für diesen Eintrag nicht verfügbar.",
+      "reconfigure_successful": "Das Buspro-Gateway wurde neu konfiguriert."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Buspro-Optionen",
+        "description": "Aktualisieren Sie IP-Adresse und Ports für dieses Buspro-Gateway.",
+        "data": {
+          "host": "Host-IP-Adresse",
+          "port": "Portnummer",
+          "send_port": "UDP-Sendeport",
+          "receive_port": "UDP-Empfangsport"
+        }
+      }
     }
   }
 }
