@@ -1,4 +1,7 @@
 # HDL Buspro
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+
 ## Languages
 
 [![English](https://flagcdn.com/24x18/gb.png) English](README.md) |
@@ -11,11 +14,16 @@
 [![Українська](https://flagcdn.com/24x18/ua.png) Українська](README.uk.md) |
 [![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md)
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-
-The HDL Buspro integration allows you to control your HDL Buspro system from Home Assistant.
+# The HDL Buspro integration allows you to control your HDL Buspro system from Home Assistant.
 
 ## Installation
+
+### One-click install (HACS)
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Frequencies&repository=home_assistant_buspro&category=integration)
+
+### Manual installation
+
 Under HACS -> Integrations, add custom repository "https://github.com/Frequencies/home_assistant_buspro" with Category "Integration". Select the integration named "HDL Buspro" and download it.
 
 Restart Home Assistant.

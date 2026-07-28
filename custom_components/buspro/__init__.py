@@ -122,10 +122,11 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Setup the Buspro component. """
-    host = config_entry.data.get(CONF_HOST, "")
-    port = config_entry.data.get(CONF_PORT, 1)
-    send_port = config_entry.data.get(CONF_SEND_PORT, port)
-    receive_port = config_entry.data.get(CONF_RECEIVE_PORT, port)
+    cfg = {**config_entry.data, **config_entry.options}
+    host = cfg.get(CONF_HOST, "")
+    port = cfg.get(CONF_PORT, 1)
+    send_port = cfg.get(CONF_SEND_PORT, port)
+    receive_port = cfg.get(CONF_RECEIVE_PORT, port)
 
     module = BusproModule(hass, host, port, send_port, receive_port)
     _entry_modules(hass)[config_entry.entry_id] = module

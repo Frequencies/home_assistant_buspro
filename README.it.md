@@ -1,4 +1,7 @@
 # HDL Buspro
+
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+
 ## Lingue
 
 [![English](https://flagcdn.com/24x18/gb.png) English](README.md) |
@@ -11,11 +14,16 @@
 [![Українська](https://flagcdn.com/24x18/ua.png) Українська](README.uk.md) |
 [![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md)
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-
-L'integrazione HDL Buspro ti consente di controllare il tuo sistema HDL Buspro da Home Assistant.
+# L'integrazione HDL Buspro ti consente di controllare il tuo sistema HDL Buspro da Home Assistant.
 
 ## Installazione
+
+### Installazione con un clic (HACS)
+
+[![Apri la tua istanza di Home Assistant e apri un repository nell'Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Frequencies&repository=home_assistant_buspro&category=integration)
+
+### Installazione manuale
+
 In HACS -> Integrazioni, aggiungi il repository personalizzato "https://github.com/Frequencies/home_assistant_buspro" con la categoria "Integrazione". Seleziona l’integrazione chiamata "HDL Buspro" e scaricala.
 
 Riavvia l'assistente domestico.
