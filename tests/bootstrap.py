@@ -54,8 +54,9 @@ def ensure_homeassistant_stubs():
             return super().__init_subclass__()
 
     class OptionsFlow:  # pragma: no cover - stub
-        def __init__(self):
+        def __init__(self, config_entry=None):
             self.hass = None
+            self.config_entry = config_entry
 
         def async_create_entry(self, title, data):
             return {'type': 'create_entry', 'title': title, 'data': data}
