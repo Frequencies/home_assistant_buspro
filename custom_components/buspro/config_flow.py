@@ -224,11 +224,14 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
     """Handle Buspro options."""
 
     def __init__(self, config_entry):
-        super().__init__(config_entry)
+        # Keep local reference for compatibility across HA versions where
+        # OptionsFlow may or may not expose/accept config_entry handling
+        # in the base class.
+        self._config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         errors = {}
-        current = {**self.config_entry.data, **self.config_entry.options}
+        current = {**self._config_entry.data, **self._config_entry.options}
         default_host = current.get(CONF_HOST, "")
         default_port = current.get(CONF_PORT, 6000)
         default_send_port = current.get(CONF_SEND_PORT, default_port)
