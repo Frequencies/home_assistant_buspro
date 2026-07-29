@@ -42,6 +42,9 @@ class NetworkInterface:
             self.udp_client = None
 
     async def send_telegram(self, telegram):
+        if telegram.source_address is None:
+            telegram.source_address = self.buspro.client_address
+            
         message = self._th.build_send_buffer(telegram)
         if message is None:
             return

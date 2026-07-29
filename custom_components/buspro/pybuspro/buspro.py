@@ -31,6 +31,7 @@ class StateUpdater:
 
 
 class Buspro:
+    DEFAULT_CLIENT_ADDRESS = (200, 200)
 
     def __init__(self, gateway_address_send_receive, loop_=None):
         self.loop = loop_ or asyncio.get_event_loop()
@@ -45,6 +46,7 @@ class Buspro:
         self._telegram_received_cbs_by_addr = {}
 
         self.gateway_address_send_receive = gateway_address_send_receive
+        self.client_address = self.DEFAULT_CLIENT_ADDRESS
 
     def __del__(self):
         if self.started:
