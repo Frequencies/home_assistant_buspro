@@ -84,20 +84,6 @@ Na het opslaan maakt Home Assistant:
 
 Voor volledige UI- en YAML-voorbeelden voor alle apparaattypen, raadpleeg **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)**.
 
-## Configuratieopties
-
-De buspro-integratie ondersteunt zowel **UI-instellingen** als **YAML-configuratie**:
-
-### UI-instellingen
-De gemakkelijkste manier om apparaten toe te voegen — raadpleeg **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)** voor stap-voor-stap voorbeelden van alle apparaattypen.
-
-### YAML-configuratie  
-De integratie ondersteunt twee aanvullende YAML-benaderingen:
-- **Entity-Centric** (Legacy) — individuele entiteitsbestanden, georganiseerd op domeinen
-- **Device-Centric** (Modern) — volledige apparaatdefinities met alle kanalen
-
-**Voor volledige YAML-documentatie, voorbeelden en best practices, raadpleeg [../en/DUAL_MODE_YAML.md](../en/DUAL_MODE_YAML.md)** (ook beschikbaar in [English](../en/DUAL_MODE_YAML.md) | [Беларуская](../en/DUAL_MODE_YAML.md) | [Deutsch](../en/DUAL_MODE_YAML.md) | [Español](../en/DUAL_MODE_YAML.md) | [Français](../en/DUAL_MODE_YAML.md) | [Italiano](../en/DUAL_MODE_YAML.md) | [Norsk](../en/DUAL_MODE_YAML.md) | [Русский](../en/DUAL_MODE_YAML.md) | [Українська](../en/DUAL_MODE_YAML.md))
-
 ## Incompatibele wijzigingen in 2.2.0
 
 - Adressen, namen, aantallen apparaten en kanaaltoewijzingen zijn niet langer
@@ -320,6 +306,66 @@ Ondersteunde dimmers kunnen connectiviteit, maximale helderheid per kanaal, laad
 - `buspro.send_message`
 
 `buspro.send_message` verzendt een onbewerkt protocolcommando en mag alleen worden gebruikt met een geverifieerde HDL-bewerkingscode en payload.
+
+## YAML-configuratie (legacy)
+
+YAML-apparaatconfiguratie wordt volledig ondersteund naast beheer van config-entry-gateways. U kunt lampen, rolgordijnen, schakelaars, ventilatoren, klimaat, sensoren en binaire sensoren via YAML definiëren terwijl de gateway wordt beheerd via de integratie-UI.
+
+**Opmerking**: Nieuwe apparaten moeten de integratie-UI **Configureren > Apparaat toevoegen** gebruiken in plaats van YAML, omdat deze apparaatgroepering, modelgestuurde mogelijkheden en kanaalstuatsbeheer biedt. YAML wordt aanbevolen voor:
+- Apparaten met niet-standaard of legacy-profielen
+- Migratie van oudere Buspro-integraties
+- Complexe automatisering of sensortemplates
+
+### YAML-syntaxisvoorbeeld
+
+Voeg dit toe aan uw `configuration.yaml`:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Ceiling light"
+        dimmable: true
+      "1.5.2":
+        name: "Wall lamp"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Living room curtain"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Bedroom climate"
+        profile: "ac"
+```
+
+### Platformconfiguratie
+
+Elk platform (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) accepteert:
+
+| Sleutel | Type | Beschrijving |
+| --- | --- | --- |
+| `devices` | dict | Vereist. Toewijzing van Buspro-adressen aan apparaatconfiguraties. |
+| `running_time` | int | Standaard overgangstijd in seconden (0 = geen overgang). Per apparaat overschreven. |
+| `ack_retry_enabled` | bool | Herhaal zendingen zonder ACK (platformstandaard; per-apparaat overschrijvingen). |
+
+Elke apparaatsleutel is het **Buspro-adres** in formaat:
+- **Lamp, rolgordijn, ventilator, schakelaar**: `subnet.device.channel` (bijv. `1.5.2`)
+- **Klimaat, sensor, binaire sensor**: `subnet.device` (bijv. `3.1`)
+
+Elke apparaatconfiguratie ondersteunt:
+- `name` (vereist): Weergavenaam
+- `running_time`, `dimmable`, `ack_retry_enabled` (platformspecifiek, optioneel)
+- `profile` (optioneel, voor klimaatsensoren — bijv. `"ac"`, `"floor_heating"`)
+- `object_id` (optioneel): Entity-ID-slug
+- `unique_id` (optioneel): Voor handmatig beheer in het entiteitsregister
 
 ## Ontwikkeling
 

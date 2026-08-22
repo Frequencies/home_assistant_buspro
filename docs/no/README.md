@@ -81,20 +81,6 @@ Etter lagring opprett Home Assistant:
 
 For komplette UI- og YAML-eksempler for alle enhetstyper, se **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)**.
 
-## Konfigurasjonsalternativer
-
-Buspro-integrasjonen støtter både **UI-oppsett** og **YAML-konfigurasjon**:
-
-### UI-oppsett
-Den enkleste måten å legge til enheter — se **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)** for trinn-for-trinn eksempler på alle enhetstyper.
-
-### YAML-konfigurasjon  
-Integrasjonen støtter to komplementære YAML-tilnærminger:
-- **Entity-Centric** (Legacy) — individuelle enhetsfiler, organisert etter domener
-- **Device-Centric** (Modern) — komplette enhetsdefinisioner med alle kanaler
-
-**For fullstendig YAML-dokumentasjon, eksempler og beste praksis, se [../en/DUAL_MODE_YAML.md](../en/DUAL_MODE_YAML.md)** (også tilgjengelig på [English](../en/DUAL_MODE_YAML.md) | [Беларуская](../en/DUAL_MODE_YAML.md) | [Deutsch](../en/DUAL_MODE_YAML.md) | [Español](../en/DUAL_MODE_YAML.md) | [Français](../en/DUAL_MODE_YAML.md) | [Italiano](../en/DUAL_MODE_YAML.md) | [Nederlands](../en/DUAL_MODE_YAML.md) | [Русский](../en/DUAL_MODE_YAML.md) | [Українська](../en/DUAL_MODE_YAML.md))
-
 ## Inkompatible endringer i 2.2.0
 
 - Adresser, navn, antall enheter og kanaltilordninger er ikke lenger innebygd i
@@ -314,6 +300,66 @@ Støttede dimmere kan avgi tilkobling, maksimal lysstyrke per kanal, belastnings
 - `buspro.send_message`
 
 `buspro.send_message` sender en rå protokollkommando og bør bare brukes med en verifisert HDL-operasjonskode og nyttelast.
+
+## YAML-konfigurasjon (eldre)
+
+YAML-enhetskonfigurasjon støttes fullt ut sammen med konfigurasjonsposisjons-gateway-administrasjon. Du kan definere lys, gardiner, brytere, vifter, klima, sensorer og binære sensorer via YAML mens gatewayen administreres av integrasjonsgrensesnittet.
+
+**Merk**: Nye enheter bør bruke integrasjonsgrensesnittet **Konfigurer > Legg til enhet** i stedet for YAML, da det gir enhetgruppering, modellstyrte funksjoner og kanalstatusadministrasjon. YAML anbefales for:
+- Enheter med ikke-standard eller eldre profiler
+- Overføring fra eldre Buspro-integrasjoner
+- Kompleks automatisering eller sensormaler
+
+### YAML-syntakseksempel
+
+Legg til i din `configuration.yaml`:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Ceiling light"
+        dimmable: true
+      "1.5.2":
+        name: "Wall lamp"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Living room curtain"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Bedroom climate"
+        profile: "ac"
+```
+
+### Plattformkonfigurasjon
+
+Hver plattform (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) godtar:
+
+| Nokkel | Type | Beskrivelse |
+| --- | --- | --- |
+| `devices` | dict | Obligatorisk. Kartlegging av Buspro-adresser til enhetskonfigurasjoner. |
+| `running_time` | int | Standard overgangstid i sekunder (0 = ingen overgang). Overstyrt per enhet. |
+| `ack_retry_enabled` | bool | Prov igjen sendinger uten ACK (plattformstandard; overstyringer per enhet). |
+
+Hver enhetnokkel er **Buspro-adressen** i format:
+- **Lys, gardin, vifte, bryter**: `subnet.device.channel` (f.eks. `1.5.2`)
+- **Klima, sensor, binær sensor**: `subnet.device` (f.eks. `3.1`)
+
+Hver enhetskonfigurasjon stotter:
+- `name` (obligatorisk): Visningsnavn
+- `running_time`, `dimmable`, `ack_retry_enabled` (plattformspesifikk, valgfritt)
+- `profile` (valgfritt, for klimasensorer — f.eks. `"ac"`, `"floor_heating"`)
+- `object_id` (valgfritt): Entity-ID-slug
+- `unique_id` (valgfritt): For manuell entityregisterkontroll
 
 ## Utvikling
 

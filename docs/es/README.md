@@ -83,20 +83,6 @@ Después de guardar, Home Assistant crea:
 
 Para ejemplos completos de interfaz de usuario y YAML para todos los tipos de dispositivos, consulte **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)**.
 
-## Opciones de configuración
-
-La integración buspro admite tanto **configuración basada en interfaz de usuario** como **configuración YAML**:
-
-### Configuración de interfaz de usuario
-La forma más fácil de agregar dispositivos — consulte **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)** para ejemplos paso a paso de todos los tipos de dispositivos.
-
-### Configuración YAML  
-La integración admite dos enfoques YAML complementarios:
-- **Basado en entidades** (Legacy) — archivos de entidades individuales, organizados por dominios
-- **Basado en dispositivos** (Modern) — definiciones completas de dispositivos con todos los canales
-
-**Para documentación completa de YAML, ejemplos y mejores prácticas, consulte [../en/DUAL_MODE_YAML.md](../en/DUAL_MODE_YAML.md)** (también disponible en [English](../en/DUAL_MODE_YAML.md) | [Беларуская](../en/DUAL_MODE_YAML.md) | [Deutsch](../en/DUAL_MODE_YAML.md) | [Français](../en/DUAL_MODE_YAML.md) | [Italiano](../en/DUAL_MODE_YAML.md) | [Nederlands](../en/DUAL_MODE_YAML.md) | [Norsk](../en/DUAL_MODE_YAML.md) | [Русский](../en/DUAL_MODE_YAML.md) | [Українська](../en/DUAL_MODE_YAML.md))
-
 ## Cambios incompatibles en 2.2.0
 
 - Las direcciones, los nombres, la cantidad de dispositivos y las asignaciones
@@ -321,6 +307,66 @@ Los atenuadores soportados pueden exponer conectividad, brillo máximo por canal
 - `buspro.send_message`
 
 `buspro.send_message` envía un comando de protocolo sin procesar y solo debe usarse con un código de operación HDL y una carga útil verificados.
+
+## Configuración YAML (heredado)
+
+La configuración de dispositivos YAML es totalmente compatible junto con la gestión de puertas de enlace de entrada de configuración. Puede definir luces, cubiertas, interruptores, ventiladores, clima, sensores y sensores binarios a través de YAML mientras la puerta de enlace se gestiona mediante la interfaz de usuario de integración.
+
+**Nota**: Los nuevos dispositivos deben utilizar la interfaz de usuario de integración **Configurar > Agregar dispositivo** en lugar de YAML, ya que proporciona agrupación de dispositivos, capacidades controladas por modelo y gestión del estado del canal. Se recomienda YAML para:
+- Dispositivos con perfiles no estándar o heredados
+- Migración desde integraciones Buspro más antiguas
+- Automatización compleja o plantillas de sensores
+
+### Ejemplo de sintaxis YAML
+
+Agregue a su `configuration.yaml`:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Ceiling light"
+        dimmable: true
+      "1.5.2":
+        name: "Wall lamp"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Living room curtain"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Bedroom climate"
+        profile: "ac"
+```
+
+### Configuración de plataforma
+
+Cada plataforma (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) acepta:
+
+| Clave | Tipo | Descripción |
+| --- | --- | --- |
+| `devices` | dict | Requerido. Mapeo de direcciones Buspro a configuraciones de dispositivos. |
+| `running_time` | int | Tiempo de transición predeterminado en segundos (0 = sin transición). Anulado por dispositivo. |
+| `ack_retry_enabled` | bool | Reintentar envíos sin ACK (valor predeterminado de plataforma; anulaciones por dispositivo). |
+
+Cada clave de dispositivo es la **dirección Buspro** en formato:
+- **Luz, cubierta, ventilador, interruptor**: `subnet.device.channel` (p. ej. `1.5.2`)
+- **Clima, sensor, sensor binario**: `subnet.device` (p. ej. `3.1`)
+
+Cada configuración de dispositivo admite:
+- `name` (requerido): Nombre para mostrar
+- `running_time`, `dimmable`, `ack_retry_enabled` (específico de la plataforma, opcional)
+- `profile` (opcional, para sensores climáticos — p. ej. `"ac"`, `"floor_heating"`)
+- `object_id` (opcional): Slug de ID de entidad
+- `unique_id` (opcional): Para control manual del registro de entidades
 
 ## Desarrollo
 

@@ -79,20 +79,6 @@ Nach dem Speichern erstellt Home Assistant:
 
 Vollständige UI- und YAML-Beispiele für alle Gerätetypen finden Sie unter **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)**.
 
-## Konfigurationsoptionen
-
-Die Buspro-Integration unterstützt sowohl **UI-Setup** als auch **YAML-Konfiguration**:
-
-### UI-Setup
-Der einfachste Weg, Geräte hinzuzufügen — siehe **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)** für Schritt-für-Schritt-Beispiele aller Gerätetypen.
-
-### YAML-Konfiguration  
-Die Integration unterstützt zwei ergänzende YAML-Ansätze:
-- **Entity-Centric** (Legacy) — einzelne Entity-Dateien, organisiert nach Domänen
-- **Device-Centric** (Modern) — vollständige Gerätedefinitionen mit allen Kanälen
-
-**Für vollständige YAML-Dokumentation, Beispiele und Best Practices siehe [../en/DUAL_MODE_YAML.md](../en/DUAL_MODE_YAML.md)** (auch verfügbar in [English](../en/DUAL_MODE_YAML.md) | [Беларуская](../en/DUAL_MODE_YAML.md) | [Español](../en/DUAL_MODE_YAML.md) | [Français](../en/DUAL_MODE_YAML.md) | [Italiano](../en/DUAL_MODE_YAML.md) | [Nederlands](../en/DUAL_MODE_YAML.md) | [Norsk](../en/DUAL_MODE_YAML.md) | [Русский](../en/DUAL_MODE_YAML.md) | [Українська](../en/DUAL_MODE_YAML.md))
-
 ## Wichtige Änderungen in 2.2.0
 
 - Adressen, Namen, Geräteanzahl und Kanalzuordnungen sind nicht mehr in der
@@ -323,6 +309,66 @@ Unterstützte Dimmer können Konnektivität, maximale Helligkeit pro Kanal, Last
 - `buspro.send_message`
 
 `buspro.send_message` sendet einen rohen Protokollbefehl und sollte nur mit verifiziertem HDL-Betriebscode und Payload verwendet werden.
+
+## YAML-Konfiguration (Vermächtnis)
+
+Die YAML-Gerätekonfiguration wird vollständig neben der Verwaltung von Config-Entry-Gateways unterstützt. Sie können Lichter, Abdeckungen, Schalter, Lüfter, Klima, Sensoren und binäre Sensoren über YAML definieren, während das Gateway von der Integrations-Benutzeroberfläche verwaltet wird.
+
+**Hinweis**: Neue Geräte sollten stattdessen die Integrations-Benutzeroberfläche **Konfigurieren > Gerät hinzufügen** verwenden, da sie Gerätegruppierung, modellgesteuerte Funktionen und Kanalstatusverwaltung bietet. YAML wird empfohlen für:
+- Geräte mit nicht standardmäßigen oder Legacy-Profilen
+- Migration von älteren Buspro-Integrationen
+- Komplexe Automatisierung oder Sensorvorlagen
+
+### YAML-Syntaxbeispiel
+
+Fügen Sie dies zu Ihrer `configuration.yaml` hinzu:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Ceiling light"
+        dimmable: true
+      "1.5.2":
+        name: "Wall lamp"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Living room curtain"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Bedroom climate"
+        profile: "ac"
+```
+
+### Plattformkonfiguration
+
+Jede Plattform (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) akzeptiert:
+
+| Schlüssel | Typ | Beschreibung |
+| --- | --- | --- |
+| `devices` | dict | Erforderlich. Zuordnung von Buspro-Adressen zu Gerätekonfigurationen. |
+| `running_time` | int | Standard-Übergangsdauer in Sekunden (0 = kein Übergang). Wird pro Gerät überschrieben. |
+| `ack_retry_enabled` | bool | Wiederholung beim Senden ohne ACK (Plattformstandard; pro-Gerät Außerkraftsetzungen). |
+
+Jeder Geräteschlüssel ist die **Buspro-Adresse** im Format:
+- **Licht, Abdeckung, Lüfter, Schalter**: `subnet.device.channel` (z.B. `1.5.2`)
+- **Klima, Sensor, binärer Sensor**: `subnet.device` (z.B. `3.1`)
+
+Jede Gerätekonfiguration unterstützt:
+- `name` (erforderlich): Anzeigename
+- `running_time`, `dimmable`, `ack_retry_enabled` (plattformspezifisch, optional)
+- `profile` (optional, für Klimasensoren — z.B. `"ac"`, `"floor_heating"`)
+- `object_id` (optional): Entity-ID-Slug
+- `unique_id` (optional): Zur manuellen Steuerung der Entity-Registry
 
 ## Entwicklung
 

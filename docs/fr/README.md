@@ -84,20 +84,6 @@ Après l'enregistrement, Home Assistant crée :
 
 Pour des exemples complets d'interface utilisateur et YAML pour tous les types d'appareils, consultez **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)**.
 
-## Options de configuration
-
-L'intégration buspro prend en charge à la fois **la configuration par interface utilisateur** et **la configuration YAML** :
-
-### Configuration par interface utilisateur
-Le moyen le plus facile d'ajouter des appareils — consultez **[../en/DEVICE_EXAMPLES.md](../en/DEVICE_EXAMPLES.md)** pour des exemples étape par étape de tous les types d'appareils.
-
-### Configuration YAML  
-L'intégration prend en charge deux approches YAML complémentaires :
-- **Basée sur les entités** (Legacy) — fichiers d'entités individuels, organisés par domaines
-- **Basée sur les appareils** (Modern) — définitions complètes d'appareils avec tous les canaux
-
-**Pour la documentation YAML complète, les exemples et les meilleures pratiques, consultez [../en/DUAL_MODE_YAML.md](../en/DUAL_MODE_YAML.md)** (également disponible en [English](../en/DUAL_MODE_YAML.md) | [Беларуская](../en/DUAL_MODE_YAML.md) | [Deutsch](../en/DUAL_MODE_YAML.md) | [Español](../en/DUAL_MODE_YAML.md) | [Italiano](../en/DUAL_MODE_YAML.md) | [Nederlands](../en/DUAL_MODE_YAML.md) | [Norsk](../en/DUAL_MODE_YAML.md) | [Русский](../en/DUAL_MODE_YAML.md) | [Українська](../en/DUAL_MODE_YAML.md))
-
 ## Changements incompatibles dans la version 2.2.0
 
 - Les adresses, noms, nombres d'appareils et affectations de canaux ne sont
@@ -321,6 +307,66 @@ Les variateurs pris en charge peuvent exposer la connectivité, la luminosité m
 - `buspro.send_message`
 
 `buspro.send_message` envoie une commande de protocole brute et ne doit être utilisé qu'avec un code d'opération HDL et une charge utile vérifiés.
+
+## Configuration YAML (héritage)
+
+La configuration des appareils YAML est entièrement prise en charge aux côtés de la gestion des passerelles d'entrée de configuration. Vous pouvez définir des lumières, des volets, des commutateurs, des ventilateurs, du climat, des capteurs et des capteurs binaires via YAML tandis que la passerelle est gérée par l'interface utilisateur d'intégration.
+
+**Remarque** : Les nouveaux appareils doivent utiliser l'interface utilisateur d'intégration **Configurer > Ajouter un appareil** au lieu de YAML, car elle fournit le regroupement d'appareils, les capacités pilotées par le modèle et la gestion de l'état du canal. YAML est recommandé pour :
+- Les appareils avec des profils non standard ou hérités
+- Migration à partir d'intégrations Buspro plus anciennes
+- Modèles d'automatisation ou de capteurs complexes
+
+### Exemple de syntaxe YAML
+
+Ajoutez à votre `configuration.yaml` :
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Ceiling light"
+        dimmable: true
+      "1.5.2":
+        name: "Wall lamp"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Living room curtain"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Bedroom climate"
+        profile: "ac"
+```
+
+### Configuration de la plateforme
+
+Chaque plateforme (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) accepte :
+
+| Clé | Type | Description |
+| --- | --- | --- |
+| `devices` | dict | Requis. Mappage des adresses Buspro aux configurations d'appareils. |
+| `running_time` | int | Durée de transition par défaut en secondes (0 = pas de transition). Remplacée par appareil. |
+| `ack_retry_enabled` | bool | Réessayez les envois sans ACK (par défaut de plateforme ; remplacements par appareil). |
+
+Chaque clé d'appareil est l'**adresse Buspro** au format :
+- **Lumière, volet, ventilateur, commutateur** : `subnet.device.channel` (par exemple `1.5.2`)
+- **Climat, capteur, capteur binaire** : `subnet.device` (par exemple `3.1`)
+
+Chaque configuration d'appareil prend en charge :
+- `name` (requis) : Nom d'affichage
+- `running_time`, `dimmable`, `ack_retry_enabled` (spécifique à la plateforme, facultatif)
+- `profile` (facultatif, pour les capteurs climatiques — par exemple `"ac"`, `"floor_heating"`)
+- `object_id` (facultatif) : Slug d'ID d'entité
+- `unique_id` (facultatif) : Pour le contrôle manuel du registre d'entité
 
 ## Développement
 
