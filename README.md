@@ -1,10 +1,10 @@
 # HDL Buspro for Home Assistant
 
-**Documentation:** English | [Беларуская](docs/README.be.md) |
-[Deutsch](docs/README.de.md) | [Español](docs/README.es.md) |
-[Français](docs/README.fr.md) | [Italiano](docs/README.it.md) |
-[Nederlands](docs/README.nl.md) | [Norsk](docs/README.no.md) |
-[Русский](docs/README.ru.md) | [Українська](docs/README.uk.md)
+**Documentation:** English | [Беларуская](docs/be/README.md) |
+[Deutsch](docs/de/README.md) | [Español](docs/es/README.md) |
+[Français](docs/fr/README.md) | [Italiano](docs/it/README.md) |
+[Nederlands](docs/nl/README.md) | [Norsk](docs/no/README.md) |
+[Русский](docs/ru/README.md) | [Українська](docs/uk/README.md)
 
 Local Home Assistant integration for HDL Buspro gateways and devices. The
 integration supports config-entry gateway management, model-driven physical
@@ -44,18 +44,17 @@ Home Assistant after each integration update.
 After gateway setup is complete:
 
 1. Open **Settings > Devices & services > HDL Buspro > Configure**.
-2. Select **Add device** to add a Buspro physical module to Home Assistant.
-3. **Select device type**: choose the capability (Relay, Dimmer, Fan, Cover, Multisensor, etc.).
-4. **Select exact model**: pick the model matching your hardware. This determines the number of channels.
-   - For unknown models, choose the **Generic** profile and specify the channel count.
-5. **Enter Buspro address**: the physical subnet.device address of the module (e.g., `1.5`).
-6. **Enter device name**: a display name for the device (e.g., "Living room lights").
-7. **Name each channel**: assign a name to each channel or capability you want to use.
-   - Example: for a 4-channel relay, name channels as "Ceiling light", "Table lamp", etc.
-   - **Leave a name empty to disable that channel** — it will not create an entity.
-8. Select **Save** to create the device and its entities.
+2. Click **Add device** to add a Buspro physical module.
+3. **Select device type** (Relay, Dimmer, Cover, Climate, Sensor, etc.).
+4. **Select exact model** matching your hardware.
+5. **Enter Buspro address** in `subnet.device` format (e.g., `1.5`).
+6. **Enter device name** (e.g., "Living room lights").
+7. **Name each channel** — leave empty to disable a channel.
+8. Click **Save**.
 
-Home Assistant automatically groups all entities from one physical module under a single Device Registry entry and reloads the config entry.
+Home Assistant automatically groups entities by physical module in the Device Registry.
+
+**For UI and YAML configuration examples of all device types, see [DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md).**
 
 ### Editing devices
 
@@ -67,21 +66,31 @@ To change an existing device, open **Configure > Edit device**. You can:
 
 UI-managed devices support full editing. Legacy YAML devices can expose registry naming controls, but their protocol configuration must still be changed in YAML. Restart Home Assistant after changing YAML.
 
-### Example: Adding a 4-channel relay module
+### Quick example: Adding a 4-channel relay module
 
 1. Model: `HDL-MR0410.431` (4 relay channels)
 2. Buspro address: `1.10`
 3. Device name: "Room relays"
-4. Channel names:
-   - Channel 1: "Ceiling light"
-   - Channel 2: "Wall lamp"
-   - Channel 3: "" (disabled)
-   - Channel 4: "Fan"
+4. Channel names: "Ceiling light", "Wall lamp", "", "Fan"
+5. Click **Save**
 
-After saving, Home Assistant creates:
-- `light.room_relays_ceiling_light`
-- `light.room_relays_wall_lamp`
-- `switch.room_relays_fan`
+Home Assistant automatically creates entities: `light.room_relays_ceiling_light`, `light.room_relays_wall_lamp`, `switch.room_relays_fan`
+
+For complete UI and YAML examples for all device types, see **[DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md)**.
+
+## Configuration Options
+
+The buspro integration supports both **UI-based setup** and **YAML configuration**:
+
+### UI Setup
+The easiest way to add devices — see **[DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md)** for step-by-step examples of all device types.
+
+### YAML Configuration  
+The integration supports two complementary YAML approaches:
+- **Entity-Centric** (Legacy) — individual entity files organized by domain
+- **Device-Centric** (Modern) — complete device definitions with all channels
+
+**For complete YAML documentation, examples, and best practices, see [DUAL_MODE_YAML.md](docs/en/DUAL_MODE_YAML.md)** (also available in [Беларуская](docs/be/DUAL_MODE_YAML.md) | [Deutsch](docs/de/DUAL_MODE_YAML.md) | [Español](docs/es/DUAL_MODE_YAML.md) | [Français](docs/fr/DUAL_MODE_YAML.md) | [Italiano](docs/it/DUAL_MODE_YAML.md) | [Nederlands](docs/nl/DUAL_MODE_YAML.md) | [Norsk](docs/no/DUAL_MODE_YAML.md) | [Русский](docs/ru/DUAL_MODE_YAML.md) | [Українська](docs/uk/DUAL_MODE_YAML.md))
 
 ## Breaking changes in 2.2.0
 

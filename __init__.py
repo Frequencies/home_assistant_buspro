@@ -35,6 +35,10 @@ from .const import (
     CONF_SEND_PORT,
     CONF_RECEIVE_PORT,
     CONF_UNIQUE_ID,
+    CONF_CHANNELS,
+    CONF_DEVICE_TYPE,
+    CONF_CHANNEL_NUMBER,
+    CONF_CHANNEL_ENABLED,
     DATA_BUSPRO_CONFIG,
     DEFAULT_MANUFACTURER,
     DEFAULT_CLIENT_ADDRESS,
@@ -52,6 +56,7 @@ from .devices import DEVICE_CATALOG
 from .entity_helpers import registry_device_definitions
 from .model_notes import emit_model_support_notes
 from .yaml_normalization import normalize_yaml_devices
+from .dual_mode_yaml import normalize_dual_mode, is_device_centric
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,6 +150,23 @@ COMPOUND_DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITIES): vol.All(cv.ensure_list, [COMPOUND_ENTITY_SCHEMA]),
 })
 
+# Device-centric format: single file per device with all its channels
+CHANNEL_SCHEMA = vol.Schema({
+    vol.Required(CONF_CHANNEL_NUMBER): vol.Any(cv.positive_int, cv.string),
+    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_CHANNEL_ENABLED, default=True): cv.boolean,
+    vol.Optional(CONF_OBJECT_ID): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
+})
+
+MANAGED_YAML_DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ADDRESS): cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_MODEL): cv.string,
+    vol.Required(CONF_DEVICE_TYPE): cv.string,
+    vol.Optional(CONF_CHANNELS): vol.All(cv.ensure_list, [CHANNEL_SCHEMA]),
+})
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -156,7 +178,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(
             CONF_CLIENT_ADDRESS, default=DEFAULT_CLIENT_ADDRESS
         ): vol.All(cv.string, _validate_client_address),
-        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [COMPOUND_DEVICE_SCHEMA]),
+        vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [
+            vol.Any(COMPOUND_DEVICE_SCHEMA, MANAGED_YAML_DEVICE_SCHEMA)
+        ]),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -193,14 +217,20 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     domain_config = config[DOMAIN]
     runtime_data = hass.data.setdefault(DATA_BUSPRO_CONFIG, {})
-    runtime_data["configured_devices"] = normalize_yaml_devices(
-        domain_config.get(CONF_DEVICES, []),
+
+    # Normalize both entity-centric and device-centric YAML formats
+    raw_devices = domain_config.get(CONF_DEVICES, [])
+    normalized_devices = normalize_dual_mode(
+        raw_devices,
         DEVICE_CATALOG,
-        DEFAULT_SENSOR_MODEL,
-        DEFAULT_SENSOR_PROFILE,
         _LOGGER,
     )
+
+    runtime_data["configured_devices"] = normalized_devices
     runtime_data["device_config_source"] = "yaml"
+    runtime_data["has_device_centric"] = any(
+        is_device_centric(d) for d in normalized_devices
+    )
 
     # A config entry may own the gateway while YAML only describes devices.
     if CONF_HOST not in domain_config or CONF_PORT not in domain_config:
