@@ -1,13 +1,31 @@
-# Tests
+# Buspro tests
 
-Run all tests:
+Buspro tests are colocated with the integration module for easier extraction/publishing.
 
-```bash
-python3 -m unittest discover -s tests -p 'test_*.py' -v
+## Layout
+
+- `buspro_protocol/` — protocol/library behavior (`pybuspro`), telegram parsing, transport assumptions.
+- `buspro_integration/` — Home Assistant integration behavior: catalog, managed-device logic, normalization, logging helpers.
+
+## Naming conventions
+
+- Test files: `test_<scope>.py`
+- Test classes: `<Scope>Test` or `<Scope>ProtocolTest`
+- Keep protocol and integration concerns in separate files.
+
+## Import/path convention
+
+Tests in these folders should resolve the Buspro module root with:
+
+```python
+Path(__file__).parents[2]
 ```
 
-This suite currently includes:
-- project-wide smoke compile tests for all Python files
-- `pybuspro` unit tests (generics, telegram helper, control dedup)
-- Home Assistant-facing flow tests (user/options/reconfigure)
-- integration setup tests (`async_setup_entry` options override)
+(Example: from `custom_components/buspro/tests/buspro_protocol/test_*.py`, `parents[2]` is `custom_components/buspro`.)
+
+## Run examples
+
+```bash
+python3 custom_components/buspro/tests/buspro_protocol/test_sensor_protocol.py
+python3 custom_components/buspro/tests/buspro_integration/test_device_catalog.py
+```

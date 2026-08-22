@@ -1,0 +1,199 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Налаштування шлюзу Buspro",
+        "description": "Введіть IP-адресу та номер порту шлюзу.",
+        "data": {
+          "host": "IP-адреса хоста",
+          "port": "Номер порту",
+          "send_port": "UDP порт надсилання",
+          "receive_port": "UDP порт прийому",
+          "client_address": "Buspro-адреса Home Assistant"
+        }
+      },
+      "reconfigure": {
+        "title": "Переналаштування шлюзу Buspro",
+        "description": "Оновіть IP-адресу та порти для цього шлюзу Buspro.",
+        "data": {
+          "host": "IP-адреса хоста",
+          "port": "Номер порту",
+          "send_port": "UDP порт надсилання",
+          "receive_port": "UDP порт прийому",
+          "client_address": "Buspro-адреса Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не вдалося підключитися до шлюзу Buspro.",
+      "invalid_host": "Недійсний хост.",
+      "invalid_client_address": "Укажіть коректну адресу subnet.device для клієнта Home Assistant.",
+      "unknown": "Сталася помилка."
+    },
+    "abort": {
+      "reconfigure_not_supported": "Переналаштування недоступне для цього запису.",
+      "reconfigure_successful": "Шлюз Buspro було переналаштовано."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Параметри Buspro",
+        "description": "Керування шлюзом і пристроями Buspro.",
+        "menu_options": {
+          "gateway": "Налаштування шлюзу",
+          "add_device": "Додати пристрій",
+          "edit_device": "Змінити пристрій"
+        }
+      },
+      "gateway": {
+        "title": "Налаштування шлюзу",
+        "description": "Оновіть налаштування шлюзу та вільну Buspro-адресу Home Assistant.",
+        "data": {
+          "host": "IP-адреса хоста",
+          "port": "Номер порту",
+          "send_port": "UDP порт надсилання",
+          "receive_port": "UDP порт прийому",
+          "client_address": "Buspro-адреса Home Assistant"
+        }
+      },
+      "add_device": {
+        "title": "Додати пристрій Buspro",
+        "description": "Виберіть тип фізичного пристрою.",
+        "data": {
+          "device_type": "Тип пристрою"
+        }
+      },
+      "device_details": {
+        "title": "Параметри пристрою",
+        "description": "Налаштуйте фізичну Buspro-адресу та кількість каналів.",
+        "data": {
+          "name": "Назва",
+          "address": "Buspro-адреса (subnet.device)",
+          "model": "Модель",
+          "channel_count": "Кількість каналів",
+          "remove_device": "Видалити цей пристрій, керований через UI"
+        }
+      },
+      "device_channels": {
+        "title": "Назви каналів",
+        "description": "Введіть назви для {device_name}. Порожні канали залишаться вимкненими.",
+        "data": {
+          "channel_1": "Канал 1",
+          "channel_2": "Канал 2",
+          "channel_3": "Канал 3",
+          "channel_4": "Канал 4",
+          "channel_5": "Канал 5",
+          "channel_6": "Канал 6",
+          "channel_7": "Канал 7",
+          "channel_8": "Канал 8",
+          "channel_9": "Канал 9",
+          "channel_10": "Канал 10",
+          "channel_11": "Канал 11",
+          "channel_12": "Канал 12",
+          "channel_13": "Канал 13",
+          "channel_14": "Канал 14",
+          "channel_15": "Канал 15",
+          "channel_16": "Канал 16",
+          "channel_17": "Канал 17",
+          "channel_18": "Канал 18",
+          "channel_19": "Канал 19",
+          "channel_20": "Канал 20",
+          "channel_21": "Канал 21",
+          "channel_22": "Канал 22",
+          "channel_23": "Канал 23",
+          "channel_24": "Канал 24",
+          "channel_25": "Канал 25",
+          "channel_26": "Канал 26",
+          "channel_27": "Канал 27",
+          "channel_28": "Канал 28",
+          "channel_29": "Канал 29",
+          "channel_30": "Канал 30",
+          "channel_31": "Канал 31",
+          "channel_32": "Канал 32",
+          "channel_33": "Канал 33",
+          "channel_34": "Канал 34",
+          "channel_35": "Канал 35",
+          "channel_36": "Канал 36",
+          "channel_37": "Канал 37",
+          "channel_38": "Канал 38",
+          "channel_39": "Канал 39",
+          "channel_40": "Канал 40",
+          "channel_41": "Канал 41",
+          "channel_42": "Канал 42",
+          "channel_43": "Канал 43",
+          "channel_44": "Канал 44",
+          "channel_45": "Канал 45",
+          "channel_46": "Канал 46",
+          "channel_47": "Канал 47",
+          "channel_48": "Канал 48",
+          "channel_49": "Канал 49",
+          "channel_50": "Канал 50",
+          "channel_51": "Канал 51",
+          "channel_52": "Канал 52",
+          "channel_53": "Канал 53",
+          "channel_54": "Канал 54",
+          "channel_55": "Канал 55",
+          "channel_56": "Канал 56",
+          "channel_57": "Канал 57",
+          "channel_58": "Канал 58",
+          "channel_59": "Канал 59",
+          "channel_60": "Канал 60",
+          "channel_61": "Канал 61",
+          "channel_62": "Канал 62",
+          "channel_63": "Канал 63",
+          "channel_64": "Канал 64",
+          "channel_temperature": "Температура",
+          "channel_illuminance": "Освітленість",
+          "channel_humidity": "Вологість",
+          "channel_motion": "Рух",
+          "channel_dry_contact_1": "Сухий контакт 1",
+          "channel_dry_contact_2": "Сухий контакт 2",
+          "channel_climate": "Клімат"
+        }
+      },
+      "edit_device": {
+        "title": "Змінити пристрій Buspro",
+        "description": "Виберіть керований або наявний YAML-пристрій.",
+        "data": {
+          "device": "Пристрій"
+        }
+      },
+      "edit_legacy_device": {
+        "title": "Змінити наявний пристрій",
+        "description": "Змініть назви пристрою та каналів. Показано фізичні номери каналів.",
+        "data": {
+          "name": "Назва",
+          "model": "Модель",
+          "channel_1": "Канал 1",
+          "channel_2": "Канал 2",
+          "channel_3": "Канал 3",
+          "channel_4": "Канал 4",
+          "channel_5": "Канал 5",
+          "channel_6": "Канал 6",
+          "channel_7": "Канал 7",
+          "channel_8": "Канал 8",
+          "channel_9": "Канал 9",
+          "channel_10": "Канал 10",
+          "channel_11": "Канал 11",
+          "channel_12": "Канал 12",
+          "channel_13": "Канал 13",
+          "channel_14": "Канал 14",
+          "channel_15": "Канал 15",
+          "channel_16": "Канал 16"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не вдалося підключитися до шлюзу Buspro.",
+      "invalid_host": "Недійсний хост.",
+      "invalid_address": "Укажіть коректну адресу subnet.device.",
+      "invalid_client_address": "Укажіть коректну адресу subnet.device для клієнта Home Assistant.",
+      "address_in_use": "Ця Buspro-адреса вже існує.",
+      "unsupported_model": "Ця модель не підтримується для вибраного типу пристрою.",
+      "invalid_channel_count": "Кількість каналів перевищує обмеження моделі.",
+      "name_required": "Введіть назву пристрою.",
+      "unknown": "Сталася неочікувана помилка."
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "domain": "buspro",
+  "name": "HDL Buspro",
+  "config_flow": true,
+  "documentation": "https://github.com/Frequencies/home_assistant_buspro",
+  "issue_tracker": "https://github.com/Frequencies/home_assistant_buspro/issues",
+  "codeowners": ["@eyesoft", "@Frequencies"],
+  "dependencies": [],
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "version": "3.0.2",
+  "iot_class": "local_polling"
+}

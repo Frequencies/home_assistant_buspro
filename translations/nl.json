@@ -1,0 +1,199 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Buspro gateway-configuratie",
+        "description": "Voer het IP-adres en poortnummer van de gateway in.",
+        "data": {
+          "host": "Host-IP-adres",
+          "port": "Poortnummer",
+          "send_port": "UDP-verzendpoort",
+          "receive_port": "UDP-ontvangstpoort",
+          "client_address": "Buspro-adres van Home Assistant"
+        }
+      },
+      "reconfigure": {
+        "title": "Buspro-gateway opnieuw configureren",
+        "description": "Werk het IP-adres en de poorten voor deze Buspro-gateway bij.",
+        "data": {
+          "host": "Host-IP-adres",
+          "port": "Poortnummer",
+          "send_port": "UDP-verzendpoort",
+          "receive_port": "UDP-ontvangstpoort",
+          "client_address": "Buspro-adres van Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de Buspro-gateway.",
+      "invalid_host": "Ongeldige host.",
+      "invalid_client_address": "Gebruik een geldig subnet.device-adres voor deze Home Assistant-client.",
+      "unknown": "Er is een fout opgetreden."
+    },
+    "abort": {
+      "reconfigure_not_supported": "Herconfiguratie is niet beschikbaar voor deze invoer.",
+      "reconfigure_successful": "Buspro-gateway is opnieuw geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Buspro-opties",
+        "description": "Beheer de gateway en Buspro-apparaten.",
+        "menu_options": {
+          "gateway": "Gateway-instellingen",
+          "add_device": "Apparaat toevoegen",
+          "edit_device": "Apparaat bewerken"
+        }
+      },
+      "gateway": {
+        "title": "Gateway-instellingen",
+        "description": "Werk de gateway en het ongebruikte Buspro-adres van Home Assistant bij.",
+        "data": {
+          "host": "Host-IP-adres",
+          "port": "Poortnummer",
+          "send_port": "UDP-verzendpoort",
+          "receive_port": "UDP-ontvangstpoort",
+          "client_address": "Buspro-adres van Home Assistant"
+        }
+      },
+      "add_device": {
+        "title": "Buspro-apparaat toevoegen",
+        "description": "Selecteer het type fysiek apparaat.",
+        "data": {
+          "device_type": "Apparaattype"
+        }
+      },
+      "device_details": {
+        "title": "Apparaatdetails",
+        "description": "Configureer het fysieke Buspro-adres en het aantal kanalen.",
+        "data": {
+          "name": "Naam",
+          "address": "Buspro-adres (subnet.device)",
+          "model": "Model",
+          "channel_count": "Aantal kanalen",
+          "remove_device": "Dit via de interface beheerde apparaat verwijderen"
+        }
+      },
+      "device_channels": {
+        "title": "Kanaalnamen",
+        "description": "Voer namen in voor {device_name}. Lege kanalen blijven uitgeschakeld.",
+        "data": {
+          "channel_1": "Kanaal 1",
+          "channel_2": "Kanaal 2",
+          "channel_3": "Kanaal 3",
+          "channel_4": "Kanaal 4",
+          "channel_5": "Kanaal 5",
+          "channel_6": "Kanaal 6",
+          "channel_7": "Kanaal 7",
+          "channel_8": "Kanaal 8",
+          "channel_9": "Kanaal 9",
+          "channel_10": "Kanaal 10",
+          "channel_11": "Kanaal 11",
+          "channel_12": "Kanaal 12",
+          "channel_13": "Kanaal 13",
+          "channel_14": "Kanaal 14",
+          "channel_15": "Kanaal 15",
+          "channel_16": "Kanaal 16",
+          "channel_17": "Kanaal 17",
+          "channel_18": "Kanaal 18",
+          "channel_19": "Kanaal 19",
+          "channel_20": "Kanaal 20",
+          "channel_21": "Kanaal 21",
+          "channel_22": "Kanaal 22",
+          "channel_23": "Kanaal 23",
+          "channel_24": "Kanaal 24",
+          "channel_25": "Kanaal 25",
+          "channel_26": "Kanaal 26",
+          "channel_27": "Kanaal 27",
+          "channel_28": "Kanaal 28",
+          "channel_29": "Kanaal 29",
+          "channel_30": "Kanaal 30",
+          "channel_31": "Kanaal 31",
+          "channel_32": "Kanaal 32",
+          "channel_33": "Kanaal 33",
+          "channel_34": "Kanaal 34",
+          "channel_35": "Kanaal 35",
+          "channel_36": "Kanaal 36",
+          "channel_37": "Kanaal 37",
+          "channel_38": "Kanaal 38",
+          "channel_39": "Kanaal 39",
+          "channel_40": "Kanaal 40",
+          "channel_41": "Kanaal 41",
+          "channel_42": "Kanaal 42",
+          "channel_43": "Kanaal 43",
+          "channel_44": "Kanaal 44",
+          "channel_45": "Kanaal 45",
+          "channel_46": "Kanaal 46",
+          "channel_47": "Kanaal 47",
+          "channel_48": "Kanaal 48",
+          "channel_49": "Kanaal 49",
+          "channel_50": "Kanaal 50",
+          "channel_51": "Kanaal 51",
+          "channel_52": "Kanaal 52",
+          "channel_53": "Kanaal 53",
+          "channel_54": "Kanaal 54",
+          "channel_55": "Kanaal 55",
+          "channel_56": "Kanaal 56",
+          "channel_57": "Kanaal 57",
+          "channel_58": "Kanaal 58",
+          "channel_59": "Kanaal 59",
+          "channel_60": "Kanaal 60",
+          "channel_61": "Kanaal 61",
+          "channel_62": "Kanaal 62",
+          "channel_63": "Kanaal 63",
+          "channel_64": "Kanaal 64",
+          "channel_temperature": "Temperatuur",
+          "channel_illuminance": "Verlichtingssterkte",
+          "channel_humidity": "Luchtvochtigheid",
+          "channel_motion": "Beweging",
+          "channel_dry_contact_1": "Droog contact 1",
+          "channel_dry_contact_2": "Droog contact 2",
+          "channel_climate": "Klimaat"
+        }
+      },
+      "edit_device": {
+        "title": "Buspro-apparaat bewerken",
+        "description": "Selecteer een beheerd of bestaand YAML-apparaat.",
+        "data": {
+          "device": "Apparaat"
+        }
+      },
+      "edit_legacy_device": {
+        "title": "Bestaand apparaat bewerken",
+        "description": "Werk apparaat- en kanaalnamen bij. Fysieke kanaalnummers worden getoond.",
+        "data": {
+          "name": "Naam",
+          "model": "Model",
+          "channel_1": "Kanaal 1",
+          "channel_2": "Kanaal 2",
+          "channel_3": "Kanaal 3",
+          "channel_4": "Kanaal 4",
+          "channel_5": "Kanaal 5",
+          "channel_6": "Kanaal 6",
+          "channel_7": "Kanaal 7",
+          "channel_8": "Kanaal 8",
+          "channel_9": "Kanaal 9",
+          "channel_10": "Kanaal 10",
+          "channel_11": "Kanaal 11",
+          "channel_12": "Kanaal 12",
+          "channel_13": "Kanaal 13",
+          "channel_14": "Kanaal 14",
+          "channel_15": "Kanaal 15",
+          "channel_16": "Kanaal 16"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met de Buspro-gateway.",
+      "invalid_host": "Ongeldige host.",
+      "invalid_address": "Gebruik een geldig subnet.device-adres.",
+      "invalid_client_address": "Gebruik een geldig subnet.device-adres voor deze Home Assistant-client.",
+      "address_in_use": "Dit Buspro-adres bestaat al.",
+      "unsupported_model": "Dit model wordt niet ondersteund voor het geselecteerde type.",
+      "invalid_channel_count": "Het aantal kanalen overschrijdt de limiet van het model.",
+      "name_required": "Voer een apparaatnaam in.",
+      "unknown": "Er is een onverwachte fout opgetreden."
+    }
+  }
+}

@@ -1,0 +1,199 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configurazione gateway Buspro",
+        "description": "Inserisci l'indirizzo IP e il numero di porta del gateway.",
+        "data": {
+          "host": "Indirizzo IP host",
+          "port": "Numero di porta",
+          "send_port": "Porta UDP di invio",
+          "receive_port": "Porta UDP di ricezione",
+          "client_address": "Indirizzo Buspro di Home Assistant"
+        }
+      },
+      "reconfigure": {
+        "title": "Riconfigura il gateway Buspro",
+        "description": "Aggiorna indirizzo IP e porte per questo gateway Buspro.",
+        "data": {
+          "host": "Indirizzo IP host",
+          "port": "Numero di porta",
+          "send_port": "Porta UDP di invio",
+          "receive_port": "Porta UDP di ricezione",
+          "client_address": "Indirizzo Buspro di Home Assistant"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossibile connettersi al gateway Buspro.",
+      "invalid_host": "Host non valido.",
+      "invalid_client_address": "Usa un indirizzo subnet.device valido per questo client Home Assistant.",
+      "unknown": "Si è verificato un errore."
+    },
+    "abort": {
+      "reconfigure_not_supported": "La riconfigurazione non è disponibile per questa voce.",
+      "reconfigure_successful": "Il gateway Buspro è stato riconfigurato."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opzioni Buspro",
+        "description": "Gestisci il gateway e i dispositivi Buspro.",
+        "menu_options": {
+          "gateway": "Impostazioni gateway",
+          "add_device": "Aggiungi dispositivo",
+          "edit_device": "Modifica dispositivo"
+        }
+      },
+      "gateway": {
+        "title": "Impostazioni gateway",
+        "description": "Aggiorna il gateway e l’indirizzo Buspro inutilizzato di Home Assistant.",
+        "data": {
+          "host": "Indirizzo IP host",
+          "port": "Numero di porta",
+          "send_port": "Porta UDP di invio",
+          "receive_port": "Porta UDP di ricezione",
+          "client_address": "Indirizzo Buspro di Home Assistant"
+        }
+      },
+      "add_device": {
+        "title": "Aggiungi dispositivo Buspro",
+        "description": "Seleziona il tipo di dispositivo fisico.",
+        "data": {
+          "device_type": "Tipo di dispositivo"
+        }
+      },
+      "device_details": {
+        "title": "Dettagli dispositivo",
+        "description": "Configura l’indirizzo Buspro fisico e il numero di canali.",
+        "data": {
+          "name": "Nome",
+          "address": "Indirizzo Buspro (subnet.device)",
+          "model": "Modello",
+          "channel_count": "Numero di canali",
+          "remove_device": "Rimuovi questo dispositivo gestito dall’interfaccia"
+        }
+      },
+      "device_channels": {
+        "title": "Nomi dei canali",
+        "description": "Inserisci i nomi per {device_name}. I canali vuoti restano disabilitati.",
+        "data": {
+          "channel_1": "Canale 1",
+          "channel_2": "Canale 2",
+          "channel_3": "Canale 3",
+          "channel_4": "Canale 4",
+          "channel_5": "Canale 5",
+          "channel_6": "Canale 6",
+          "channel_7": "Canale 7",
+          "channel_8": "Canale 8",
+          "channel_9": "Canale 9",
+          "channel_10": "Canale 10",
+          "channel_11": "Canale 11",
+          "channel_12": "Canale 12",
+          "channel_13": "Canale 13",
+          "channel_14": "Canale 14",
+          "channel_15": "Canale 15",
+          "channel_16": "Canale 16",
+          "channel_17": "Canale 17",
+          "channel_18": "Canale 18",
+          "channel_19": "Canale 19",
+          "channel_20": "Canale 20",
+          "channel_21": "Canale 21",
+          "channel_22": "Canale 22",
+          "channel_23": "Canale 23",
+          "channel_24": "Canale 24",
+          "channel_25": "Canale 25",
+          "channel_26": "Canale 26",
+          "channel_27": "Canale 27",
+          "channel_28": "Canale 28",
+          "channel_29": "Canale 29",
+          "channel_30": "Canale 30",
+          "channel_31": "Canale 31",
+          "channel_32": "Canale 32",
+          "channel_33": "Canale 33",
+          "channel_34": "Canale 34",
+          "channel_35": "Canale 35",
+          "channel_36": "Canale 36",
+          "channel_37": "Canale 37",
+          "channel_38": "Canale 38",
+          "channel_39": "Canale 39",
+          "channel_40": "Canale 40",
+          "channel_41": "Canale 41",
+          "channel_42": "Canale 42",
+          "channel_43": "Canale 43",
+          "channel_44": "Canale 44",
+          "channel_45": "Canale 45",
+          "channel_46": "Canale 46",
+          "channel_47": "Canale 47",
+          "channel_48": "Canale 48",
+          "channel_49": "Canale 49",
+          "channel_50": "Canale 50",
+          "channel_51": "Canale 51",
+          "channel_52": "Canale 52",
+          "channel_53": "Canale 53",
+          "channel_54": "Canale 54",
+          "channel_55": "Canale 55",
+          "channel_56": "Canale 56",
+          "channel_57": "Canale 57",
+          "channel_58": "Canale 58",
+          "channel_59": "Canale 59",
+          "channel_60": "Canale 60",
+          "channel_61": "Canale 61",
+          "channel_62": "Canale 62",
+          "channel_63": "Canale 63",
+          "channel_64": "Canale 64",
+          "channel_temperature": "Temperatura",
+          "channel_illuminance": "Illuminamento",
+          "channel_humidity": "Umidità",
+          "channel_motion": "Movimento",
+          "channel_dry_contact_1": "Contatto pulito 1",
+          "channel_dry_contact_2": "Contatto pulito 2",
+          "channel_climate": "Climatizzazione"
+        }
+      },
+      "edit_device": {
+        "title": "Modifica dispositivo Buspro",
+        "description": "Seleziona un dispositivo gestito o YAML esistente.",
+        "data": {
+          "device": "Dispositivo"
+        }
+      },
+      "edit_legacy_device": {
+        "title": "Modifica dispositivo esistente",
+        "description": "Aggiorna i nomi del dispositivo e dei canali. Sono mostrati i numeri fisici.",
+        "data": {
+          "name": "Nome",
+          "model": "Modello",
+          "channel_1": "Canale 1",
+          "channel_2": "Canale 2",
+          "channel_3": "Canale 3",
+          "channel_4": "Canale 4",
+          "channel_5": "Canale 5",
+          "channel_6": "Canale 6",
+          "channel_7": "Canale 7",
+          "channel_8": "Canale 8",
+          "channel_9": "Canale 9",
+          "channel_10": "Canale 10",
+          "channel_11": "Canale 11",
+          "channel_12": "Canale 12",
+          "channel_13": "Canale 13",
+          "channel_14": "Canale 14",
+          "channel_15": "Canale 15",
+          "channel_16": "Canale 16"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Impossibile connettersi al gateway Buspro.",
+      "invalid_host": "Host non valido.",
+      "invalid_address": "Usa un indirizzo subnet.device valido.",
+      "invalid_client_address": "Usa un indirizzo subnet.device valido per questo client Home Assistant.",
+      "address_in_use": "Questo indirizzo Buspro esiste già.",
+      "unsupported_model": "Questo modello non è supportato per il tipo selezionato.",
+      "invalid_channel_count": "Il numero di canali supera il limite del modello.",
+      "name_required": "Inserisci un nome per il dispositivo.",
+      "unknown": "Si è verificato un errore imprevisto."
+    }
+  }
+}
