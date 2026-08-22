@@ -1,0 +1,251 @@
+import asyncio
+import logging
+
+# from ..helpers.generics import Generics
+from .control import _ReadSensorStatus, _ReadStatusOfUniversalSwitch, _ReadStatusOfChannels, _ReadFloorHeatingStatus, \
+    _ReadDryContactStatus, _ReadSensorsInOneStatus
+from .device import Device
+from ..helpers.enums import *
+
+_LOGGER = logging.getLogger(__name__)
+
+class Sensor(Device):
+    def __init__(self, buspro, device_address, universal_switch_number=None, channel_number=None, device=None,
+                 switch_number=None, name="", delay_read_current_state_seconds=0):
+        super().__init__(buspro, device_address, name)
+
+        self._buspro = buspro
+        self._device_address = device_address
+        self._universal_switch_number = universal_switch_number
+        self._channel_number = channel_number
+        self._name = name
+        self._device = device
+        self._switch_number = switch_number
+
+        self._current_temperature = None
+        self._current_humidity = None
+        self._brightness = None
+        self._motion_sensor = None
+        self._sonic = None
+        self._dry_contact_1_status = None
+        self._dry_contact_2_status = None
+        self._universal_switch_status = OnOffStatus.OFF
+        self._channel_status = 0
+        self._switch_status = 0
+
+        self.register_telegram_received_cb(self._telegram_received_cb)
+        self._initial_read_task = self._call_read_current_status_of_sensor(run_from_init=True)
+
+    def _telegram_received_cb(self, telegram):
+        if telegram.operate_code == OperateCode.ReadSensorStatusResponse:
+            if len(telegram.payload) < 8:
+                return
+            success_or_fail = telegram.payload[0]
+            if self._is_response_for_client(telegram):
+                self._current_temperature = telegram.payload[1]
+            brightness_high = telegram.payload[2]
+            brightness_low = telegram.payload[3]
+            self._motion_sensor = telegram.payload[4]
+            self._sonic = telegram.payload[5]
+            self._dry_contact_1_status = telegram.payload[6]
+            self._dry_contact_2_status = telegram.payload[7]
+            if success_or_fail == SuccessOrFailure.Success.value[0]:
+                self._brightness = (brightness_high << 8) | brightness_low
+                self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.ReadSensorsInOneStatusResponse:
+            if len(telegram.payload) < 10:
+                return
+            if self._is_response_for_client(telegram):
+                self._current_temperature = telegram.payload[1]
+            self._current_humidity = telegram.payload[4]
+            self._motion_sensor = telegram.payload[7]
+            self._dry_contact_1_status = telegram.payload[8]
+            self._dry_contact_2_status = telegram.payload[9]
+
+            brightness_high = telegram.payload[2]
+            brightness_low = telegram.payload[3]
+            self._brightness = (brightness_high << 8) | brightness_low
+
+            self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.BroadcastSensorStatusResponse:
+            self._current_temperature = telegram.payload[0]
+            brightness_high = telegram.payload[1]
+            brightness_low = telegram.payload[2]
+            self._motion_sensor = telegram.payload[3]
+            self._sonic = telegram.payload[4]
+            self._dry_contact_1_status = telegram.payload[5]
+            self._dry_contact_2_status = telegram.payload[6]
+            self._brightness = (brightness_high << 8) | brightness_low
+            self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.BroadcastSensorStatusAutoResponse:
+            self._current_temperature = telegram.payload[0]
+
+            brightness_high = telegram.payload[1]
+            brightness_low = telegram.payload[2]
+            self._motion_sensor = telegram.payload[3]
+            self._sonic = telegram.payload[4]
+            self._dry_contact_1_status = telegram.payload[5]
+            self._dry_contact_2_status = telegram.payload[6]
+            self._brightness = (brightness_high << 8) | brightness_low
+            self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.ReadFloorHeatingStatusResponse:
+            self._current_temperature = telegram.payload[1]
+            self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.BroadcastTemperatureResponse:
+            self._current_temperature = telegram.payload[1]
+            self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.ReadStatusOfUniversalSwitchResponse:
+            switch_number = telegram.payload[0]
+            universal_switch_status = telegram.payload[1]
+
+            if switch_number == self._universal_switch_number:
+                self._universal_switch_status = universal_switch_status
+                self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.BroadcastStatusOfUniversalSwitch:
+            if self._universal_switch_number is not None and self._universal_switch_number <= telegram.payload[0]:
+                self._universal_switch_status = telegram.payload[self._universal_switch_number]
+                self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.UniversalSwitchControlResponse:
+            switch_number = telegram.payload[0]
+            universal_switch_status = telegram.payload[1]
+
+            if switch_number == self._universal_switch_number:
+                self._universal_switch_status = universal_switch_status
+                self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.ReadStatusOfChannelsResponse:
+            if self._channel_number is None:
+                _LOGGER.warning("Sensor channel number is not set, ignoring telegram")
+                return
+            if self._channel_number <= telegram.payload[0]:
+                self._channel_status = telegram.payload[self._channel_number]
+                self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.SingleChannelControlResponse:
+            if self._channel_number == telegram.payload[0]:
+                # if telegram.payload[1] == SuccessOrFailure.Success::
+                self._channel_status = telegram.payload[2]
+                self._call_device_updated()
+
+        elif telegram.operate_code == OperateCode.ReadDryContactStatusResponse:
+            if self._switch_number == telegram.payload[1]:
+                self._switch_status = telegram.payload[2]
+                self._call_device_updated()
+
+    def _is_response_for_client(self, telegram):
+        return tuple(telegram.target_address or ()) == self._buspro.client_address
+
+    async def read_sensor_status(self):
+        if self._universal_switch_number is not None:
+            rsous = _ReadStatusOfUniversalSwitch(self._buspro)
+            rsous.subnet_id, rsous.device_id = self._device_address
+            rsous.switch_number = self._universal_switch_number
+            await rsous.send()
+        elif self._channel_number is not None:
+            rsoc = _ReadStatusOfChannels(self._buspro)
+            rsoc.subnet_id, rsoc.device_id = self._device_address
+            await rsoc.send()
+        elif self._device is not None and self._device == "dlp":
+            rfhs = _ReadFloorHeatingStatus(self._buspro)
+            rfhs.subnet_id, rfhs.device_id = self._device_address
+            await rfhs.send()
+        elif self._device is not None and self._device == "dry_contact":
+            rdcs = _ReadDryContactStatus(self._buspro)
+            rdcs.subnet_id, rdcs.device_id = self._device_address
+            rdcs.switch_number = self._switch_number
+            await rdcs.send()
+        elif self._device is not None and self._device == "sensors_in_one":
+            rsios = _ReadSensorsInOneStatus(self._buspro)
+            rsios.subnet_id, rsios.device_id = self._device_address
+            await rsios.send()
+        else:
+            rss = _ReadSensorStatus(self._buspro)
+            rss.subnet_id, rss.device_id = self._device_address
+            await rss.send()
+
+    @property
+    def temperature(self):
+        if self._current_temperature is None:
+            return 0
+        return self._current_temperature
+
+    @property
+    def brightness(self):
+        return self._brightness
+
+    @property
+    def humidity(self):
+        return self._current_humidity
+
+    @property
+    def movement(self):
+        vals = [self._motion_sensor, self._sonic]
+        if all(v is None for v in vals):
+            return None
+        return any((v or 0) != 0 for v in vals)
+
+    @property
+    def dry_contact_1_is_on(self):
+        if self._dry_contact_1_status == 1:
+            return True
+        else:
+            return False
+
+    @property
+    def dry_contact_2_is_on(self):
+        if self._dry_contact_2_status == 1:
+            return True
+        else:
+            return False
+
+    @property
+    def universal_switch_is_on(self):
+        if self._universal_switch_status == 1:
+            return True
+        else:
+            return False
+
+    @property
+    def single_channel_is_on(self):
+        if self._channel_status > 0:
+            return True
+        else:
+            return False
+
+    @property
+    def switch_status(self):
+        if self._switch_status == 1:
+            return True
+        else:
+            return False
+
+    @property
+    def device_identifier(self):
+        return f"{self._device_address}-{self._universal_switch_number}-{self._channel_number}-{self._switch_number}"
+
+    def close(self):
+        """Detach this device from the bus and cancel its pending initial read."""
+        if self._initial_read_task is not None and not self._initial_read_task.done():
+            self._initial_read_task.cancel()
+        self._initial_read_task = None
+        try:
+            self.unregister_telegram_received_cb(self._telegram_received_cb)
+        except ValueError:
+            pass
+
+    def _call_read_current_status_of_sensor(self, run_from_init=False):
+
+        async def read_current_status_of_sensor():
+            if run_from_init:
+                await asyncio.sleep(5)
+            await self.read_sensor_status()
+
+        return asyncio.ensure_future(read_current_status_of_sensor(), loop=self._buspro.loop)

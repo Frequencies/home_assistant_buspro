@@ -1,0 +1,199 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Buspro gateway konfigurasjon",
+        "description": "Tast inn IP-adresse og portnummer til gateway.",
+        "data": {
+          "host": "IP-adresse",
+          "port": "Portnummer",
+          "send_port": "UDP sendeport",
+          "receive_port": "UDP mottaksport",
+          "client_address": "Home Assistant sin Buspro-adresse"
+        }
+      },
+      "reconfigure": {
+        "title": "Konfigurer Buspro-gateway på nytt",
+        "description": "Oppdater IP-adresse og porter for denne Buspro-gatewayen.",
+        "data": {
+          "host": "IP-adresse",
+          "port": "Portnummer",
+          "send_port": "UDP sendeport",
+          "receive_port": "UDP mottaksport",
+          "client_address": "Home Assistant sin Buspro-adresse"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kunne ikke koble til Buspro-gatewayen.",
+      "invalid_host": "Ugyldig vert.",
+      "invalid_client_address": "Bruk en gyldig subnet.device-adresse for denne Home Assistant-klienten.",
+      "unknown": "En feil oppstod."
+    },
+    "abort": {
+      "reconfigure_not_supported": "Omkonfigurering er ikke tilgjengelig for denne oppføringen.",
+      "reconfigure_successful": "Buspro-gatewayen ble konfigurert på nytt."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Buspro-alternativer",
+        "description": "Administrer gatewayen og Buspro-enheter.",
+        "menu_options": {
+          "gateway": "Gateway-innstillinger",
+          "add_device": "Legg til enhet",
+          "edit_device": "Rediger enhet"
+        }
+      },
+      "gateway": {
+        "title": "Gateway-innstillinger",
+        "description": "Oppdater gatewayen og Home Assistant sin ubrukte Buspro-adresse.",
+        "data": {
+          "host": "IP-adresse",
+          "port": "Portnummer",
+          "send_port": "UDP sendeport",
+          "receive_port": "UDP mottaksport",
+          "client_address": "Home Assistant sin Buspro-adresse"
+        }
+      },
+      "add_device": {
+        "title": "Legg til Buspro-enhet",
+        "description": "Velg typen fysisk enhet.",
+        "data": {
+          "device_type": "Enhetstype"
+        }
+      },
+      "device_details": {
+        "title": "Enhetsdetaljer",
+        "description": "Konfigurer fysisk Buspro-adresse og antall kanaler.",
+        "data": {
+          "name": "Navn",
+          "address": "Buspro-adresse (subnet.device)",
+          "model": "Modell",
+          "channel_count": "Antall kanaler",
+          "remove_device": "Fjern denne UI-administrerte enheten"
+        }
+      },
+      "device_channels": {
+        "title": "Kanalnavn",
+        "description": "Skriv inn navn for {device_name}. Tomme kanaler forblir deaktivert.",
+        "data": {
+          "channel_1": "Kanal 1",
+          "channel_2": "Kanal 2",
+          "channel_3": "Kanal 3",
+          "channel_4": "Kanal 4",
+          "channel_5": "Kanal 5",
+          "channel_6": "Kanal 6",
+          "channel_7": "Kanal 7",
+          "channel_8": "Kanal 8",
+          "channel_9": "Kanal 9",
+          "channel_10": "Kanal 10",
+          "channel_11": "Kanal 11",
+          "channel_12": "Kanal 12",
+          "channel_13": "Kanal 13",
+          "channel_14": "Kanal 14",
+          "channel_15": "Kanal 15",
+          "channel_16": "Kanal 16",
+          "channel_17": "Kanal 17",
+          "channel_18": "Kanal 18",
+          "channel_19": "Kanal 19",
+          "channel_20": "Kanal 20",
+          "channel_21": "Kanal 21",
+          "channel_22": "Kanal 22",
+          "channel_23": "Kanal 23",
+          "channel_24": "Kanal 24",
+          "channel_25": "Kanal 25",
+          "channel_26": "Kanal 26",
+          "channel_27": "Kanal 27",
+          "channel_28": "Kanal 28",
+          "channel_29": "Kanal 29",
+          "channel_30": "Kanal 30",
+          "channel_31": "Kanal 31",
+          "channel_32": "Kanal 32",
+          "channel_33": "Kanal 33",
+          "channel_34": "Kanal 34",
+          "channel_35": "Kanal 35",
+          "channel_36": "Kanal 36",
+          "channel_37": "Kanal 37",
+          "channel_38": "Kanal 38",
+          "channel_39": "Kanal 39",
+          "channel_40": "Kanal 40",
+          "channel_41": "Kanal 41",
+          "channel_42": "Kanal 42",
+          "channel_43": "Kanal 43",
+          "channel_44": "Kanal 44",
+          "channel_45": "Kanal 45",
+          "channel_46": "Kanal 46",
+          "channel_47": "Kanal 47",
+          "channel_48": "Kanal 48",
+          "channel_49": "Kanal 49",
+          "channel_50": "Kanal 50",
+          "channel_51": "Kanal 51",
+          "channel_52": "Kanal 52",
+          "channel_53": "Kanal 53",
+          "channel_54": "Kanal 54",
+          "channel_55": "Kanal 55",
+          "channel_56": "Kanal 56",
+          "channel_57": "Kanal 57",
+          "channel_58": "Kanal 58",
+          "channel_59": "Kanal 59",
+          "channel_60": "Kanal 60",
+          "channel_61": "Kanal 61",
+          "channel_62": "Kanal 62",
+          "channel_63": "Kanal 63",
+          "channel_64": "Kanal 64",
+          "channel_temperature": "Temperatur",
+          "channel_illuminance": "Belysningsstyrke",
+          "channel_humidity": "Luftfuktighet",
+          "channel_motion": "Bevegelse",
+          "channel_dry_contact_1": "Tørrkontakt 1",
+          "channel_dry_contact_2": "Tørrkontakt 2",
+          "channel_climate": "Klima"
+        }
+      },
+      "edit_device": {
+        "title": "Rediger Buspro-enhet",
+        "description": "Velg en administrert eller eksisterende YAML-enhet.",
+        "data": {
+          "device": "Enhet"
+        }
+      },
+      "edit_legacy_device": {
+        "title": "Rediger eksisterende enhet",
+        "description": "Oppdater enhets- og kanalnavn. Fysiske kanalnumre vises.",
+        "data": {
+          "name": "Navn",
+          "model": "Modell",
+          "channel_1": "Kanal 1",
+          "channel_2": "Kanal 2",
+          "channel_3": "Kanal 3",
+          "channel_4": "Kanal 4",
+          "channel_5": "Kanal 5",
+          "channel_6": "Kanal 6",
+          "channel_7": "Kanal 7",
+          "channel_8": "Kanal 8",
+          "channel_9": "Kanal 9",
+          "channel_10": "Kanal 10",
+          "channel_11": "Kanal 11",
+          "channel_12": "Kanal 12",
+          "channel_13": "Kanal 13",
+          "channel_14": "Kanal 14",
+          "channel_15": "Kanal 15",
+          "channel_16": "Kanal 16"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kunne ikke koble til Buspro-gatewayen.",
+      "invalid_host": "Ugyldig vert.",
+      "invalid_address": "Bruk en gyldig subnet.device-adresse.",
+      "invalid_client_address": "Bruk en gyldig subnet.device-adresse for denne Home Assistant-klienten.",
+      "address_in_use": "Denne Buspro-adressen finnes allerede.",
+      "unsupported_model": "Denne modellen støttes ikke for valgt enhetstype.",
+      "invalid_channel_count": "Antall kanaler overskrider modellens grense.",
+      "name_required": "Skriv inn et enhetsnavn.",
+      "unknown": "Det oppstod en uventet feil."
+    }
+  }
+}
