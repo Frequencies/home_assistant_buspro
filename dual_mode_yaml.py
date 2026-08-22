@@ -5,8 +5,13 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from .const import (
+from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_NAME,
+    CONF_TYPE,
+)
+
+from .const import (
     CONF_CHANNEL_COUNT,
     CONF_CHANNEL_ENABLED,
     CONF_CHANNEL_NUMBER,
@@ -14,10 +19,8 @@ from .const import (
     CONF_DEVICE_TYPE,
     CONF_ENTITIES,
     CONF_MODEL,
-    CONF_NAME,
     CONF_OBJECT_ID,
     CONF_PROFILE,
-    CONF_TYPE,
     CONF_UNIQUE_ID,
     DEFAULT_MANUFACTURER,
 )
