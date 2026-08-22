@@ -1,6 +1,6 @@
 # HDL Buspro für Home Assistant
 
-[English](../../README.md) | **Deutsch**
+[🇧🇾 Беларуская](../be/README.md) | 🇩🇪 Deutsch | [🇬🇧 English](../../README.md) | [🇪🇸 Español](../es/README.md) | [🇫🇷 Français](../fr/README.md) | [🇮🇹 Italiano](../it/README.md) | [🇳🇱 Nederlands](../nl/README.md) | [🇳🇴 Norsk](../no/README.md) | [🇷🇺 Русский](../ru/README.md) | [🇺🇦 Українська](../uk/README.md)
 
 Die Integration verwaltet das Gateway und physische HDL-Buspro-Geräte über
 die Home-Assistant-Oberfläche. Eine vollständige Liste der Modelle, Entitäten

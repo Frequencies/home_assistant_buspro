@@ -5,15 +5,15 @@
 ## Languages
 
 [![English](https://flagcdn.com/24x18/gb.png) English](README.md) |
-[![Deutsch](https://flagcdn.com/24x18/de.png) Deutsch](README.de.md) |
-[![Français](https://flagcdn.com/24x18/fr.png) Français](README.fr.md) |
-[![Nederlands](https://flagcdn.com/24x18/nl.png) Nederlands](README.nl.md) |
-[![Español](https://flagcdn.com/24x18/es.png) Español](README.es.md) |
-[![Italiano](https://flagcdn.com/24x18/it.png) Italiano](README.it.md) |
-[![Русский](https://flagcdn.com/24x18/ru.png) Русский](README.ru.md) |
-[![Українська](https://flagcdn.com/24x18/ua.png) Українська](README.uk.md) |
-[![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md) |
-[![Norsk](https://flagcdn.com/24x18/no.png) Norsk](README.no.md)
+[![Deutsch](https://flagcdn.com/24x18/de.png) Deutsch](docs/de/README.md) |
+[![Français](https://flagcdn.com/24x18/fr.png) Français](docs/fr/README.md) |
+[![Nederlands](https://flagcdn.com/24x18/nl.png) Nederlands](docs/nl/README.md) |
+[![Español](https://flagcdn.com/24x18/es.png) Español](docs/es/README.md) |
+[![Italiano](https://flagcdn.com/24x18/it.png) Italiano](docs/it/README.md) |
+[![Русский](https://flagcdn.com/24x18/ru.png) Русский](docs/ru/README.md) |
+[![Українська](https://flagcdn.com/24x18/ua.png) Українська](docs/uk/README.md) |
+[![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](docs/be/README.md) |
+[![Norsk](https://flagcdn.com/24x18/no.png) Norsk](docs/no/README.md)
 
 # The HDL Buspro integration allows you to control your HDL Buspro system from Home Assistant.
 
