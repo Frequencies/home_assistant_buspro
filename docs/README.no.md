@@ -29,26 +29,67 @@ Assistant på nytt etter hver oppdatering av integrasjonen.
 
 ## Første oppsett
 
+### Gatewaykonfigurasjon
 1. Åpne **Innstillinger > Enheter og tjenester > Legg til integrasjon** og velg
    **HDL Buspro**.
-2. Skriv inn gatewayadressen og UDP-portene. Vanlig standardport er `6000`.
+2. Skriv inn gatewayvert og UDP-porter. Normal port er `6000`.
 3. Skriv inn en ledig Buspro-adresse for Home Assistant på formatet
-   `subnett.enhet`. Standardverdien `200.200` må ikke tilhøre en annen
+   `subnett.enhet`. Standardverdien er `200.200`; den må ikke tilhøre en annen
    Buspro-enhet.
-4. Åpne **Konfigurer > Legg til enhet**, velg type og nøyaktig modell, og skriv
-   inn den fysiske Buspro-adressen og et navn.
-5. Gi nødvendige kanaler eller funksjoner navn. Et tomt navn holder kanalen
-   deaktivert og hindrer at entiteten opprettes.
 
-Kjente modeller bruker fast kanalantall eller funksjonslisten fra
-enhetskatalogen. For generiske profiler angir brukeren et kanalantall innenfor
-den støttede grensen. Etter lagring lastes konfigurasjonsoppføringen på nytt,
-og entitetene grupperes under én fysisk enhet.
+### Legge til enheter
+Etter at gatewaykonfigurasjonen er fullført:
 
-Åpne **Konfigurer > Rediger enhet** for å gjøre endringer. For enheter som
-administreres i grensesnittet, kan modell, navn og kanaler endres, eller enheten
-kan fjernes. Protokollkonfigurasjonen for eldre YAML-enheter må fortsatt endres
-i YAML; start Home Assistant på nytt etterpå.
+1. Åpne **Innstillinger > Enheter og tjenester > HDL Buspro > Konfigurer**.
+2. Velg **Legg til enhet** for å legge til en fysisk Buspro-modul.
+3. **Velg enhettype**: velg funksjonen (Relé, Dimmer, Vifte, Gardin,
+   Multisensor, osv.).
+4. **Velg nøyaktig modell**: velg modellen som samsvarer med maskinvaren din.
+   Dette bestemmer antallet kanaler.
+   - For ukjente modeller, velg profilen **Generisk** og angi antallet kanaler.
+5. **Skriv inn Buspro-adresse**: den fysiske subnett.enhet-adressen til modulen
+   (f.eks. `1.5`).
+6. **Skriv inn enhetsnavn**: et visningsnavn (f.eks. "Stuelyser").
+7. **Gi navn til hver kanal**: tildel et navn til hver kanal eller funksjon du
+   ønsker å bruke.
+   - Eksempel: for et 4-kanals relé, navngi kanaler som "Taklampe",
+     "Bordlampe", osv.
+   - **La et navn være tomt for å deaktivere den kanalen** — ingen enhet vil
+     bli opprettet.
+8. Velg **Lagre** for å opprette enheten og entitetene.
+
+Home Assistant grupperer automatisk alle entiteter fra en fysisk modul under
+en enkelt enhetregistreringspost og laster inn konfigurasjonsoppføringen på
+nytt.
+
+### Redigere enheter
+
+For å endre en eksisterende enhet, åpne **Konfigurer > Rediger enhet**. Du kan:
+- Gi enheten nytt navn
+- Gi individuelt navn til, aktivere eller deaktivere kanaler
+- Endre modell (kan endre antallet kanaler)
+- Fjerne enheten helt
+
+Via grensesnittet administrerte enheter støtter full redigering. Legacy
+YAML-enheter kan vise navnegivingskontroller for registeret, men deres
+protokollkonfigurasjon må fortsatt endres i YAML. Start Home Assistant på
+nytt etter YAML-endringer.
+
+### Eksempel: Legge til 4-kanals relaismodul
+
+1. Modell: `HDL-MR0410.431` (4 relaiskanaler)
+2. Buspro-adresse: `1.10`
+3. Enhetsnavn: "Romrelé"
+4. Kanalnavn:
+   - Kanal 1: "Taklampe"
+   - Kanal 2: "Vegglampe"
+   - Kanal 3: "" (deaktivert)
+   - Kanal 4: "Vifte"
+
+Etter lagring opprett Home Assistant:
+- `light.room_relays_ceiling_light`
+- `light.room_relays_wall_lamp`
+- `switch.room_relays_fan`
 
 ## Inkompatible endringer i 2.2.0
 
@@ -75,22 +116,97 @@ i YAML; start Home Assistant på nytt etterpå.
 Ikke konfigurer samme fysiske kanal i både YAML og grensesnittet. Det vil
 opprette dupliserte entiteter og protokollabonnementer.
 
-## Katalogsjekk og tester
+## YAML-konfigurasjon (legacy)
 
-For å sammenligne modellkatalogen med den vedlikeholdte offisielle HDL-listen:
+YAML-enhetskonfigurasjon er fullt ut støttet sammen med gatewayadministrasjon
+via konfigurasjonsoppføring. Du kan definere lamper, gardiner, brytere,
+viftere, klimakontroll, sensorer og binære sensorer via YAML mens gatewayen
+administreres av integrasjonens grensesnitt.
 
-```bash
-python3 custom_components/buspro/tools/check_catalog_models.py
-python3 custom_components/buspro/tools/check_catalog_models.py --strict
+**Merknad**: Nye enheter bør bruke **Konfigurer > Legg til enhet**-grensesnittet
+i stedet for YAML, da det gir enhetgruppering, modelldrevne funksjoner og
+administrasjon av kanaltilstand. YAML anbefales for:
+- Enheter med ikke-standard eller legacy-profiler
+- Migrering fra eldre Buspro-integrasjoner
+- Kompleks automatisering eller sensormaler
+
+### YAML-syntakseksempel
+
+Legg til i `configuration.yaml`:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Taklampe"
+        dimmable: true
+      "1.5.2":
+        name: "Vegglampe"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Stuegardin"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Soveromsklimat"
+        profile: "ac"
 ```
 
-For eldre YAML-enheter normaliserer integrasjonen nå manglende profiler ved
-hjelp av modellmetadata. Ukjente modeller eller ugyldige profiler logges som
-advarsler og faller tilbake til `sensor_status`.
+### Plattformkonfigurasjon
 
-Målrettede tester for integrasjonen:
+Hver plattform (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`,
+`switch`) godtar:
+
+| Nøkkel | Type | Beskrivelse |
+| --- | --- | --- |
+| `devices` | dict | Påkrevd. Tilordning av Buspro-adresser til enhetskonfigurasjoner. |
+| `running_time` | int | Standard overgangstid i sekunder (0 = ingen overgang). Overstyrt per enhet. |
+| `ack_retry_enabled` | bool | Prøv på nytt sendinger uten ACK (plattformstandard; overstyrt per enhet). |
+
+Hver enhetsnøkkel er **Buspro-adressen** i formatet:
+- **Lampe, gardin, vifte, bryter**: `subnett.enhet.kanal` (f.eks., `1.5.2`)
+- **Klimakontroll, sensor, binær sensor**: `subnett.enhet` (f.eks., `3.1`)
+
+Hver enhetskonfigurasjon støtter:
+- `name` (påkrevd): Visningsnavn
+- `running_time`, `dimmable`, `ack_retry_enabled` (plattformspesifikk, valgfri)
+- `profile` (valgfri, for klimasensorer — f.eks., `"ac"`, `"floor_heating"`)
+- `object_id` (valgfri): Entity-ID-slug
+- `unique_id` (valgfri): For manuell enhetregisterkontroll
+
+## Utvikling
+
+### Kjøre testpakker
+
+Fra Home Assistant-konfigurasjonsmappe:
 
 ```bash
-python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -p 'test_*.py'
-python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -p 'test_*.py'
+# Kjør alle protokolltester (19 tester)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -v
+
+# Kjør alle integrasjonstester (18 tester)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -v
+
+# Eller kjør enkelttest-filer
+python3 custom_components/buspro/tests/buspro_protocol/test_sensor_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_relay_coordinator.py
+python3 custom_components/buspro/tests/buspro_protocol/test_logic_controller_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_config_isolation.py
+python3 custom_components/buspro/tests/buspro_protocol/test_device_lifecycle.py
+python3 custom_components/buspro/tests/buspro_integration/test_device_catalog.py
+python3 custom_components/buspro/tests/buspro_integration/test_managed_device_logic.py
+python3 custom_components/buspro/tests/buspro_integration/test_model_notes_logging.py
+python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalization.py
 ```
+
+Protokolltester dekker telegrammanalyse, enhetkoordinering og sikkerhet for
+kjerne-oppgaver/tilbakekall. Integrasjonstester dekker enhetskatalog,
+administrert-enhet-logikk, YAML-normalisering og modellstøttesporing.

@@ -61,8 +61,13 @@ def _form_schema(
     })
 
 
-async def _async_validate_connectivity(hass, data):
-    """Validate Buspro network settings without assuming a device address."""
+async def _async_validate_connectivity(hass, data, probe_socket=True):
+    """Validate Buspro network settings without assuming a device address.
+
+    When an entry is already loaded it holds the receive socket; binding a
+    second one on the same port would falsely fail. Callers in that situation
+    pass ``probe_socket=False`` to validate host/client only.
+    """
     host = data[CONF_HOST]
     send_port = data.get(CONF_SEND_PORT, data[CONF_PORT])
     receive_port = data.get(CONF_RECEIVE_PORT, data[CONF_PORT])
@@ -74,6 +79,9 @@ async def _async_validate_connectivity(hass, data):
         await hass.async_add_executor_job(socket.gethostbyname, host)
     except socket.gaierror as err:
         raise InvalidHost from err
+
+    if not probe_socket:
+        return
 
     # UDP has no connection handshake. Validate that the local receive socket
     # can be created without assuming a physical device exists at any address.
@@ -245,7 +253,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
                 try:
-                    await _async_validate_connectivity(self.hass, data)
+                    await _async_validate_connectivity(
+                        self.hass,
+                        data,
+                        probe_socket=entry.state
+                        != config_entries.ConfigEntryState.LOADED,
+                    )
                 except CannotConnect:
                     return self.async_show_form(
                         step_id="reconfigure",
@@ -375,7 +388,12 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
                     errors[CONF_CLIENT_ADDRESS] = "invalid_client_address"
                 if not errors:
                     try:
-                        await _async_validate_connectivity(self.hass, data)
+                        await _async_validate_connectivity(
+                            self.hass,
+                            data,
+                            probe_socket=self._config_entry.state
+                            != config_entries.ConfigEntryState.LOADED,
+                        )
                     except CannotConnect:
                         errors["base"] = "cannot_connect"
                     except InvalidHost:

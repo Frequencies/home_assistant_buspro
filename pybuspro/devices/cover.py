@@ -1,5 +1,7 @@
+import asyncio
+
 from .control import _GenericControl
-from .device import Device
+from .device import Device, startup_read_delay
 from ..helpers.enums import OperateCode
 
 
@@ -11,8 +13,20 @@ class Cover(Device):
         self._device_address = device_address
         self._channel = channel_number
         self._state = 0
+        self._closed = False
         self.register_telegram_received_cb(self._telegram_received_cb)
         self._call_read_status(run_from_init=True)
+
+    def close(self):
+        """Detach from the bus and cancel pending tasks (called on removal)."""
+        if self._closed:
+            return
+        self._closed = True
+        super().close()
+        try:
+            self.unregister_telegram_received_cb(self._telegram_received_cb)
+        except ValueError:
+            pass
 
     def _telegram_received_cb(self, telegram):
         if telegram.operate_code in (
@@ -56,14 +70,12 @@ class Cover(Device):
         await gc.send()
 
     def _call_read_status(self, run_from_init=False):
-        import asyncio
-
         async def read_current_state():
             if run_from_init:
-                await asyncio.sleep(3)
+                await asyncio.sleep(startup_read_delay(self._device_address, base=3))
             await self.read_status()
 
-        asyncio.ensure_future(read_current_state(), loop=self._buspro.loop)
+        self._spawn(read_current_state())
 
     @property
     def device_identifier(self):

@@ -6,6 +6,8 @@ Die Integration verwaltet das Gateway und physische HDL-Buspro-Geräte über
 die Home-Assistant-Oberfläche. Eine vollständige Liste der Modelle, Entitäten
 und Dienste steht in der [englischen Dokumentation](../README.md).
 
+> **Hinweis**: Für detaillierte Anleitungen zur Gerätekonfiguration, YAML-Beispiele, Dienste und Entwicklung siehe die [englische README](../README.md). Diese Seite enthält grundlegende Installations- und Konfigurationsinformationen.
+
 ## Installation
 
 ### HACS (empfohlen)
@@ -29,26 +31,55 @@ werden. Home Assistant nach jedem Integrationsupdate neu starten.
 
 ## Ersteinrichtung
 
+### Gateway-Konfiguration
 1. **Einstellungen > Geräte & Dienste > Integration hinzufügen** öffnen und
    **HDL Buspro** auswählen.
-2. Gateway-Adresse und UDP-Ports eingeben. Der übliche Standardport ist `6000`.
+2. Gateway-Host und UDP-Ports eingeben. Der Standardport ist normalerweise `6000`.
 3. Eine freie Home-Assistant-Buspro-Adresse im Format `Subnetz.Gerät` eingeben.
    Der Standard `200.200` darf keinem anderen Buspro-Gerät gehören.
-4. **Konfigurieren > Gerät hinzufügen** öffnen, Gerätetyp und genaues Modell
-   auswählen und die physische Buspro-Adresse sowie einen Namen eingeben.
-5. Benötigte Kanäle oder Funktionen benennen. Ein leerer Name lässt den Kanal
-   deaktiviert und verhindert die Erstellung seiner Entität.
 
-Bekannte Modelle verwenden die feste Kanalanzahl oder Funktionsliste aus dem
-Gerätekatalog. Bei generischen Profilen gibt der Benutzer die Kanalanzahl
-innerhalb des unterstützten Limits an. Nach dem Speichern wird der
-Konfigurationseintrag neu geladen und alle Entitäten werden unter einem
-physischen Gerät gruppiert.
+### Geräte hinzufügen
+Nach der Gateway-Konfiguration:
 
-Zum Ändern **Konfigurieren > Gerät bearbeiten** öffnen. Bei UI-verwalteten
-Geräten können Modell, Name und Kanäle geändert oder das Gerät entfernt
-werden. Protokolleinstellungen älterer YAML-Geräte müssen weiterhin in YAML
-geändert werden; danach Home Assistant neu starten.
+1. **Einstellungen > Geräte & Dienste > HDL Buspro > Konfigurieren** öffnen.
+2. **Gerät hinzufügen** auswählen, um ein physisches Buspro-Modul hinzuzufügen.
+3. **Gerätetyp auswählen**: wählen Sie die Funktion (Relais, Dimmer, Ventilator, Jalousie, Multisensor usw.).
+4. **Genaues Modell auswählen**: wählen Sie das Modell Ihrer Hardware. Dies bestimmt die Kanalanzahl.
+   - Für unbekannte Modelle wählen Sie das Profil **Generisch** und geben Sie die Kanalanzahl an.
+5. **Buspro-Adresse eingeben**: die physische Subnetz.Gerät-Adresse des Moduls (z. B. `1.5`).
+6. **Gerätenamen eingeben**: einen Anzeigenamen für das Gerät (z. B. "Wohnzimmerlichter").
+7. **Jeden Kanal benennen**: weisen Sie jedem Kanal oder jeder Funktion einen Namen zu, den Sie nutzen möchten.
+   - Beispiel: für ein 4-Kanal-Relais: "Deckenleuchte", "Tischlampe" usw.
+   - **Lassen Sie einen Namen leer, um diesen Kanal zu deaktivieren** — es wird keine Entität erstellt.
+8. **Speichern** auswählen, um das Gerät und seine Entitäten zu erstellen.
+
+Home Assistant gruppiert automatisch alle Entitäten eines physischen Moduls unter einem Geräteregistereintrag und lädt den Konfigurationseintrag neu.
+
+### Geräte bearbeiten
+
+Zum Ändern eines bestehenden Geräts **Konfigurieren > Gerät bearbeiten** öffnen. Sie können:
+- Das Gerät umbenennen
+- Einzelne Kanäle umbenennen, aktivieren oder deaktivieren
+- Das Modell ändern (kann die Kanalanzahl verändern)
+- Das Gerät vollständig entfernen
+
+UI-verwaltete Geräte unterstützen vollständige Bearbeitung. Bei älteren YAML-Geräten können Änderungen im Geräteregister vorgenommen werden, aber die Protokollkonfiguration muss in YAML geändert werden. Home Assistant nach YAML-Änderungen neu starten.
+
+### Beispiel: 4-Kanal-Relaismodul hinzufügen
+
+1. Modell: `HDL-MR0410.431` (4 Relaiskanäle)
+2. Buspro-Adresse: `1.10`
+3. Gerätenamen: "Raumrelais"
+4. Kanalnamen:
+   - Kanal 1: "Deckenleuchte"
+   - Kanal 2: "Wandlampe"
+   - Kanal 3: "" (deaktiviert)
+   - Kanal 4: "Ventilator"
+
+Nach dem Speichern erstellt Home Assistant:
+- `light.room_relays_ceiling_light`
+- `light.room_relays_wall_lamp`
+- `switch.room_relays_fan`
 
 ## Wichtige Änderungen in 2.2.0
 
@@ -78,23 +109,89 @@ Derselbe physische Kanal darf nicht gleichzeitig in YAML und über die UI
 konfiguriert sein. Andernfalls entstehen doppelte Entitäten und
 Protokollabonnements.
 
-## Katalogabgleich und Tests
+## YAML-Konfiguration (veraltet)
 
-Zum Prüfen des Modellkatalogs gegenüber der gepflegten offiziellen HDL-Liste:
+YAML-Gerätekonfiguration wird vollständig unterstützt neben der Config-Entry-Gateway-Verwaltung. Sie können Lichter, Jalousien, Schalter, Ventilatoren, Klima, Sensoren und binäre Sensoren über YAML definieren, während das Gateway über die Integration-UI verwaltet wird.
 
-```bash
-python3 custom_components/buspro/tools/check_catalog_models.py
-python3 custom_components/buspro/tools/check_catalog_models.py --strict
+**Hinweis**: Neue Geräte sollten die UI-Konfiguration **Konfigurieren > Gerät hinzufügen** verwenden, da sie Gerätegruppen, modellgesteuerte Funktionen und Kanalstatusspeicherung bietet. YAML wird empfohlen für:
+- Geräte mit nicht standardisierten oder älteren Profilen
+- Migration von älteren Buspro-Integrationen
+- Komplexe Automatisierungen oder Sensortemplates
+
+### YAML-Syntaxbeispiel
+
+Zu Ihrer `configuration.yaml` hinzufügen:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Deckenleuchte"
+        dimmable: true
+      "1.5.2":
+        name: "Wandlampe"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Wohnzimmergardinen"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Schlafzimmerklima"
+        profile: "ac"
 ```
 
-Bei Legacy-YAML-Geräten normalisiert die Integration fehlende Profile jetzt
-anhand der Modellmetadaten. Unbekannte Modelle oder ungültige
-Profil-Zeichenfolgen werden als Warnung protokolliert und fallen auf
-`sensor_status` zurück.
+### Plattformkonfiguration
 
-Fokussierte Tests der Integration:
+Jede Plattform (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) akzeptiert:
+
+| Schlüssel | Typ | Beschreibung |
+| --- | --- | --- |
+| `devices` | dict | Erforderlich. Zuordnung von Buspro-Adressen zu Gerätekonfigurationen. |
+| `running_time` | int | Standardübergangszeit in Sekunden (0 = kein Übergang). Pro Gerät überschreibbar. |
+| `ack_retry_enabled` | bool | Wiederholung bei keinem ACK (Plattform-Standard; pro Gerät überschreibbar). |
+
+Jeder Geräteschlüssel ist die **Buspro-Adresse** im Format:
+- **Licht, Jalousie, Ventilator, Schalter**: `subnetz.gerät.kanal` (z. B. `1.5.2`)
+- **Klima, Sensor, Binärsensor**: `subnetz.gerät` (z. B. `3.1`)
+
+Jede Gerätekonfiguration unterstützt:
+- `name` (erforderlich): Anzeigename
+- `running_time`, `dimmable`, `ack_retry_enabled` (plattformspezifisch, optional)
+- `profile` (optional, für Klimasensoren — z. B. `"ac"`, `"floor_heating"`)
+- `object_id` (optional): Entity-ID-Slug
+- `unique_id` (optional): Zur manuellen Geräteregisterkontrolle
+
+## Entwicklung
+
+### Test-Suites ausführen
+
+Aus dem Home-Assistant-Konfigurationsverzeichnis:
 
 ```bash
-python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -p 'test_*.py'
-python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -p 'test_*.py'
+# Alle Protokolltests ausführen (19 Tests)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -v
+
+# Alle Integrationstests ausführen (18 Tests)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -v
+
+# Oder einzelne Testdateien ausführen
+python3 custom_components/buspro/tests/buspro_protocol/test_sensor_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_relay_coordinator.py
+python3 custom_components/buspro/tests/buspro_protocol/test_logic_controller_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_config_isolation.py
+python3 custom_components/buspro/tests/buspro_protocol/test_device_lifecycle.py
+python3 custom_components/buspro/tests/buspro_integration/test_device_catalog.py
+python3 custom_components/buspro/tests/buspro_integration/test_managed_device_logic.py
+python3 custom_components/buspro/tests/buspro_integration/test_model_notes_logging.py
+python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalization.py
 ```
+
+Protokolltests decken Telegrammanalyse, Gerätekoordination und Kernaufgaben-/Callback-Sicherheit ab. Integrationstests decken Gerätekatalog, verwaltete Gerätelogik, YAML-Normalisierung und Modellunterstützungsverfolgung ab.

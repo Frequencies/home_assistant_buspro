@@ -192,19 +192,8 @@ class BusproFan(RestoreEntity, FanEntity):
                 FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
             )
 
-        self.async_register_callbacks()
-        self.entity_id = generate_entity_id("fan.{}", object_id, None, hass)
-
         self._polling_interval = timedelta(minutes=60)
-        stagger = hash(str(self._device._device_address)) % 300
-
-        @callback
-        def _start_polling(_now):
-            self._unsub_poll_interval = event.async_track_time_interval(
-                self._hass, self.async_update, self._polling_interval
-            )
-
-        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
+        self.entity_id = generate_entity_id("fan.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):
@@ -229,6 +218,8 @@ class BusproFan(RestoreEntity, FanEntity):
             except ValueError:
                 pass
             self._device_update_cb = None
+        # Detach from the bus so telegram callbacks and pending tasks are freed.
+        self._device.close()
         await super().async_will_remove_from_hass()
 
     @property
@@ -248,6 +239,9 @@ class BusproFan(RestoreEntity, FanEntity):
 
     @property
     def percentage(self) -> Optional[int]:
+        # Non-dimmable fans are on/off only; HA expects no percentage.
+        if not self._dimmable:
+            return None
         if self._optimistic_percentage is not None:
             if time.time() <= self._optimistic_timeout:
                 return self._optimistic_percentage
@@ -268,6 +262,18 @@ class BusproFan(RestoreEntity, FanEntity):
         attach_entity_to_physical_device(
             self._hass, self, self._device.device_address
         )
+
+        # Register update callback and staggered poll timer only once added.
+        self.async_register_callbacks()
+        stagger = hash(str(self._device._device_address)) % 300
+
+        @callback
+        def _start_polling(_now):
+            self._unsub_poll_interval = event.async_track_time_interval(
+                self._hass, self.async_update, self._polling_interval
+            )
+
+        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
 
         last_state = await self.async_get_last_state()
         if last_state:

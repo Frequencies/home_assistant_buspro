@@ -21,16 +21,13 @@ class Generics:
 
     @staticmethod
     def enum_has_value(enum, value):
-        return any(value == item.value for item in enum)
+        return value in enum._value2member_map_
 
-    def get_enum_value(self, enum, value):
-        if enum == DeviceType:
-            if self.enum_has_value(enum, value):
-                return DeviceType(value)
-            else:
-                return None
-        elif enum == OperateCode:
-            if self.enum_has_value(enum, value):
-                return OperateCode(value)
-            else:
-                return None
+    @staticmethod
+    def get_enum_value(enum, value):
+        # O(1) reverse lookup on the enum's built-in value map; returns None
+        # for unknown values instead of scanning every member per datagram.
+        try:
+            return enum(value)
+        except ValueError:
+            return None

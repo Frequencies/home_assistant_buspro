@@ -1,7 +1,7 @@
 ﻿import asyncio
 
 from .control import _ReadStatusOfChannels, _SingleChannelControl
-from .device import Device
+from .device import Device, startup_read_delay
 from ..helpers.enums import *
 from ..helpers.generics import Generics
 
@@ -27,8 +27,22 @@ class Light(Device):
         self._ack_retry_enabled = bool(ack_retry_enabled)
         self._ack_task = None
         self._awaiting_ack = False
+        self._closed = False
         self.register_telegram_received_cb(self._telegram_received_cb)
         self._call_read_current_status_of_channels(run_from_init=True)
+
+    def close(self):
+        """Detach from the bus and cancel pending tasks (called on removal)."""
+        if self._closed:
+            return
+        self._closed = True
+        if self._ack_task is not None and not self._ack_task.done():
+            self._ack_task.cancel()
+        super().close()
+        try:
+            self.unregister_telegram_received_cb(self._telegram_received_cb)
+        except ValueError:
+            pass
 
     def _telegram_received_cb(self, telegram):
 
@@ -128,7 +142,7 @@ class Light(Device):
             except asyncio.CancelledError:
                 pass
 
-        self._ack_task = asyncio.ensure_future(_watch(), loop=self._buspro.loop)
+        self._ack_task = self._spawn(_watch())
 
     def _set_previous_brightness(self, brightness):
         if self.supports_brightness and brightness > 0:
@@ -140,7 +154,7 @@ class Light(Device):
     def _call_read_current_status_of_channels(self, run_from_init=False):
         async def read_current_status_of_channels():
             if run_from_init:
-                await asyncio.sleep(10)
+                await asyncio.sleep(startup_read_delay(self._device_address, base=5))
             await self.read_status()
 
-        asyncio.ensure_future(read_current_status_of_channels(), loop=self._buspro.loop)
+        self._spawn(read_current_status_of_channels())

@@ -38,11 +38,14 @@ def _channel_entity(hass, target_address, channel):
 
     suffix = f"-{channel}"
     entity_registry = er.async_get(hass)
+    # Look up only this device's entries instead of scanning the whole registry
+    # on every decoded channel telegram.
     candidates = [
         entry
-        for entry in entity_registry.entities.values()
-        if entry.device_id == device.id
-        and entry.platform == DOMAIN
+        for entry in er.async_entries_for_device(
+            entity_registry, device.id, include_disabled_entities=True
+        )
+        if entry.platform == DOMAIN
         and entry.unique_id.endswith(suffix)
         and entry.entity_id.split(".", 1)[0] in {"cover", "fan", "light", "switch"}
     ]

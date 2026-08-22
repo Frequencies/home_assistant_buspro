@@ -91,6 +91,13 @@ class TelegramHelper:
         if telegram is None:
             return None
 
+        if telegram.operate_code is None or telegram.target_address is None:
+            self._LOGGER.warning(
+                "Cannot build telegram: missing operate_code or target_address (%s)",
+                telegram,
+            )
+            return None
+
         if telegram.payload is None:
             telegram.payload = []
 

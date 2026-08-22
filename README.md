@@ -33,25 +33,55 @@ Home Assistant after each integration update.
 
 ## First setup
 
+### Gateway configuration
 1. Open **Settings > Devices & services > Add integration** and select
    **HDL Buspro**.
 2. Enter the gateway host and UDP ports. Port `6000` is the normal default.
 3. Enter an unused Home Assistant Buspro address in `subnet.device` format.
    The default is `200.200`; it must not belong to another Buspro device.
-4. Open **Configure > Add device**, select the device type and exact model,
-   then enter its physical Buspro address and a display name.
-5. Name each required channel or capability. Leave a name empty to keep that
-   channel disabled and prevent its entity from being instantiated.
 
-Known models use the fixed channel count or capability list in the device
-catalog. Generic profiles ask for a channel count within the supported limit.
-After saving, Home Assistant reloads the config entry and groups the generated
-entities under one physical device.
+### Adding devices
+After gateway setup is complete:
 
-To change an existing device, open **Configure > Edit device**. UI-managed
-devices support model, name, channel, and removal changes. Legacy YAML devices
-can expose registry naming controls, but their protocol configuration must
-still be changed in YAML. Restart Home Assistant after changing YAML.
+1. Open **Settings > Devices & services > HDL Buspro > Configure**.
+2. Select **Add device** to add a Buspro physical module to Home Assistant.
+3. **Select device type**: choose the capability (Relay, Dimmer, Fan, Cover, Multisensor, etc.).
+4. **Select exact model**: pick the model matching your hardware. This determines the number of channels.
+   - For unknown models, choose the **Generic** profile and specify the channel count.
+5. **Enter Buspro address**: the physical subnet.device address of the module (e.g., `1.5`).
+6. **Enter device name**: a display name for the device (e.g., "Living room lights").
+7. **Name each channel**: assign a name to each channel or capability you want to use.
+   - Example: for a 4-channel relay, name channels as "Ceiling light", "Table lamp", etc.
+   - **Leave a name empty to disable that channel** — it will not create an entity.
+8. Select **Save** to create the device and its entities.
+
+Home Assistant automatically groups all entities from one physical module under a single Device Registry entry and reloads the config entry.
+
+### Editing devices
+
+To change an existing device, open **Configure > Edit device**. You can:
+- Rename the device
+- Rename, enable, or disable individual channels
+- Change the model (which may change the channel count)
+- Remove the device entirely
+
+UI-managed devices support full editing. Legacy YAML devices can expose registry naming controls, but their protocol configuration must still be changed in YAML. Restart Home Assistant after changing YAML.
+
+### Example: Adding a 4-channel relay module
+
+1. Model: `HDL-MR0410.431` (4 relay channels)
+2. Buspro address: `1.10`
+3. Device name: "Room relays"
+4. Channel names:
+   - Channel 1: "Ceiling light"
+   - Channel 2: "Wall lamp"
+   - Channel 3: "" (disabled)
+   - Channel 4: "Fan"
+
+After saving, Home Assistant creates:
+- `light.room_relays_ceiling_light`
+- `light.room_relays_wall_lamp`
+- `switch.room_relays_fan`
 
 ## Breaking changes in 2.2.0
 
@@ -272,25 +302,89 @@ not writable because changing them can overwrite controller programming.
 `buspro.send_message` sends a raw protocol command and should only be used with
 a verified HDL operation code and payload.
 
-## Legacy YAML
+## YAML configuration (legacy)
 
-Legacy platform entities and top-level compound sensor definitions remain
-supported as a migration path. A config entry can own the gateway while YAML
-describes legacy entities. New physical devices should be configured from the
-integration's UI so model capabilities, Device Registry grouping, channel
-state, and edits remain consistent.
+YAML device configuration is fully supported alongside config-entry gateway management. You can define lights, covers, switches, fans, climate, sensors, and binary sensors via YAML while the gateway is managed by the integration UI.
+
+**Note**: New devices should use the integration's **Configure > Add device** UI instead of YAML, as it provides device grouping, model-driven capabilities, and channel state management. YAML is recommended for:
+- Devices with non-standard or legacy profiles
+- Migration from older Buspro integrations
+- Complex automation or sensor templates
+
+### YAML syntax example
+
+Add to your `configuration.yaml`:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Ceiling light"
+        dimmable: true
+      "1.5.2":
+        name: "Wall lamp"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Living room curtain"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Bedroom climate"
+        profile: "ac"
+```
+
+### Platform configuration
+
+Each platform (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) accepts:
+
+| Key | Type | Description |
+| --- | --- | --- |
+| `devices` | dict | Required. Mapping of Buspro addresses to device configs. |
+| `running_time` | int | Default transition time in seconds (0 = no transition). Overridden per-device. |
+| `ack_retry_enabled` | bool | Retry sends on no ACK (platform default; per-device overrides). |
+
+Each device key is the **Buspro address** in format:
+- **Light, cover, fan, switch**: `subnet.device.channel` (e.g., `1.5.2`)
+- **Climate, sensor, binary_sensor**: `subnet.device` (e.g., `3.1`)
+
+Each device config supports:
+- `name` (required): Display name
+- `running_time`, `dimmable`, `ack_retry_enabled` (platform-specific, optional)
+- `profile` (optional, for climate sensors — e.g., `"ac"`, `"floor_heating"`)
+- `object_id` (optional): Entity ID slug
+- `unique_id` (optional): For manual entity registry control
 
 ## Development
 
-Run the focused regression suite from the Home Assistant configuration root:
+### Run the test suites
+
+From the Home Assistant configuration root:
 
 ```bash
+# Run all protocol tests (19 tests)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -v
+
+# Run all integration tests (18 tests)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -v
+
+# Or run individual test files
 python3 custom_components/buspro/tests/buspro_protocol/test_sensor_protocol.py
 python3 custom_components/buspro/tests/buspro_protocol/test_relay_coordinator.py
 python3 custom_components/buspro/tests/buspro_protocol/test_logic_controller_protocol.py
 python3 custom_components/buspro/tests/buspro_protocol/test_config_isolation.py
+python3 custom_components/buspro/tests/buspro_protocol/test_device_lifecycle.py
 python3 custom_components/buspro/tests/buspro_integration/test_device_catalog.py
 python3 custom_components/buspro/tests/buspro_integration/test_managed_device_logic.py
 python3 custom_components/buspro/tests/buspro_integration/test_model_notes_logging.py
 python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalization.py
 ```
+
+Protocol tests cover telegram parsing, device coordination, and core task/callback safety. Integration tests cover device catalog, managed-device logic, YAML normalization, and model support tracking.

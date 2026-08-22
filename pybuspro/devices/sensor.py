@@ -4,7 +4,7 @@ import logging
 # from ..helpers.generics import Generics
 from .control import _ReadSensorStatus, _ReadStatusOfUniversalSwitch, _ReadStatusOfChannels, _ReadFloorHeatingStatus, \
     _ReadDryContactStatus, _ReadSensorsInOneStatus
-from .device import Device
+from .device import Device, startup_read_delay
 from ..helpers.enums import *
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +37,14 @@ class Sensor(Device):
         self._initial_read_task = self._call_read_current_status_of_sensor(run_from_init=True)
 
     def _telegram_received_cb(self, telegram):
+        # Several branches index fixed payload offsets; a short/malformed frame
+        # would otherwise raise IndexError. Ignore such frames quietly.
+        try:
+            self._handle_telegram(telegram)
+        except IndexError:
+            _LOGGER.debug("Ignoring short sensor telegram: %s", telegram)
+
+    def _handle_telegram(self, telegram):
         if telegram.operate_code == OperateCode.ReadSensorStatusResponse:
             if len(telegram.payload) < 8:
                 return
@@ -236,6 +244,7 @@ class Sensor(Device):
         if self._initial_read_task is not None and not self._initial_read_task.done():
             self._initial_read_task.cancel()
         self._initial_read_task = None
+        super().close()
         try:
             self.unregister_telegram_received_cb(self._telegram_received_cb)
         except ValueError:
@@ -245,7 +254,7 @@ class Sensor(Device):
 
         async def read_current_status_of_sensor():
             if run_from_init:
-                await asyncio.sleep(5)
+                await asyncio.sleep(startup_read_delay(self._device_address, base=5))
             await self.read_sensor_status()
 
         return asyncio.ensure_future(read_current_status_of_sensor(), loop=self._buspro.loop)

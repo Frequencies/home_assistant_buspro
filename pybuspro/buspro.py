@@ -11,25 +11,6 @@ from .transport.network_interface import NetworkInterface
 # subnet_id, device_id, channel = device_address
 
 
-class StateUpdater:
-    def __init__(self, buspro, sleep=10):
-        self.buspro = buspro
-        self.run_forever = True
-        self.run_task = None
-        self.sleep = sleep
-
-    async def start(self):
-        self.run_task = self.buspro.loop.create_task(self.run())
-
-    async def run(self):
-        await asyncio.sleep(0)
-        self.buspro.logger.info("Starting StateUpdater with {} seconds interval".format(self.sleep))
-
-        while True:
-            await asyncio.sleep(self.sleep)
-            await self.buspro.sync()
-
-
 class Buspro:
     def __init__(
         self,
@@ -55,33 +36,15 @@ class Buspro:
         self.client_address = tuple(client_address)
         self.advertised_ip = advertised_ip
 
-    def __del__(self):
-        if self.started:
-            try:
-                task = self.loop.create_task(self.stop())
-                self.loop.run_until_complete(task)
-            except RuntimeError as exp:
-                self.logger.warning("Could not close loop, reason: {}".format(exp))
+    # Cleanup is explicit via stop(); relying on __del__ + run_until_complete
+    # is invalid on a running event loop and would raise on interpreter exit.
 
     # noinspection PyUnusedLocal
     async def start(self, state_updater=False):  # , daemon_mode=False):
         self.network_interface = NetworkInterface(self, self.gateway_address_send_receive)
         self.network_interface.register_callback(self._callback_all_messages)
         await self.network_interface.start()
-
-        if state_updater:
-            self.state_updater = StateUpdater(self)
-            await self.state_updater.start()
-
-        '''
-        if daemon_mode:
-            await self._loop_until_sigint()
-        '''
-
         self.started = True
-
-        # await asyncio.sleep(5)
-        # await self.network_interface.send_message(b'\0x01')
 
     async def stop(self):
         await self._stop_network_interface()
@@ -99,12 +62,19 @@ class Buspro:
 
         addresses = {self._addr_key(telegram.target_address), self._addr_key(telegram.source_address)}
         for address in addresses:
-            for telegram_received_cb in self._telegram_received_cbs_by_addr.get(address, ()):
-                postfix = telegram_received_cb['postfix']
-                if postfix is not None:
-                    telegram_received_cb['callback'](telegram, postfix)
-                else:
-                    telegram_received_cb['callback'](telegram)
+            # Snapshot the bucket: a callback may register/unregister devices,
+            # which would otherwise mutate the list mid-iteration.
+            for telegram_received_cb in tuple(self._telegram_received_cbs_by_addr.get(address, ())):
+                # Isolate each device: a malformed telegram raising in one
+                # callback must not starve every other device on this address.
+                try:
+                    postfix = telegram_received_cb['postfix']
+                    if postfix is not None:
+                        telegram_received_cb['callback'](telegram, postfix)
+                    else:
+                        telegram_received_cb['callback'](telegram)
+                except Exception:
+                    self.logger.exception("Error in telegram callback for %s", address)
 
     @staticmethod
     def _addr_key(device_address):
@@ -138,9 +108,3 @@ class Buspro:
             bucket.remove(entry)
             if not bucket:
                 del self._telegram_received_cbs_by_addr[key]
-
-    @staticmethod
-    async def sync():
-        # await self.callback("LOG: Sync() triggered from StateUpdater")
-        # print("LOG: Sync() triggered from StateUpdater")
-        raise NotImplementedError

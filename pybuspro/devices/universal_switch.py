@@ -1,7 +1,7 @@
 import asyncio
 
 from .control import _UniversalSwitch, _ReadStatusOfUniversalSwitch
-from .device import Device
+from .device import Device, startup_read_delay
 from ..helpers.enums import *
 
 
@@ -14,8 +14,19 @@ class UniversalSwitch(Device):
         self._device_address = device_address
         self._switch_number = switch_number
         self._switch_status = SwitchStatusOnOff.OFF
+        self._closed = False
         self.register_telegram_received_cb(self._telegram_received_cb)
         self._call_read_current_status_of_universal_switch(run_from_init=True)
+
+    def close(self):
+        if self._closed:
+            return
+        self._closed = True
+        super().close()
+        try:
+            self.unregister_telegram_received_cb(self._telegram_received_cb)
+        except ValueError:
+            pass
 
     def _telegram_received_cb(self, telegram):
         if telegram.operate_code == OperateCode.UniversalSwitchControlResponse:
@@ -64,11 +75,11 @@ class UniversalSwitch(Device):
 
         async def read_current_state_of_universal_switch():
             if run_from_init:
-                await asyncio.sleep(1)
+                await asyncio.sleep(startup_read_delay(self._device_address, base=1))
 
             read_status_of_universal_switch = _ReadStatusOfUniversalSwitch(self._buspro)
             read_status_of_universal_switch.subnet_id, read_status_of_universal_switch.device_id = self._device_address
             read_status_of_universal_switch.switch_number = self._switch_number
             await read_status_of_universal_switch.send()
 
-        asyncio.ensure_future(read_current_state_of_universal_switch(), loop=self._buspro.loop)
+        self._spawn(read_current_state_of_universal_switch())

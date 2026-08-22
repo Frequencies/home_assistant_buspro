@@ -11,7 +11,7 @@ from .control import (
     _ReadPanelAC,
     _ControlPanelAC,
 )
-from .device import Device
+from .device import Device, startup_read_delay
 from ..helpers.enums import (
     OperateCode,
     SuccessOrFailure,
@@ -21,6 +21,10 @@ from ..helpers.enums import (
     FloorHeatingDeviceType,
 )
 from ..helpers.generics import Generics
+
+# Valid WorkType enum values, precomputed for O(1) membership checks on the
+# per-telegram hot path (was rebuilt as a list on every frame).
+_WORK_TYPE_VALUES = frozenset(w.value for w in WorkType)
 
 
 class ControlFloorHeatingStatus:
@@ -55,9 +59,21 @@ class Climate(Device):
         self._current_temperature = None
         self._normal_temperature = None
 
+        self._closed = False
         self.register_telegram_received_cb(self._telegram_received_cb)
         self._call_read_current_panel_status(run_from_init=True)
         self._call_read_current_panel_temp(run_from_init=True)
+
+    def close(self):
+        """Detach from the bus and cancel pending tasks (called on removal)."""
+        if self._closed:
+            return
+        self._closed = True
+        super().close()
+        try:
+            self.unregister_telegram_received_cb(self._telegram_received_cb)
+        except ValueError:
+            pass
 
     def _telegram_received_cb(self, telegram):
         if telegram.operate_code in (OperateCode.ReadPanelACResponse, OperateCode.ControlPanelACResponse):
@@ -109,18 +125,18 @@ class Climate(Device):
     def _call_read_current_panel_status(self, run_from_init=False):
         async def read_current_panel_status():
             if run_from_init:
-                await asyncio.sleep(5)
+                await asyncio.sleep(startup_read_delay(self._device_address, base=5))
             await self.read_status()
 
-        asyncio.ensure_future(read_current_panel_status(), loop=self._buspro.loop)
+        self._spawn(read_current_panel_status())
 
     def _call_read_current_panel_temp(self, run_from_init=False):
         async def read_current_panel_temp():
             if run_from_init:
-                await asyncio.sleep(5)
+                await asyncio.sleep(startup_read_delay(self._device_address, base=5))
             await self.read_temperature()
 
-        asyncio.ensure_future(read_current_panel_temp(), loop=self._buspro.loop)
+        self._spawn(read_current_panel_temp())
 
     @property
     def is_on(self):
@@ -164,8 +180,20 @@ class FloorHeating(Device):
         self._valve = None
         self._watering_time = None
 
+        self._closed = False
         self.register_telegram_received_cb(self._telegram_received_cb)
         self._call_read_current_status(run_from_init=True)
+
+    def close(self):
+        """Detach from the bus and cancel pending tasks (called on removal)."""
+        if self._closed:
+            return
+        self._closed = True
+        super().close()
+        try:
+            self.unregister_telegram_received_cb(self._telegram_received_cb)
+        except ValueError:
+            pass
 
     def _telegram_received_cb(self, telegram):
         if telegram.operate_code == OperateCode.ReadFloorHeatingStatusResponse:
@@ -192,8 +220,7 @@ class FloorHeating(Device):
             self._day_temperature = telegram.payload[5]
             self._night_temperature = telegram.payload[6]
             self._away_temperature = telegram.payload[7]
-            self._call_device_updated()
-            if success_or_fail == SuccessOrFailure.Success:
+            if success_or_fail == SuccessOrFailure.Success.value[0]:
                 self._call_device_updated()
 
         elif telegram.operate_code == OperateCode.ReadFloorHeatingModuleStatusResponse:
@@ -205,7 +232,7 @@ class FloorHeating(Device):
             work = telegram.payload[1]
             self._status = 1 if (work & 0x0F) else 0
             work_raw = (work >> 4) & 0x0F
-            self._work_type = WorkType(work_raw) if work_raw in [w.value for w in WorkType] else WorkType.Heating
+            self._work_type = WorkType(work_raw) if work_raw in _WORK_TYPE_VALUES else WorkType.Heating
             self._temperature_type = telegram.payload[2]
             self._mode = telegram.payload[3]
             self._normal_temperature = telegram.payload[4]
@@ -225,7 +252,7 @@ class FloorHeating(Device):
             work = telegram.payload[1]
             self._status = 1 if (work & 0x0F) else 0
             work_raw = (work >> 4) & 0x0F
-            self._work_type = WorkType(work_raw) if work_raw in [w.value for w in WorkType] else WorkType.Heating
+            self._work_type = WorkType(work_raw) if work_raw in _WORK_TYPE_VALUES else WorkType.Heating
             self._temperature_type = telegram.payload[2]
             self._mode = telegram.payload[3]
             self._normal_temperature = telegram.payload[4]
@@ -341,7 +368,7 @@ class FloorHeating(Device):
         async def send_control():
             await ctrl.send()
 
-        asyncio.ensure_future(send_control(), loop=self._buspro.loop)
+        self._spawn(send_control())
 
     def _telegram_received_control_module_cb(self, telegram, floor_heating_status):
         if telegram.operate_code != OperateCode.ReadFloorHeatingModuleStatusResponse:
@@ -365,7 +392,7 @@ class FloorHeating(Device):
 
         status = 1 if (work & 0x0F) else 0
         work_raw = (work >> 4) & 0x0F
-        current_work_type = WorkType(work_raw) if work_raw in [w.value for w in WorkType] else WorkType.Heating
+        current_work_type = WorkType(work_raw) if work_raw in _WORK_TYPE_VALUES else WorkType.Heating
 
         if floor_heating_status.temperature_type is not None:
             temperature_type = floor_heating_status.temperature_type
@@ -400,15 +427,15 @@ class FloorHeating(Device):
         async def send_control():
             await ctrl.send()
 
-        asyncio.ensure_future(send_control(), loop=self._buspro.loop)
+        self._spawn(send_control())
 
     def _call_read_current_status(self, run_from_init=False):
         async def read_current_status():
             if run_from_init:
-                await asyncio.sleep(5)
+                await asyncio.sleep(startup_read_delay(self._device_address, base=5))
             await self.read_status()
 
-        asyncio.ensure_future(read_current_status(), loop=self._buspro.loop)
+        self._spawn(read_current_status())
 
     @property
     def unit_of_measurement(self):

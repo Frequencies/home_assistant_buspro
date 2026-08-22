@@ -184,19 +184,8 @@ class BusproLight(RestoreEntity, LightEntity):
         self._device_update_cb = None
         self._unsub_start_poll = None
         self._unsub_poll_interval = None
-        self.async_register_callbacks()
-        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
-
         self._polling_interval = timedelta(minutes=60)
-        stagger = hash(str(self._device._device_address)) % 300
-
-        @callback
-        def _start_polling(_now):
-            self._unsub_poll_interval = event.async_track_time_interval(
-                self._hass, self.async_update, self._polling_interval
-            )
-
-        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
+        self.entity_id = generate_entity_id("light.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):
@@ -223,6 +212,9 @@ class BusproLight(RestoreEntity, LightEntity):
             except ValueError:
                 pass
             self._device_update_cb = None
+        # Detach the device from the bus so its telegram callback and any
+        # pending tasks (ack watch, init read) are released on removal.
+        self._device.close()
         await super().async_will_remove_from_hass()
 
     @property
@@ -269,6 +261,19 @@ class BusproLight(RestoreEntity, LightEntity):
             self._hass, self, self._device.device_address
         )
 
+        # Register bus/update callbacks and the staggered poll timer only once
+        # the entity is actually added to hass (not from __init__).
+        self.async_register_callbacks()
+        stagger = hash(str(self._device._device_address)) % 300
+
+        @callback
+        def _start_polling(_now):
+            self._unsub_poll_interval = event.async_track_time_interval(
+                self._hass, self.async_update, self._polling_interval
+            )
+
+        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
+
         last_state = await self.async_get_last_state()
         if last_state:
             brightness_255 = last_state.attributes.get(ATTR_BRIGHTNESS)
@@ -294,7 +299,9 @@ class BusproLight(RestoreEntity, LightEntity):
         """Instruct the light to turn on."""
         has_explicit_brightness = ATTR_BRIGHTNESS in kwargs
         if has_explicit_brightness:
-            brightness = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+            # Round rather than truncate, and never let an explicit on-request
+            # collapse to 0 (which would read as "off").
+            brightness = max(1, int(round(kwargs[ATTR_BRIGHTNESS] / 255 * 100)))
         elif self.is_on:
             brightness = max(1, self._device.current_brightness)
         elif self._device.previous_brightness is not None:

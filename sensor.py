@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
+    SensorStateClass,
 )
 from homeassistant.const import (
     CONF_NAME, 
@@ -462,7 +463,6 @@ class BusproSensor(SensorEntity):
             hass, device.device_address
         )
         self._device_update_cb = None
-        self.async_register_callbacks()
         self._offset = offset
         self._temperature = None
         self._brightness = None
@@ -479,6 +479,8 @@ class BusproSensor(SensorEntity):
         attach_entity_to_physical_device(
             self._hass, self, self._device.device_address
         )
+        # Register the update callback only once added to hass.
+        self.async_register_callbacks()
 
     @callback
     def async_register_callbacks(self):
@@ -589,10 +591,16 @@ class BusproSensor(SensorEntity):
         return ""
 
     @property
+    def state_class(self):
+        """All Buspro sensor readings are point-in-time measurements."""
+        if self._sensor_type in (TEMPERATURE, ILLUMINANCE, "humidity"):
+            return SensorStateClass.MEASUREMENT
+        return None
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
-        attributes['state_class'] = "measurement"
         if self._humidity is not None:
             attributes['humidity'] = self._humidity
         if self._device.movement is not None:

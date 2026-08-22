@@ -464,17 +464,23 @@ class BusproModule:
         if self._stop_listener is not None:
             self._stop_listener()
             self._stop_listener = None
-        for sensor in self._sensor_devices.values():
-            sensor.close()
-        self._sensor_devices.clear()
-        for diagnostics in self._dimmer_diagnostics.values():
-            diagnostics.close()
-        self._dimmer_diagnostics.clear()
-        for diagnostics in self._logic_controllers.values():
-            diagnostics.close()
-        self._logic_controllers.clear()
-        await self.hdl.stop()
-        self.connected = False
+        # A single failing close() must not leave the remaining devices attached
+        # or, worse, skip the gateway shutdown and leak the UDP socket.
+        try:
+            for collection in (
+                self._sensor_devices,
+                self._dimmer_diagnostics,
+                self._logic_controllers,
+            ):
+                for device in collection.values():
+                    try:
+                        device.close()
+                    except Exception:
+                        _LOGGER.exception("Error closing Buspro device on stop")
+                collection.clear()
+        finally:
+            await self.hdl.stop()
+            self.connected = False
 
     async def service_activate_scene(self, call):
         """Service for activatign a __scene"""
@@ -505,11 +511,16 @@ class BusproModule:
         attr_switch_number = call.data.get(SERVICE_BUSPRO_ATTR_SWITCH_NUMBER)
         universal_switch = UniversalSwitch(self.hdl, attr_address, attr_switch_number)
 
-        status = call.data.get(SERVICE_BUSPRO_ATTR_STATUS)
-        if status == 1:
-            await universal_switch.set_on()
-        else:
-            await universal_switch.set_off()
+        try:
+            status = call.data.get(SERVICE_BUSPRO_ATTR_STATUS)
+            if status == 1:
+                await universal_switch.set_on()
+            else:
+                await universal_switch.set_off()
+        finally:
+            # This is a throwaway device; detach its bus callback so each
+            # service call does not leak a registered listener.
+            universal_switch.close()
 
     def register_services(self, force=False):
         if force:

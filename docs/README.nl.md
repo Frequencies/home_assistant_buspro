@@ -6,6 +6,8 @@ De integratie beheert de gateway en fysieke HDL Buspro-apparaten via de
 Home Assistant-interface. De volledige lijst met modellen, entiteiten en
 services staat in de [Engelse documentatie](../README.md).
 
+> **Belangrijke opmerking**: Voor gedetailleerde configuratie van apparaten, YAML-voorbeelden, beschikbare services en ontwikkelingsgids, raadpleeg de [Engelse documentatie](../README.md). Deze pagina biedt informatie over installatie en initiële configuratie.
+
 ## Installatie
 
 ### HACS (aanbevolen)
@@ -29,27 +31,68 @@ Home Assistant na elke update van de integratie opnieuw.
 
 ## Eerste configuratie
 
+### Gatewayconfiguratie
 1. Open **Instellingen > Apparaten & diensten > Integratie toevoegen** en
    selecteer **HDL Buspro**.
-2. Voer het gatewayadres en de UDP-poorten in. De gebruikelijke standaardpoort
-   is `6000`.
-3. Voer een vrij Buspro-adres voor Home Assistant in als `subnet.apparaat`. De
-   standaardwaarde `200.200` mag niet aan een ander Buspro-apparaat toebehoren.
-4. Open **Configureren > Apparaat toevoegen**, selecteer het type en exacte
-   model en voer het fysieke Buspro-adres en een naam in.
-5. Geef de benodigde kanalen of functies een naam. Een lege naam houdt het
-   kanaal uitgeschakeld en voorkomt dat de entiteit wordt aangemaakt.
+2. Voer de gatewayhost en UDP-poorten in. De normale poort is `6000`.
+3. Voer een vrij Buspro-adres voor Home Assistant in als `subnet.apparaat`.
+   De standaardwaarde is `200.200`; deze mag niet aan een ander Buspro-apparaat
+   toebehoren.
 
-Bekende modellen gebruiken het vaste aantal kanalen of de functielijst uit de
-apparaatcatalogus. Bij generieke profielen geeft de gebruiker een kanaalaantal
-binnen de ondersteunde limiet op. Na het opslaan wordt de configuratie-entry
-opnieuw geladen en worden de entiteiten onder één fysiek apparaat gegroepeerd.
+### Apparaten toevoegen
+Nadat u de gatewayconfiguratie hebt voltooid:
 
-Open **Configureren > Apparaat bewerken** om wijzigingen aan te brengen. Voor
-apparaten die via de interface worden beheerd, kunnen model, naam en kanalen
-worden gewijzigd of kan het apparaat worden verwijderd. De
-protocolconfiguratie van oudere YAML-apparaten moet nog steeds in YAML worden
-gewijzigd; start Home Assistant daarna opnieuw.
+1. Open **Instellingen > Apparaten & diensten > HDL Buspro > Configureren**.
+2. Selecteer **Apparaat toevoegen** om een fysieke Buspro-module toe te voegen.
+3. **Selecteer apparaattype**: kies de mogelijkheid (Relais, Dimmer, Ventilator,
+   Gordijn, Multisensor, enz.).
+4. **Selecteer exact model**: kies het model dat uw hardware overeenkomt. Dit
+   bepaalt het aantal kanalen.
+   - Kies voor onbekende modellen het profiel **Generiek** en geef het aantal
+     kanalen op.
+5. **Voer Buspro-adres in**: het fysieke subnet.apparaat-adres van de module
+   (bijv. `1.5`).
+6. **Voer apparaatnaam in**: een weergavenaam (bijv. "Woonkamerlichten").
+7. **Noem elk kanaal**: wijs een naam toe aan elk kanaal of functie dat u wilt
+   gebruiken.
+   - Voorbeeld: voor een 4-kanaals relais, noem kanalen "Plafondlicht",
+     "Tafellamp", enz.
+   - **Laat een naam leeg om dat kanaal uit te schakelen** — er wordt geen
+     entiteit gemaakt.
+8. Selecteer **Opslaan** om het apparaat en de entiteiten ervan te maken.
+
+Home Assistant groepeert automatisch alle entiteiten van een fysieke module
+onder één apparaatregistervermelding en laadt de configuratie-entry opnieuw.
+
+### Apparaten bewerken
+
+Open **Configureren > Apparaat bewerken** om een bestaand apparaat te wijzigen.
+U kunt:
+- Het apparaat hernoemen
+- Individuele kanalen hernoemen, inschakelen of uitschakelen
+- Het model wijzigen (kan het aantal kanalen veranderen)
+- Het apparaat volledig verwijderen
+
+Via de interface beheerde apparaten ondersteunen volledige bewerking. Legacy
+YAML-apparaten kunnen naamgevingsbesturingselementen van het register
+beschikbaar stellen, maar hun protocolconfiguratie moet nog steeds in YAML
+worden gewijzigd. Start Home Assistant opnieuw na YAML-wijzigingen.
+
+### Voorbeeld: 4-kanaals relaismodule toevoegen
+
+1. Model: `HDL-MR0410.431` (4 relaiskanalen)
+2. Buspro-adres: `1.10`
+3. Apparaatnaam: "Kamer relais"
+4. Kanaalnamen:
+   - Kanaal 1: "Plafondlicht"
+   - Kanaal 2: "Wandlamp"
+   - Kanaal 3: "" (uitgeschakeld)
+   - Kanaal 4: "Ventilator"
+
+Na het opslaan maakt Home Assistant:
+- `light.room_relays_ceiling_light`
+- `light.room_relays_wall_lamp`
+- `switch.room_relays_fan`
 
 ## Incompatibele wijzigingen in 2.2.0
 
@@ -78,22 +121,98 @@ gewijzigd; start Home Assistant daarna opnieuw.
 Configureer hetzelfde fysieke kanaal niet tegelijk in YAML en via de
 interface. Dit veroorzaakt dubbele entiteiten en protocolabonnementen.
 
-## Cataloguscontrole en tests
+## YAML-configuratie (verouderd)
 
-Om de modelcatalogus te vergelijken met de bijgehouden officiële HDL-lijst:
+YAML-apparaatconfiguratie wordt volledig ondersteund naast gatewaybeheer via
+configuratie-entry. U kunt lampen, gordijnen, schakelaars, ventilators,
+klimaatbeheersing, sensoren en binaire sensoren via YAML definiëren terwijl de
+gateway via de integratieinterface wordt beheerd.
 
-```bash
-python3 custom_components/buspro/tools/check_catalog_models.py
-python3 custom_components/buspro/tools/check_catalog_models.py --strict
+**Opmerking**: Nieuwe apparaten moeten de interface **Configureren > Apparaat
+toevoegen** gebruiken in plaats van YAML, omdat deze apparaatgroepering,
+modelsturende mogelijkheden en beheer van kanaaltoestand biedt. YAML wordt
+aanbevolen voor:
+- Apparaten met niet-standaard of verouderde profielen
+- Migratie van oudere Buspro-integraties
+- Complexe automatisering of sensorsjablonen
+
+### YAML-syntaxisvoorbeeld
+
+Voeg toe aan uw `configuration.yaml`:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.5.1":
+        name: "Plafondlicht"
+        dimmable: true
+      "1.5.2":
+        name: "Wandlamp"
+        dimmable: false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Woonkamergordijn"
+        running_time: 45
+
+climate:
+  - platform: buspro
+    devices:
+      "3.1":
+        name: "Slaapkamer klimaat"
+        profile: "ac"
 ```
 
-Voor legacy YAML-apparaten normaliseert de integratie nu ontbrekende profielen
-op basis van modelmetadata. Onbekende modellen of ongeldige profielen worden
-als waarschuwing gelogd en vallen terug op `sensor_status`.
+### Platformconfiguratie
 
-Gerichte tests van de integratie:
+Elk platform (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`,
+`switch`) accepteert:
+
+| Sleutel | Type | Beschrijving |
+| --- | --- | --- |
+| `devices` | dict | Vereist. Toewijzing van Buspro-adressen aan apparaatconfiguraties. |
+| `running_time` | int | Standaard overgangstijd in seconden (0 = geen overgang). Per apparaat overschrijfbaar. |
+| `ack_retry_enabled` | bool | Verzend opnieuw zonder ACK (platformstandaard; per apparaat overschrijfbaar). |
+
+Elke apparaatsleutel is het **Buspro-adres** in formaat:
+- **Lamp, gordijn, ventilator, schakelaar**: `subnet.apparaat.kanaal` (bijv., `1.5.2`)
+- **Klimaat, sensor, binaire sensor**: `subnet.apparaat` (bijv., `3.1`)
+
+Elke apparaatconfiguratie ondersteunt:
+- `name` (vereist): Weergavenaam
+- `running_time`, `dimmable`, `ack_retry_enabled` (platformspecifiek, optioneel)
+- `profile` (optioneel, voor klimaatsensoren — bijv., `"ac"`, `"floor_heating"`)
+- `object_id` (optioneel): Entity-ID-slug
+- `unique_id` (optioneel): Voor handmatige bediening van entiteitregister
+
+## Ontwikkeling
+
+### Test-suites uitvoeren
+
+Vanuit de Home Assistant-configuratiemap:
 
 ```bash
-python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -p 'test_*.py'
-python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -p 'test_*.py'
+# Alle protocoltests uitvoeren (19 tests)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -v
+
+# Alle integratietests uitvoeren (18 tests)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -v
+
+# Of afzonderlijke testbestanden uitvoeren
+python3 custom_components/buspro/tests/buspro_protocol/test_sensor_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_relay_coordinator.py
+python3 custom_components/buspro/tests/buspro_protocol/test_logic_controller_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_config_isolation.py
+python3 custom_components/buspro/tests/buspro_protocol/test_device_lifecycle.py
+python3 custom_components/buspro/tests/buspro_integration/test_device_catalog.py
+python3 custom_components/buspro/tests/buspro_integration/test_managed_device_logic.py
+python3 custom_components/buspro/tests/buspro_integration/test_model_notes_logging.py
+python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalization.py
 ```
+
+Protocoltests bestrijken telegramanalyse, apparaatcoördinatie en veiligheid van
+kerntaken/callbacks. Integratietests bestrijken apparaatcatalogus, logica voor
+beheerde apparaten, YAML-normalisatie en tracking van modelondersteuning.

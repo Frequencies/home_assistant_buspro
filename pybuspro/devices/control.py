@@ -5,10 +5,30 @@ from ..core.telegram import Telegram
 from ..helpers.enums import OperateCode
 
 _LOGGER = logging.getLogger(__name__)
-_last_queries = {}
 _LAST_QUERIES_MAX = 4096
 _LAST_QUERIES_PRUNE_INTERVAL = 60.0
-_last_queries_prune_at = 0.0
+_QUERY_WINDOW_SECONDS = 4.0
+
+# Read op-codes whose redundant repeats within a short window are coalesced.
+_QUERY_CODES = frozenset({
+    OperateCode.ReadStatusOfChannels,
+    OperateCode.ReadChannelLoadType,
+    OperateCode.ReadLimitOfEveryChannel,
+    OperateCode.ReadSafeguardTimeOfChannel,
+    OperateCode.ReadDelayOfTurnOnChannel,
+    OperateCode.IsDeviceOnline,
+    OperateCode.ReadFirmwareVersion,
+    OperateCode.ReadStatusOfUniversalSwitch,
+    OperateCode.ReadSensorStatus,
+    OperateCode.ReadSensorsInOneStatus,
+    OperateCode.ReadFloorHeatingStatus,
+    OperateCode.ReadFloorHeatingModuleStatus,
+    OperateCode.ReadFloorHeatingTemperatureNew,
+    OperateCode.ReadFloorHeatingTemperatureLegacy,
+    OperateCode.ReadPanelAC,
+    OperateCode.ReadDryContactStatus,
+    OperateCode.ReadStatusofCurtainSwitch,
+})
 
 
 class _Control:
@@ -105,44 +125,37 @@ class _Control:
     def telegram(self):
         return self.build_telegram_from_control(self)
 
+    def _query_dedup_state(self):
+        # Per-Buspro-instance dedup state: two gateways with overlapping
+        # subnet/device addresses must not suppress each other's reads.
+        state = getattr(self._buspro, "_query_dedup", None)
+        if state is None:
+            state = {"last_queries": {}, "prune_at": 0.0}
+            try:
+                self._buspro._query_dedup = state
+            except AttributeError:
+                pass
+        return state
+
     async def send(self):
-        global _last_queries_prune_at
         telegram = self.telegram
         if telegram is None:
             return
 
-        query_codes = {
-            OperateCode.ReadStatusOfChannels,
-            OperateCode.ReadChannelLoadType,
-            OperateCode.ReadLimitOfEveryChannel,
-            OperateCode.ReadSafeguardTimeOfChannel,
-            OperateCode.ReadDelayOfTurnOnChannel,
-            OperateCode.IsDeviceOnline,
-            OperateCode.ReadFirmwareVersion,
-            OperateCode.ReadStatusOfUniversalSwitch,
-            OperateCode.ReadSensorStatus,
-            OperateCode.ReadSensorsInOneStatus,
-            OperateCode.ReadFloorHeatingStatus,
-            OperateCode.ReadFloorHeatingModuleStatus,
-            OperateCode.ReadFloorHeatingTemperatureNew,
-            OperateCode.ReadFloorHeatingTemperatureLegacy,
-            OperateCode.ReadPanelAC,
-            OperateCode.ReadDryContactStatus,
-            OperateCode.ReadStatusofCurtainSwitch,
-        }
-
-        if telegram.operate_code in query_codes:
+        if telegram.operate_code in _QUERY_CODES:
+            state = self._query_dedup_state()
+            last_queries = state["last_queries"]
             now = time.time()
-            if now >= _last_queries_prune_at:
-                _last_queries_prune_at = now + _LAST_QUERIES_PRUNE_INTERVAL
-                if len(_last_queries) > _LAST_QUERIES_MAX:
+            if now >= state["prune_at"]:
+                state["prune_at"] = now + _LAST_QUERIES_PRUNE_INTERVAL
+                if len(last_queries) > _LAST_QUERIES_MAX:
                     # Drop oldest entries to keep dedup memory bounded.
-                    remove_count = len(_last_queries) - _LAST_QUERIES_MAX
-                    for key, _ in sorted(_last_queries.items(), key=lambda item: item[1])[:remove_count]:
-                        _last_queries.pop(key, None)
+                    remove_count = len(last_queries) - _LAST_QUERIES_MAX
+                    for key, _ in sorted(last_queries.items(), key=lambda item: item[1])[:remove_count]:
+                        last_queries.pop(key, None)
             key = (telegram.target_address, telegram.operate_code, tuple(telegram.payload or []))
-            last_sent = _last_queries.get(key, 0.0)
-            if now - last_sent < 4.0:
+            last_sent = last_queries.get(key, 0.0)
+            if now - last_sent < _QUERY_WINDOW_SECONDS:
                 _LOGGER.debug(
                     "DEDUPLICATOR: skip %s to %s payload=%s dt=%.2fs",
                     telegram.operate_code,
@@ -151,7 +164,7 @@ class _Control:
                     now - last_sent,
                 )
                 return
-            _last_queries[key] = now
+            last_queries[key] = now
 
         # if telegram.target_address[1] == 100:
         #     print("==== {}".format(str(telegram)))

@@ -441,7 +441,6 @@ class BusproBinarySensor(BinarySensorEntity):
         if scan_interval > 0:
             self._should_poll = True
 
-        self.async_register_callbacks()
         self.entity_id = generate_entity_id("binary_sensor.{}", object_id, None, hass)
 
     async def async_added_to_hass(self):
@@ -450,6 +449,8 @@ class BusproBinarySensor(BinarySensorEntity):
         attach_entity_to_physical_device(
             self._hass, self, self._device.device_address
         )
+        # Register the update callback only once added to hass.
+        self.async_register_callbacks()
 
     @callback
     def async_register_callbacks(self):

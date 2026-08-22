@@ -396,19 +396,8 @@ class _BusproClimateBase(ClimateEntity):
         self._configured_min_temp = min_temp
         self._configured_max_temp = max_temp
         self._configured_precision = precision
-        self.async_register_callbacks()
-        self.entity_id = generate_entity_id("climate.{}", object_id, None, hass)
-
         self._polling_interval = timedelta(minutes=60)
-        stagger = hash(str(self._device._device_address)) % 300
-
-        @callback
-        def _start_polling(_now):
-            self._unsub_poll_interval = event.async_track_time_interval(
-                self._hass, self.async_update, self._polling_interval
-            )
-
-        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
+        self.entity_id = generate_entity_id("climate.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):
@@ -434,6 +423,19 @@ class _BusproClimateBase(ClimateEntity):
             self._hass, self, self._device.device_address
         )
 
+        # Register update callbacks and the staggered poll timer only once the
+        # entity is added to hass (not from __init__).
+        self.async_register_callbacks()
+        stagger = hash(str(self._device._device_address)) % 300
+
+        @callback
+        def _start_polling(_now):
+            self._unsub_poll_interval = event.async_track_time_interval(
+                self._hass, self.async_update, self._polling_interval
+            )
+
+        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
+
     async def async_will_remove_from_hass(self):
         if self._unsub_start_poll is not None:
             self._unsub_start_poll()
@@ -453,6 +455,11 @@ class _BusproClimateBase(ClimateEntity):
             except ValueError:
                 pass
             self._relay_sensor_update_cb = None
+        # Detach devices from the bus so telegram callbacks and pending tasks
+        # are released on removal.
+        self._device.close()
+        if self._relay_sensor is not None:
+            self._relay_sensor.close()
         await super().async_will_remove_from_hass()
 
     @property
@@ -580,7 +587,7 @@ class BusproACClimate(_BusproClimateBase):
         if temperature is None:
             return
         control = ControlPanelAC()
-        control.normal_temperature = int(temperature)
+        control.normal_temperature = int(round(temperature))
         await self._device.control_ac_temperature(control)
         self.async_write_ha_state()
 
@@ -619,12 +626,16 @@ class BusproFloorHeatingClimate(_BusproClimateBase):
             "channel_configured": channel_enabled,
         }
         self._preset_modes = preset_modes
-        self._attr_supported_features = (
+        features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
-            | ClimateEntityFeature.PRESET_MODE
             | ClimateEntityFeature.TURN_OFF
             | ClimateEntityFeature.TURN_ON
         )
+        # Only advertise PRESET_MODE when presets are actually configured;
+        # otherwise preset_modes returns None and HA warns on the mismatch.
+        if preset_modes:
+            features |= ClimateEntityFeature.PRESET_MODE
+        self._attr_supported_features = features
 
     @property
     def target_temperature(self):
@@ -636,10 +647,11 @@ class BusproFloorHeatingClimate(_BusproClimateBase):
 
     @property
     def preset_modes(self) -> Optional[List[str]]:
-        if len(self._preset_modes) == 0:
+        if not self._preset_modes:
             return None
-        keys = HA_PRESET_TO_HDL.keys() & self._preset_modes
-        return list({k: HA_PRESET_TO_HDL[k] for k in keys})
+        # Preserve the canonical preset order (set intersection is unordered).
+        configured = set(self._preset_modes)
+        return [preset for preset in HA_PRESET_TO_HDL if preset in configured]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         if not self._channel_enabled:
@@ -707,7 +719,7 @@ class BusproFloorHeatingClimate(_BusproClimateBase):
             return
 
         control = ControlFloorHeatingStatus()
-        target_temperature = int(temperature)
+        target_temperature = int(round(temperature))
         preset = HDL_TO_HA_PRESET.get(self._device.mode, PRESET_NONE)
 
         if preset == PRESET_NONE:

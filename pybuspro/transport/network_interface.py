@@ -27,6 +27,8 @@ class NetworkInterface:
             self.callback(telegram)
 
     async def _send_message(self, message):
+        if self.udp_client is None:
+            return
         await self.udp_client.send_message(message)
 
     """
@@ -39,6 +41,7 @@ class NetworkInterface:
         await self.udp_client.start()
 
     async def stop(self):
+        self.callback = None
         if self.udp_client is not None:
             await self.udp_client.stop()
             self.udp_client = None
@@ -49,6 +52,9 @@ class NetworkInterface:
 
         message = self._th.build_send_buffer(telegram)
         if message is None:
+            return
+
+        if self.udp_client is None:
             return
 
         if self.buspro.logger.isEnabledFor(logging.DEBUG):

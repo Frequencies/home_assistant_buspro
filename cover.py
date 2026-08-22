@@ -149,19 +149,8 @@ class BusproCover(CoverEntity):
         self._device_update_cb = None
         self._unsub_start_poll = None
         self._unsub_poll_interval = None
-        self.async_register_callbacks()
-        self.entity_id = generate_entity_id("cover.{}", object_id, None, hass)
-
         self._polling_interval = timedelta(minutes=60)
-        stagger = hash(str(self._device._device_address)) % 300
-
-        @callback
-        def _start_polling(_now):
-            self._unsub_poll_interval = event.async_track_time_interval(
-                self._hass, self.async_update, self._polling_interval
-            )
-
-        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
+        self.entity_id = generate_entity_id("cover.{}", object_id, None, hass)
 
     @callback
     def async_register_callbacks(self):
@@ -178,6 +167,18 @@ class BusproCover(CoverEntity):
             self._hass, self, self._device.device_address
         )
 
+        # Register update callback and staggered poll timer only once added.
+        self.async_register_callbacks()
+        stagger = hash(str(self._device._device_address)) % 300
+
+        @callback
+        def _start_polling(_now):
+            self._unsub_poll_interval = event.async_track_time_interval(
+                self._hass, self.async_update, self._polling_interval
+            )
+
+        self._unsub_start_poll = event.async_call_later(self._hass, stagger, _start_polling)
+
     async def async_will_remove_from_hass(self):
         if self._unsub_start_poll is not None:
             self._unsub_start_poll()
@@ -191,6 +192,8 @@ class BusproCover(CoverEntity):
             except ValueError:
                 pass
             self._device_update_cb = None
+        # Detach from the bus so telegram callbacks and pending tasks are freed.
+        self._device.close()
         await super().async_will_remove_from_hass()
 
     @property
