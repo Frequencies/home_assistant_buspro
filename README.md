@@ -1,14 +1,23 @@
-# HDL Buspro for Home Assistant
+# HDL Buspro
 
-**Documentation:** English | [Беларуская](docs/be/README.md) |
-[Deutsch](docs/de/README.md) | [Español](docs/es/README.md) |
-[Français](docs/fr/README.md) | [Italiano](docs/it/README.md) |
-[Nederlands](docs/nl/README.md) | [Norsk](docs/no/README.md) |
-[Русский](docs/ru/README.md) | [Українська](docs/uk/README.md)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
 
-Local Home Assistant integration for HDL Buspro gateways and devices. The
-integration supports config-entry gateway management, model-driven physical
-devices, grouped entities, read-only diagnostics, and Buspro control services.
+## Languages
+
+[![English](https://flagcdn.com/24x18/gb.png) English](README.md) |
+[![Deutsch](https://flagcdn.com/24x18/de.png) Deutsch](README.de.md) |
+[![Français](https://flagcdn.com/24x18/fr.png) Français](README.fr.md) |
+[![Nederlands](https://flagcdn.com/24x18/nl.png) Nederlands](README.nl.md) |
+[![Español](https://flagcdn.com/24x18/es.png) Español](README.es.md) |
+[![Italiano](https://flagcdn.com/24x18/it.png) Italiano](README.it.md) |
+[![Русский](https://flagcdn.com/24x18/ru.png) Русский](README.ru.md) |
+[![Українська](https://flagcdn.com/24x18/ua.png) Українська](README.uk.md) |
+[![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md) |
+[![Norsk](https://flagcdn.com/24x18/no.png) Norsk](README.no.md)
+
+# The HDL Buspro integration allows you to control your HDL Buspro system from Home Assistant.
+
+The HDL Buspro integration allows you to control your HDL Buspro system from Home Assistant.
 
 ## Installation
 

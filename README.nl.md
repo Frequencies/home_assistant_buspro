@@ -12,7 +12,8 @@
 [![Italiano](https://flagcdn.com/24x18/it.png) Italiano](README.it.md) |
 [![Русский](https://flagcdn.com/24x18/ru.png) Русский](README.ru.md) |
 [![Українська](https://flagcdn.com/24x18/ua.png) Українська](README.uk.md) |
-[![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md)
+[![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md) |
+[![Norsk](https://flagcdn.com/24x18/no.png) Norsk](README.no.md)
 
 # Dankzij de HDL Buspro-integratie kunt u uw HDL Buspro-systeem bedienen vanuit Home Assistant.
 
