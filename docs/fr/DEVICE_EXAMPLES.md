@@ -1,6 +1,6 @@
 # Exemples de configuration d'appareils HDL Buspro
 
-**Langues disponibles :** [English](../en/DEVICE_EXAMPLES.md) | [Deutsch](../de/DEVICE_EXAMPLES.md) | [Français](../fr/DEVICE_EXAMPLES.md) | [Español](../es/DEVICE_EXAMPLES.md) | [Italiano](../it/DEVICE_EXAMPLES.md) | [Nederlands](../nl/DEVICE_EXAMPLES.md) | [Norsk](../no/DEVICE_EXAMPLES.md) | [Русский](../ru/DEVICE_EXAMPLES.md) | [Українська](../uk/DEVICE_EXAMPLES.md)
+**Langues disponibles :** [🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | 🇫🇷 Français | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
 
 ---
 

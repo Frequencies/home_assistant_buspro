@@ -15,295 +15,367 @@
 [![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md) |
 [![Norsk](https://flagcdn.com/24x18/no.png) Norsk](README.no.md)
 
-# L'integrazione HDL Buspro ti consente di controllare il tuo sistema HDL Buspro da Home Assistant.
 
-## Installazione
+## Configurazione iniziale
 
-### Installazione con un clic (HACS)
+### Configurazione del gateway
+1. Aprire **Settings > Devices & services > Add integration** e selezionare
+   **HDL Buspro**.
+2. Inserire l'host del gateway e le porte UDP. La porta `6000` è il valore predefinito normale.
+3. Inserire un indirizzo Buspro di Home Assistant non utilizzato nel formato `subnet.device`.
+   L'impostazione predefinita è `200.200`; non deve appartenere a un altro dispositivo Buspro.
 
-[![Apri la tua istanza di Home Assistant e apri un repository nell'Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Frequencies&repository=home_assistant_buspro&category=integration)
+### Aggiunta di dispositivi
+Dopo che la configurazione del gateway è completata:
 
-### Installazione manuale
+1. Aprire **Settings > Devices & services > HDL Buspro > Configure**.
+2. Fare clic su **Add device** per aggiungere un modulo fisico Buspro.
+3. **Selezionare il tipo di dispositivo** (Relay, Dimmer, Cover, Climate, Sensor, ecc.).
+4. **Selezionare il modello esatto** che corrisponde all'hardware.
+5. **Inserire l'indirizzo Buspro** nel formato `subnet.device` (ad es., `1.5`).
+6. **Inserire il nome del dispositivo** (ad es., "Living room lights").
+7. **Assegnare un nome a ciascun canale** — lasciare vuoto per disabilitare un canale.
+8. Fare clic su **Save**.
 
-In HACS -> Integrazioni, aggiungi il repository personalizzato "https://github.com/Frequencies/home_assistant_buspro" con la categoria "Integrazione". Seleziona l’integrazione chiamata "HDL Buspro" e scaricala.
+Home Assistant raggruppa automaticamente le entità per modulo fisico nel Device Registry.
 
-Riavvia l'assistente domestico.
+**Per esempi di configurazione UI e YAML per tutti i tipi di dispositivo, vedere [DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md).**
 
-Vai su Impostazioni > Integrazioni e aggiungi integrazione "HDL Buspro". Digitare l'indirizzo IP e il numero di porta del gateway.
+### Modifica dei dispositivi
 
-## Configurazione
+Per modificare un dispositivo esistente, aprire **Configure > Edit device**. È possibile:
+- Rinominare il dispositivo
+- Rinominare, abilitare o disabilitare i singoli canali
+- Modificare il modello (che potrebbe cambiare il numero di canali)
+- Rimuovere completamente il dispositivo
 
-#### Piattaforma leggera
-   
-Per utilizzare Buspro light nella tua installazione, aggiungi quanto segue al tuo file Configuration.yaml:
+I dispositivi gestiti dall'UI supportano la modifica completa. I dispositivi legacy YAML possono esporre i controlli di denominazione del registro, ma la loro configurazione del protocollo deve comunque essere modificata in YAML. Riavviare Home Assistant dopo la modifica di YAML.
+
+### Esempio rapido: Aggiunta di un modulo relay a 4 canali
+
+1. Modello: `HDL-MR0410.431` (4 canali relay)
+2. Indirizzo Buspro: `1.10`
+3. Nome del dispositivo: "Room relays"
+4. Nomi dei canali: "Ceiling light", "Wall lamp", "", "Fan"
+5. Fare clic su **Save**
+
+Home Assistant crea automaticamente le entità: `light.room_relays_ceiling_light`, `light.room_relays_wall_lamp`, `switch.room_relays_fan`
+
+Per esempi completi di UI e YAML per tutti i tipi di dispositivo, vedere **[DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md)**.
+
+## Opzioni di configurazione
+
+L'integrazione buspro supporta sia la **configurazione basata su UI** che la **configurazione YAML**:
+
+### Configurazione UI
+Il modo più semplice per aggiungere dispositivi — vedere **[DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md)** per esempi dettagliati di tutti i tipi di dispositivo.
+
+### Configurazione YAML  
+L'integrazione supporta due approcci YAML complementari:
+- **Entity-Centric** (Legacy) — file di entità individuali organizzati per dominio
+- **Device-Centric** (Modern) — definizioni complete dei dispositivi con tutti i canali
+
+**Per la documentazione YAML completa, gli esempi e le best practice, vedere [DUAL_MODE_YAML.md](docs/en/DUAL_MODE_YAML.md)** (disponibile anche in [Беларуская](docs/be/DUAL_MODE_YAML.md) | [Deutsch](docs/de/DUAL_MODE_YAML.md) | [Español](docs/es/DUAL_MODE_YAML.md) | [Français](docs/fr/DUAL_MODE_YAML.md) | [Italiano](docs/it/DUAL_MODE_YAML.md) | [Nederlands](docs/nl/DUAL_MODE_YAML.md) | [Norsk](docs/no/DUAL_MODE_YAML.md) | [Русский](docs/ru/DUAL_MODE_YAML.md) | [Українська](docs/uk/DUAL_MODE_YAML.md))
+
+## Modifiche non retrocompatibili nella versione 2.2.0
+
+Leggere questa sezione prima di eseguire l'aggiornamento dalla versione 2.1.x.
+
+> [!WARNING]
+> This release changes device ownership, channel creation, panel event
+> semantics, and the embedded Python constructor. Complete the upgrade
+> checklist before removing legacy YAML.
+
+1. **I dispositivi specifici dell'installazione non sono più integrati nell'integrazione.**
+   Gli indirizzi dei dispositivi, i nomi, le assegnazioni dei canali e il numero di dispositivi appartengono
+   ora alle opzioni della voce di configurazione o al Device Registry di Home Assistant. Il catalogo dei dispositivi contiene solo le capacità hardware.
+
+2. **I moduli relay gestiti dall'UI utilizzano il numero di canali fisici.**
+   `HDL-MR1210.433` espone sempre 12 slot di canale e
+   `HDL-MR1610.433` espone sempre 16. Un dispositivo esistente non può essere ridotto
+   al di sotto del numero di canali fisici del modello.
+
+3. **Un nome di canale vuoto disabilita il canale.**
+   I canali disabilitati non vengono istanziati, non creano oggetti di protocollo e
+   sono contrassegnati come disabilitati dall'integrazione nel Device Registry. L'inserimento di un
+   nome abilita di nuovo il canale.
+
+4. **Il modello esatto controlla le entità generate.**
+   Un `HDL panel` generico non ha un numero di pulsanti noto. Selezionare il modello fisico
+   per creare gli eventi dei pulsanti. La modifica di un modello ricarica la voce di configurazione.
+
+5. **Home Assistant ha il suo indirizzo Buspro.**
+   Le voci di configurazione esistenti vengono migrate a `200.200`. Questo indirizzo deve essere inutilizzato sulla
+   rete Buspro e può essere modificato in **Configure > Gateway settings**.
+
+6. **L'IP di origine dei pacchetti non è più hardcoded.**
+   L'integrazione lo deriva dalla rotta verso il gateway configurato. Un
+   host Home Assistant con più interfacce deve instradare il gateway attraverso l'interfaccia
+   LAN desiderata.
+
+7. **Gli eventi delle azioni del pannello sono ora decodificati.**
+   Le automazioni che utilizzano i vecchi valori di azione grezza devono essere controllate. Gli eventi utilizzano
+   `channel_on`, `channel_off`, `channel_level`, `scene`,
+   `universal_switch_on`, o `universal_switch_off`, con attributi target e summary dove
+   possono essere risolti.
+
+8. **L'API Python incorporata è stata modificata.**
+   Gli utenti diretti di `pybuspro.Buspro` devono fornire `client_address`; vedere
+   [pybuspro/README.md](pybuspro/README.md).
+
+L'integrazione continua a leggere le entità YAML legacy durante la migrazione. Non mantenere
+lo stesso canale fisico sia nella configurazione YAML che in quella gestita dall'UI, perché
+ciò potrebbe creare entità duplicate e sottoscrizioni di protocollo duplicate.
+
+## Checklist di aggiornamento
+
+1. Riavviare Home Assistant dopo aver sostituito il componente personalizzato.
+2. Aprire **Settings > Devices & services > HDL Buspro > Configure**.
+3. Controllare l'host del gateway, le porte e l'indirizzo Buspro di Home Assistant inutilizzato.
+4. Aprire ogni dispositivo fisico e selezionare il modello esatto.
+5. Controllare il nome di ogni canale relay. I canali vuoti rimangono intenzionalmente disabilitati.
+6. Verificare le automazioni che utilizzano gli eventi delle azioni del pannello.
+7. Rimuovere o commentare le entità YAML migrate solo dopo che i loro sostituti gestiti dall'UI
+   hanno mantenuto gli ID entità previsti.
+
+## Configurazione del gateway
+
+Aggiungere **HDL Buspro** da **Settings > Devices & services** e configurare:
+
+- **Host**: nome host del gateway IP HDL o indirizzo IPv4.
+- **Port**: porta UDP primaria, normalmente `6000`.
+- **UDP send/receive ports**: modificare solo per un gateway non standard.
+- **Home Assistant Buspro address**: un'identità `subnet.device` inutilizzata, come
+  il valore predefinito di migrazione `200.200`.
+
+UDP non ha un handshake di connessione. La configurazione convalida la risoluzione degli indirizzi, il routing,
+e la creazione del socket di ricezione locale senza presupporre che un dispositivo esista
+a un indirizzo Buspro hardcoded.
+
+## Gestione dei dispositivi
+
+Aprire **Configure** sull'integrazione e scegliere:
+
+- **Gateway settings** per aggiornare le impostazioni di rete e l'identità del client.
+- **Add device** per selezionare un tipo di dispositivo, un modello, un indirizzo Buspro e nomi di canali o
+  capacità.
+- **Edit device** per rinominare i canali, abilitare o disabilitare i canali, rimuovere un
+  dispositivo gestito dall'UI, o correggere il modello di una voce di registro esistente.
+
+Gli indirizzi fisici sono visualizzati in Home Assistant come il numero di serie del dispositivo.
+Le entità appartenenti a un modulo fisico sono allegate alla stessa voce del Device
+Registry.
+
+## Modelli supportati
+
+| Modello | Supporto di Home Assistant |
+| --- | --- |
+| `HDL-MBUS01IP.431` | Metadati del dispositivo gateway |
+| `HDL-MCLog.431` | Connettività, query del firmware, ultimo accesso, eventi logici |
+| `HDL-MR0410.431` | 4 canali relay |
+| `HDL-MR0810.432` | 8 canali relay |
+| `HDL-MR1210.433` | 12 canali relay |
+| `HDL-MR1610.433` | 16 canali relay |
+| `HDL-MR0416.431` | 4 canali relay ad alta potenza |
+| `HDL-MR0416C.431` | 4 canali relay ad alta potenza |
+| `HDL-MR0416D.431` | 4 canali relay ad alta potenza |
+| `HDL-MR0816.432` | 8 canali relay ad alta potenza |
+| `HDL-MR0816C.232` | 8 canali relay ad alta potenza |
+| `HDL-MR0816D.432` | 8 canali relay ad alta potenza |
+| `HDL-MR1216.433` | 12 canali relay ad alta potenza |
+| `HDL-MR1616.434` | 16 canali relay ad alta potenza |
+| `HDL-MR1216D.433` | 12 canali relay ad alta potenza |
+| `HDL-MR0420C.431`, `HDL-MR0820C.432`, `HDL-MR1220C.433` | 4/8/12 canali relay ad alta corrente |
+| `HDL-MD0206.432` | 2 canali dimmer |
+| `HDL-MD0403.432` | 4 canali dimmer |
+| `HDL-MD0602.432` | 6 canali dimmer |
+| `HDL-MDT0203.433` | 2 canali dimmer a margine posteriore |
+| `HDL-MDT0203.532` | 2 canali dimmer a margine posteriore |
+| `HDL-MDT04015.433` | 4 canali dimmer a margine posteriore |
+| `HDL-MDT04015.532` | 4 canali dimmer a margine posteriore |
+| `HDL-MDT06015.433` | 6 canali dimmer a margine posteriore |
+| `HDL-MDT06015.533` | 6 canali dimmer a margine posteriore |
+| `HDL-MDLED0605.432` | 6 canali dimmer e diagnostica |
+| `HDL-MRDA0610.432` | 6 canali dimmer di controllo del ballast |
+| `HDL-MRDA0610.433` | 6 canali dimmer di controllo del ballast |
+| `SB-DN-DALI64` | Fino a 64 canali DALI |
+| `HDL-MS04.432` | 4 canali a contatto secco |
+| `HDL-MS24.232` | 24 canali a contatto secco |
+| `HDL-MSP02.4C` | Temperatura, illuminamento, movimento |
+| `HDL-MSP07M.4C` | Temperatura, illuminamento, umidità, movimento, due contatti |
+| `HDL-MS08M.4C` | Temperatura, illuminamento, movimento |
+| `HDL-MS12M.4C` | Temperatura, illuminamento, umidità, movimento, due contatti |
+| `HDL-MPTL3C.48`, `HDL-MPTL4C.48` | Temperatura e azioni del pannello |
+| `HDL-MPTL4.460` | Temperatura e azioni del pannello |
+| `HDL-MP4S/TILE.48` | Temperatura, quattro eventi pulsante, azioni pannello |
+| `HDL-MP2B/TILE.48` | Temperatura, due eventi pulsante, azioni pannello |
+| `HDL-MP4B-A/TILE.48` | Temperatura, quattro eventi pulsante, azioni pannello |
+| `HDL-MP4B/TILE.48` | Temperatura, quattro eventi pulsante, azioni pannello |
+| `HDL-MP2B.480` | Temperatura, due eventi pulsante, azioni pannello |
+| `HDL-MP4B.480` | Temperatura, quattro eventi pulsante, azioni pannello |
+| `HDL-MPL8.431` | Temperatura, otto eventi pulsante, azioni pannello |
+| `HDL-M/PT4.1` | Temperatura, quattro eventi pulsante, azioni pannello |
+| `HDL-MFH04.432` | 4 canali di riscaldamento a pavimento |
+| `HDL-MFH06.432` | 6 canali di riscaldamento a pavimento |
+| `HDL-M/HVAC8.1` | Entità climatiche AC |
+| `HDL-MPED4.431` | Entità climatiche AC |
+| `HDL-MW02.431` | 2 canali tenda / cover |
+| `HDL-MWM45.431` | Entità tenda / cover (canali configurabili) |
+
+I profili generici AC, tenda, ventilatore a velocità variabile, ventilatore on/off, universal-switch e
+panel sono inoltre disponibili. L'indirizzo fisico e il numero di output configurabile sono
+forniti dall'utente; non sono inventario di installazione.
+
+Alcuni modelli vengono aggiunti tramite mappatura familiare o compatibilità del protocollo generico.
+Durante l'avvio dell'integrazione, il log di Buspro esplicita le note di supporto del modello per quei
+modelli (ad esempio, comportamento convalidato dal modello rispetto a comportamento mappato per famiglia) insieme con
+gli indirizzi fisici rilevati.
+
+Per i dispositivi YAML legacy, l'integrazione ora normalizza i profili mancanti utilizzando
+i metadati del modello di catalogo. I modelli sconosciuti e le stringhe di profilo non supportate sono
+segnalati come avvisi di avvio, quindi ricadono nel comportamento generico `sensor_status`
+per mantenere la configurazione funzionante.
+
+## Helper per la manutenzione del catalogo
+
+Per confrontare il catalogo dell'integrazione con l'elenco ufficiale dei modelli HDL mantenuto, eseguire:
+
+```bash
+python3 custom_components/buspro/tools/check_catalog_models.py
+```
+
+L'helper legge `custom_components/buspro/devices/official_models.json` e
+stampa:
+
+- modelli ufficiali mancanti in `DEVICE_CATALOG`
+- modelli di catalogo non presenti nell'elenco ufficiale
+- modelli generici virtuali solo per l'integrazione
+
+Utilizzare la modalità strict per controlli in stile CI (uscita diversa da zero quando i modelli ufficiali sono
+mancanti nel catalogo):
+
+```bash
+python3 custom_components/buspro/tools/check_catalog_models.py --strict
+```
+
+## Comportamento delle entità
+
+### Relay
+
+Un coordinatore condiviso esegue una query dello stato del relay una volta per modulo fisico e
+distribuisce la risposta a tutte le entità di canale abilitate. I canali disabilitati non
+si sottoscrivono né eseguono query sul bus.
+
+### Pannelli
+
+I pannelli di pulsanti noti creano un'entità `event` per ogni pulsante fisico, un evento `Action`,
+e un sensore `Last action`. Le entità degli eventi dei pulsanti dell'UI rappresentano i telegrammi fisici dei pulsanti Buspro ricevuti; non simulano una pressione hardware.
+
+### Dimmer
+
+I dimmer supportati possono esporre connettività, luminosità massima per canale,
+tipo di carico e luminosità minima segnalata dal protocollo. `Not reported` significa che il
+dispositivo ha restituito il sentinel del protocollo piuttosto che un valore utilizzabile.
+
+### Controllore logico
+
+`HDL-MCLog.431` espone entità di connettività, versione del firmware, ultimo accesso,
+e eventi logici in sola lettura. Alcuni firmware non rispondono alla query del firmware standard;
+in tal caso l'entità del firmware rimane non disponibile. I blocchi logici non sono scrivibili perché
+modificarli può sovrascrivere la programmazione del controller.
+
+## Servizi
+
+- `buspro.activate_scene`
+- `buspro.set_universal_switch`
+- `buspro.send_message`
+
+`buspro.send_message` invia un comando di protocollo grezzo e deve essere utilizzato solo con
+un codice di operazione HDL verificato e un payload.
+
+## Configurazione YAML (legacy)
+
+La configurazione del dispositivo YAML è completamente supportata insieme alla gestione del gateway basata su voce di configurazione. È possibile definire luci, cover, switch, ventilatori, climate, sensori e sensori binari via YAML mentre il gateway è gestito dall'UI dell'integrazione.
+
+**Nota**: I nuovi dispositivi devono utilizzare l'UI **Configure > Add device** dell'integrazione invece di YAML, poiché fornisce raggruppamento dei dispositivi, capacità guidate dal modello e gestione dello stato dei canali. YAML è consigliato per:
+- Dispositivi con profili non standard o legacy
+- Migrazione da integrazioni Buspro precedenti
+- Template di automazione o sensore complessi
+
+### Esempio di sintassi YAML
+
+Aggiungere al vostro `configuration.yaml`:
 
 ```yaml
 light:
   - platform: buspro
-    running_time: 3
     devices:
-      1.89.1:
-        name: Living Room Light
-        running_time: 5
-      1.89.2:
-        name: Front Door Light
-        dimmable: False
-        ack_retry_enabled: True
-```
-+ **running_time** _(int) (Facoltativo)_: tempo di esecuzione predefinito in secondi per tutti i dispositivi. Il tempo di esecuzione è 0 secondi se non impostato.
-+ **ack_retry_enabled** _(boolean) (Facoltativo)_: Abilita un unico tentativo di ritrasmissione se non arriva ACK entro 0,8 s. Predefinito: `True`.
-+ **dispositivi** _(Obbligatorio)_: un elenco di dispositivi da configurare
-  + **X.X.X** _(Obbligatorio)_: l'indirizzo del dispositivo nel formato "<ID subnet>.<ID dispositivo>.<numero canale>"
-    + **name** _(string) (Obbligatorio)_: il nome del dispositivo
-    + **running_time** _(int) (Facoltativo)_: il tempo di esecuzione in secondi per il dispositivo. Se omesso, viene utilizzato il tempo di esecuzione predefinito per tutti i dispositivi.
-    + **ack_retry_enabled** _(boolean) (Facoltativo)_: Override per dispositivo per il retry ACK.
-    + **dimmerabile** _(booleano) (facoltativo)_: il dispositivo è dimmerabile? L'impostazione predefinita è Vero.
-    + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
-    + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
+      "1.5.1":
+        name: "Ceiling light"
+        dimmable: true
+      "1.5.2":
+        name: "Wall lamp"
+        dimmable: false
 
-#### Cambia piattaforma
-
-Per utilizzare lo switch Buspro nella tua installazione, aggiungi quanto segue al tuo file Configuration.yaml:
-
-```yaml
-switch:
-  - platform: buspro
-    devices:
-      1.89.1:
-        name: Living Room Switch
-      1.89.2:
-        name: Front Door Switch
-```
-+ **dispositivi** _(Obbligatorio)_: un elenco di dispositivi da configurare
-  + **X.X.X** _(Obbligatorio)_: l'indirizzo del dispositivo nel formato "<ID subnet>.<ID dispositivo>.<numero canale>"
-    + **name** _(string) (Obbligatorio)_: il nome del dispositivo
-    + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
-    + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
-
-#### Piattaforma di sensori
-
-Per utilizzare il sensore Buspro nella tua installazione, aggiungi quanto segue al file Configuration.yaml:
-
-```yaml
-sensor:
-  - platform: buspro
-    devices:
-      - address: "1.74"
-        name: Living Room
-        type: temperature
-        unit_of_measurement: °C
-        device_class: temperature
-        device: dlp
-      - address: "1.74"
-        name: Front Door
-        type: illuminance
-        unit_of_measurement: lux
-      - address: "1.75"
-        name: Hall
-        type: humidity
-        unit_of_measurement: "%"
-```
-+ **dispositivi** _(Obbligatorio)_: un elenco di dispositivi da configurare
-  + **indirizzo** _(stringa) (obbligatorio)_: l'indirizzo del dispositivo sensore nel formato "<ID subnet>.<ID dispositivo>"
-  + **name** _(string) (Obbligatorio)_: il nome del dispositivo
-  + **type** _(string) (Obbligatorio)_: Tipo di sensore da monitorare.
-    + Sensori disponibili:
-     + temperatura
-     + illuminamento
-     + umidità
-  + **unità_di_misura** _(stringa) (Facoltativo)_: testo da visualizzare come unità di misura
-  + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
-  + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
-  + **scan_interval** _(int) (Opzionale)_: Intervallo di polling in secondi. Se omesso o `0`, gli aggiornamenti dipendono solo dai messaggi Buspro.
-  + **classe_dispositivo** _(stringa) (facoltativo)_: classe del dispositivo HASS, ad esempio "temperatura"
-(https://www.home-assistant.io/components/sensor/)
-  + **dispositivo** _(stringa) (facoltativo)_: il tipo di dispositivo sensore:
-    + dlp
-
-#### Piattaforma di sensori binari
-
-Per utilizzare il sensore binario Buspro nella tua installazione, aggiungi quanto segue al tuo file Configuration.yaml:
-
-```yaml
-binary_sensor:
-  - platform: buspro
-    devices:
-      - address: "1.74"
-        name: Living Room
-        type: motion
-        device_class: motion
-      - address: "1.74.100"
-        name: Front Door
-        type: universal_switch
-      - address: "1.75.3"
-        name: Kitchen switch
-        type: single_channel
-```
-+ **dispositivi** _(Obbligatorio)_: un elenco di dispositivi da configurare
-  + **indirizzo** _(stringa) (obbligatorio)_: l'indirizzo del dispositivo sensore nel formato "<ID sottorete>.<ID dispositivo>". Se
-'type' = 'universal_switch' il numero dello switch universale deve essere aggiunto all'indirizzo.
-  + **name** _(string) (Obbligatorio)_: il nome del dispositivo
-  + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
-  + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
-  + **type** _(string) (Obbligatorio)_: Tipo di sensore da monitorare.
-    + Sensori disponibili:
-      + movimento
-      + contatto_secco_1
-      + contatto_secco_2
-      + interruttore_universale
-      + canale_singolo
-      + dry_contact
-    + Note sul formato indirizzo:
-      + `motion`, `dry_contact_1`, `dry_contact_2`: `<subnet ID>.<device ID>`
-      + `universal_switch`, `single_channel`, `dry_contact`: `<subnet ID>.<device ID>.<number>`
-  + **classe_dispositivo** _(stringa) (facoltativo)_: classe del dispositivo HASS, ad esempio "movimento"
-  + **scan_interval** _(int) (Opzionale)_: Intervallo di polling in secondi. Se omesso o `0`, gli aggiornamenti dipendono solo dai messaggi Buspro.
-(https://www.home-assistant.io/components/binary_sensor/)
-#### Piattaforma climatica
-
-Per utilizzare il controllo climatico del pannello Buspro nella tua installazione, aggiungi quanto segue al file Configuration.yaml:
-
-```yaml
-climate:
-  - platform: buspro
-    devices:
-      - address: "1.74"
-        name: Bedroom AC
-        type: ac
-      - address: "1.74"
-        name: Living Room
-        type: floor_heating
-        floor_heating_device_type: dlp
-        preset_modes: 
-          - none
-          - away
-          - home
-          - sleep
-      - address: "1.90"
-        type: floor_heating
-        floor_heating_device_type: module
-        channel: 1
-        unique_id: "hdl_climate_floorheat_zone_1"
-        min_temp: 22
-        max_temp: 32
-        precision: 1
-        name: Floor Heating Zone 1
-```
-+ **dispositivi** _(Obbligatorio)_: un elenco di dispositivi da configurare
-  + **indirizzo** _(stringa) (obbligatorio)_: l'indirizzo del dispositivo sensore nel formato "<ID subnet>.<ID dispositivo>"
-  + **name** _(string) (Obbligatorio)_: il nome del dispositivo
-  + **tipo** _(stringa) (facoltativo)_: `ac` o `floor_heating`. L'impostazione predefinita è "riscaldamento_pavimento".
-  + **tipo_dispositivo_riscaldamento_a_pavimento** _(stringa) (facoltativo)_: `dlp` o `modulo`.
-Se omesso, `module` viene selezionato automaticamente quando viene fornito `channel`, altrimenti `dlp`.
-  + **relay_address** _(string) (Opzionale)_: Indirizzo del canale rele nel formato `<subnet ID>.<device ID>.<channel>`. Usato come feedback esterno dello stato rele per l'azione HVAC.
-  + **object_id** _(string) (facoltativo)_: object_id dispositivo. L'impostazione predefinita è generata automaticamente dal nome del dispositivo.
-  + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
-  + **preset_modes** _(list) (Facoltativo)_: elenco delle modalità preimpostate supportate. La selezione della modalità preimpostata è disabilitata se non impostata. I valori possibili sono mostrati nella tabella seguente. Le modalità corrispondenti devono essere abilitate in HDL (Riscaldamento a pavimento > Impostazioni di lavoro > Modalità).
-  + **canale** _(int) (facoltativo)_: canale del modulo di riscaldamento a pavimento (`1..6`) per `tipo_dispositivo_di_riscaldamento_a_pavimento: modulo`.
-  + **min_temp** _(float) (Facoltativo)_: Temperatura target minima mostrata nell’interfaccia di Home Assistant.
-  + **max_temp** _(float) (Facoltativo)_: Temperatura target massima mostrata nell’interfaccia di Home Assistant.
-  + **precision** _(float) (Facoltativo)_: Passo di regolazione della temperatura target nell’interfaccia di Home Assistant. Valori consentiti: `1`, `0.5`, `0.1`.
-    
-| HA preset mode | HDL mode |
-|:--------------:|:--------:|
-|      none      |  Normal  |
-|      away      |   Away   |
-|      home      |   Day    |
-|     sleep      |  Night   |
-
-
-#### Piattaforma tende
-
-Per usare le tende Buspro nella tua installazione, aggiungi quanto segue al file `configuration.yaml`:
-
-```yaml
 cover:
   - platform: buspro
     devices:
-      1.89.1:
-        name: Living Room Curtain
-        invert: false
-        object_id: living_room_curtain
-```
-+ **devices** _(Obbligatorio)_: Mappatura dei canali tenda Buspro
-  + **chiave** _(string)_: `<ID subnet>.<ID dispositivo>.<canale>`
-  + **name** _(string) (Obbligatorio)_: Nome visualizzato
-  + **invert** _(bool) (Opzionale)_: Inverte la direzione apertura/chiusura. Valore predefinito `false`.
-  + **object_id** _(string) (Opzionale)_: `object_id` dell'entità. Predefinito auto-generato dal nome.
-  + **unique_id** _(stringa) (Facoltativo)_: Identificatore univoco stabile dell’entità per il registro entità di Home Assistant.
+      "2.10.1":
+        name: "Living room curtain"
+        running_time: 45
 
-Funzionalità supportate:
-- open
-- close
-- stop
-- open_tilt
-- close_tilt
-- stop_tilt
-
----
-## Note Di Migrazione
-
-Se stai aggiornando da una versione precedente di questa integrazione, controlla quanto segue:
-
-- **Breaking change climate v1.7.1 -> v2.0.0**
-  - Il modello climate è stato suddiviso:
-    - `type: ac` ora crea il comportamento climate AC.
-    - `type: floor_heating` ora crea il comportamento del riscaldamento a pavimento.
-    - Se `type` è omesso, il valore predefinito è `floor_heating`.
-  - Nuova tipizzazione per il riscaldamento a pavimento:
-    - È stato introdotto `floor_heating_device_type: dlp | module`.
-    - Se `channel` è impostato e `floor_heating_device_type` è omesso, il tipo passa automaticamente a `module`.
-    - Per `floor_heating_device_type: module`, `channel` (`1..6`) è obbligatorio, altrimenti l'entità non viene creata.
-  - È cambiato il comportamento delle modalità HVAC:
-    - Le entità AC espongono `COOL/OFF`.
-    - Le entità di riscaldamento a pavimento espongono `HEAT/OFF` (`COOL` disponibile anche per `module`).
-  - Azione richiesta:
-    - Imposta esplicitamente `type` per ogni entità climate.
-    - Aggiungi `floor_heating_device_type` e `channel` per i moduli di riscaldamento a pavimento.
-    - Verifica automazioni/script che assumono la vecchia semantica delle modalità climate.
-
----
-
-#### Piattaforma Ventilatore
-
-Per usare il ventilatore Buspro, aggiungi quanto segue in `configuration.yaml`:
-
-```yaml
-fan:
+climate:
   - platform: buspro
-    running_time: 3
-    ack_retry_enabled: true
     devices:
-      1.89.3:
-        name: Ventilatore Camera
-        dimmable: true
-      1.89.4:
-        name: Ventilatore Bagno
-        dimmable: false
+      "3.1":
+        name: "Bedroom climate"
+        profile: "ac"
 ```
-+ **running_time** _(int) (Opzionale)_: Tempo di esecuzione predefinito in secondi.
-+ **ack_retry_enabled** _(boolean) (Opzionale)_: Un retry senza ACK dopo 0,8s.
-+ **devices** _(Obbligatorio)_: Lista dispositivi nel formato `<subnet>.<device>.<channel>`.
 
+### Configurazione della piattaforma
 
----
-## Servizi
+Ogni piattaforma (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) accetta:
 
-#### Invio di un messaggio arbitrario:
+| Chiave | Tipo | Descrizione |
+| --- | --- | --- |
+| `devices` | dict | Obbligatorio. Mappatura degli indirizzi Buspro alle configurazioni dei dispositivi. |
+| `running_time` | int | Tempo di transizione predefinito in secondi (0 = nessuna transizione). Sostituito per dispositivo. |
+| `ack_retry_enabled` | bool | Riprovare gli invii in caso di nessun ACK (impostazione predefinita della piattaforma; gli override per dispositivo). |
+
+Ogni chiave del dispositivo è l'**indirizzo Buspro** nel formato:
+- **Luce, cover, ventilatore, switch**: `subnet.device.channel` (ad es., `1.5.2`)
+- **Climate, sensore, sensore binario**: `subnet.device` (ad es., `3.1`)
+
+Ogni configurazione del dispositivo supporta:
+- `name` (obbligatorio): Nome visualizzato
+- `running_time`, `dimmable`, `ack_retry_enabled` (specifico della piattaforma, opzionale)
+- `profile` (opzionale, per sensori climate — ad es., `"ac"`, `"floor_heating"`)
+- `object_id` (opzionale): Slug dell'ID entità
+- `unique_id` (opzionale): Per il controllo manuale del device registry
+
+## Sviluppo
+
+### Eseguire le suite di test
+
+Dalla root di configurazione di Home Assistant:
+
+```bash
+# Eseguire tutti i test del protocollo (19 test)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -v
+
+# Eseguire tutti i test di integrazione (18 test)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -v
+
+# O eseguire file di test individuali
+python3 custom_components/buspro/tests/buspro_protocol/test_sensor_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_relay_coordinator.py
+python3 custom_components/buspro/tests/buspro_protocol/test_logic_controller_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_config_isolation.py
+python3 custom_components/buspro/tests/buspro_protocol/test_device_lifecycle.py
+python3 custom_components/buspro/tests/buspro_integration/test_device_catalog.py
+python3 custom_components/buspro/tests/buspro_integration/test_managed_device_logic.py
+python3 custom_components/buspro/tests/buspro_integration/test_model_notes_logging.py
+python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalization.py
 ```
-Domain: buspro
-Service: send_message
-Service Data: {"address": [1,74], "operate_code": [4,78], "payload": [1,100,0,3]}
-```
-#### Attivazione di una scena:
-```
-Domain: buspro
-Service: activate_scene
-Service Data: {"address": [1,74], "scene_address": [3,5]}
-```
-#### Impostazione di un interruttore universale:
-```
-Domain: buspro
-Service: set_universal_switch
-Service Data: {"address": [1,74], "switch_number": 100, "status": 1}
-```
+
+I test del protocollo coprono l'analisi dei telegrammi, il coordinamento dei dispositivi e la sicurezza di task/callback di base. I test di integrazione coprono catalogo dei dispositivi, logica dei dispositivi gestiti, normalizzazione YAML e tracciamento del supporto del modello.

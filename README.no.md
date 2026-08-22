@@ -15,311 +15,370 @@
 [![Беларуская](https://flagcdn.com/24x18/by.png) Беларуская](README.be.md) |
 [![Norsk](https://flagcdn.com/24x18/no.png) Norsk](README.no.md)
 
-# Med HDL Buspro-integrasjonen kan du kontrollere ditt HDL Buspro-system fra Home Assistant.
 
-## Installasjon
+## Første oppsett
 
-### One-click install (HACS)
+### Gateway-konfigurasjon
+1. Åpne **Innstillinger > Enheter og tjenester > Legg til integrasjon** og velg
+   **HDL Buspro**.
+2. Angi gateway-verten og UDP-portene. Port `6000` er standard standard.
+3. Angi en ubrukt Home Assistant Buspro-adresse i `subnet.device`-format.
+   Standarden er `200.200`; den må ikke tilhøre en annen Buspro-enhet.
 
-[![Åpne Home Assistant-instansen din og åpne et repositorium i Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Frequencies&repository=home_assistant_buspro&category=integration)
+### Legge til enheter
+Etter at gateway-oppsettet er fullført:
 
-### Manuell installasjon
+1. Åpne **Innstillinger > Enheter og tjenester > HDL Buspro > Konfigurer**.
+2. Klikk **Legg til enhet** for å legge til en Buspro fysisk modul.
+3. **Velg enhetstype** (Relé, Dimmer, Persienne, Klima, Sensor osv.).
+4. **Velg nøyaktig modell** som samsvarer med maskinvaren din.
+5. **Angi Buspro-adresse** i `subnet.device`-format (f.eks. `1.5`).
+6. **Angi enhetsnavn** (f.eks. "Stuelamper").
+7. **Gi navn til hver kanal** — la feltet stå tomt for å deaktivere en kanal.
+8. Klikk **Lagre**.
 
-Under HACS -> Integrasjoner, legg til eget repositorium "https://github.com/Frequencies/home_assistant_buspro" med kategori "Integration". Velg integrasjonen med navn "HDL Buspro" og last ned.
+Home Assistant grupperer enheter automatisk etter fysisk modul i enhetregisteret.
 
-Omstart Home Assistant.
+**For eksempler på UI- og YAML-konfigurasjon for alle enhetstyper, se [DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md).**
 
-Gå til Innstillinger > Integrasjoner og legg til integrasjon "HDL Buspro". Skriv inn IP-adresse og portnummer for gateway-en.
+### Redigering av enheter
 
-## Konfigurasjon
+For å endre en eksisterende enhet, åpne **Konfigurer > Rediger enhet**. Du kan:
+- Gi nytt navn til enheten
+- Gi nytt navn til, aktivere eller deaktivere individuelle kanaler
+- Endre modellen (som kan endre antall kanaler)
+- Fjerne enheten helt
 
-#### Lyse plattform
-   
-For å bruke Buspro-lyset i installasjonen, legg til følgende i configuration.yaml-filen:
+UI-administrerte enheter støtter full redigering. Eldre YAML-enheter kan eksponere registreringskontroller for navn, men protokollkonfigurasjonen må fortsatt endres i YAML. Start Home Assistant på nytt etter å ha endret YAML.
+
+### Raskt eksempel: Legge til en 4-kanals relé-modul
+
+1. Modell: `HDL-MR0410.431` (4 relé-kanaler)
+2. Buspro-adresse: `1.10`
+3. Enhetsnavn: "Stuerelé"
+4. Kanalnavn: "Taklampe", "Vegglampe", "", "Vifte"
+5. Klikk **Lagre**
+
+Home Assistant oppretter automatisk enheter: `light.room_relays_ceiling_light`, `light.room_relays_wall_lamp`, `switch.room_relays_fan`
+
+For komplette UI- og YAML-eksempler for alle enhetstyper, se **[DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md)**.
+
+## Konfigurasjonsalternativer
+
+Buspro-integrasjonen støtter både **UI-basert oppsett** og **YAML-konfigurasjon**:
+
+### UI-oppsett
+Den enkleste måten å legge til enheter på — se **[DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md)** for trinn-for-trinn eksempler på alle enhetstyper.
+
+### YAML-konfigurasjon  
+Integrasjonen støtter to komplementære YAML-tilnærminger:
+- **Entity-sentrert** (Eldre) — individuelle entityfiler organisert etter domene
+- **Enhet-sentrert** (Moderne) — komplette enhetsdefinisjonerer med alle kanaler
+
+**For fullstendig YAML-dokumentasjon, eksempler og beste praksis, se [DUAL_MODE_YAML.md](docs/en/DUAL_MODE_YAML.md)** (også tilgjengelig på [Беларуская](docs/be/DUAL_MODE_YAML.md) | [Deutsch](docs/de/DUAL_MODE_YAML.md) | [Español](docs/es/DUAL_MODE_YAML.md) | [Français](docs/fr/DUAL_MODE_YAML.md) | [Italiano](docs/it/DUAL_MODE_YAML.md) | [Nederlands](docs/nl/DUAL_MODE_YAML.md) | [Norsk](docs/no/DUAL_MODE_YAML.md) | [Русский](docs/ru/DUAL_MODE_YAML.md) | [Українська](docs/uk/DUAL_MODE_YAML.md))
+
+## Brytende endringer i 2.2.0
+
+Les denne delen før du oppgraderer fra 2.1.x.
+
+> [!WARNING]
+> Denne versjonen endrer enhetseierskap, kanalopprettelse, panelhendelsessemantikk
+> og den innebygde Python-konstruktøren. Fullfør oppgraderingsjekklisten
+> før du fjerner eldre YAML.
+
+1. **Installasjonsspesifikke enheter er ikke lenger bygget inn i integrasjonen.**
+   Enhetadresser, navn, kanaltildelinger og enhetantall tilhører nå
+   konfigurasjonsoppføringer eller Home Assistant-enhetregisteret. Enhetskatalogen
+   inneholder bare maskinvareegenskaper.
+
+2. **UI-administrerte relé-moduler bruker sitt fysiske kanaltall.**
+   `HDL-MR1210.433` eksponerer alltid 12 kanalplasser og
+   `HDL-MR1610.433` eksponerer alltid 16. En eksisterende enhet kan ikke reduseres
+   under modellens fysiske kanaltall.
+
+3. **Et tomt kanalnavn deaktiverer kanalen.**
+   Deaktiverte kanaler blir ikke instansiert, oppretter ikke protokollobjekter og
+   er merket som deaktiverte av integrasjonen i Entity Registry. Hvis du angir et
+   navn, aktiveres kanalen igjen.
+
+4. **Den nøyaktige modellen kontrollerer opprettede enheter.**
+   Et generisk `HDL-panel` har ingen kjent knappantall. Velg den fysiske modellen
+   for å opprette knappehendelser. Endring av modell laster inn konfigurasjonsoppføringen på nytt.
+
+5. **Home Assistant har sin egen Buspro-adresse.**
+   Eksisterende konfigurasjonsoppføringer migreres til `200.200`. Denne adressen må være
+   ubrukt på Buspro-nettverket og kan endres under **Konfigurer > Gateway-innstillinger**.
+
+6. **IP-pakkekilden er ikke lenger hard-kodet.**
+   Integrasjonen henter den fra ruten til den konfigurerte gateway'en. En
+   Home Assistant-vert med flere grensesnitt må dirigere gatewayen gjennom det
+   tiltenkte LAN-grensesnittet.
+
+7. **Panelhendelser er nå dekodert.**
+   Automatiksering som bruker gamle råhandlingsverdier bør sjekkes. Hendelser bruker
+   `channel_on`, `channel_off`, `channel_level`, `scene`,
+   `universal_switch_on` eller `universal_switch_off`, med mål- og sammenfattingsattributter
+   der de kan løses.
+
+8. **Det innebygde Python-APIet endret seg.**
+   Direkte `pybuspro.Buspro`-brukere må oppgi `client_address`; se
+   [pybuspro/README.md](pybuspro/README.md).
+
+Integrasjonen leser fortsatt eldre YAML-enheter under migrering. Ikke hold
+samme fysiske kanal i både YAML og UI-administrert konfigurasjon, da det
+kan skape dupliserte enheter og dupliserte protokollabonnementer.
+
+## Oppgraderingsjekkliste
+
+1. Start Home Assistant på nytt etter å ha erstattet den egendefinerte komponenten.
+2. Åpne **Innstillinger > Enheter og tjenester > HDL Buspro > Konfigurer**.
+3. Sjekk gateway-verten, portene og ubrukt Home Assistant Buspro-adresse.
+4. Åpne hver fysiske enhet og velg dens nøyaktige modell.
+5. Sjekk alle relé-kanalnavn. Tomme kanaler forblir med vilje deaktiverte.
+6. Bekreft automatiksering som bruker panelhendelser.
+7. Fjern eller kommenter migrerte YAML-enheter bare etter at deres UI-administrerte
+   erstatninger har beholdt forventet entity ID-er.
+
+## Gateway-oppsett
+
+Legg til **HDL Buspro** fra **Innstillinger > Enheter og tjenester** og konfigurer:
+
+- **Vert**: HDL IP-gateway-vertsnavn eller IPv4-adresse.
+- **Port**: primær UDP-port, normalt `6000`.
+- **UDP-send/mottaksporter**: endre disse bare for en ikke-standard gateway.
+- **Home Assistant Buspro-adresse**: en ubrukt `subnet.device`-identitet, for eksempel
+  migreringsstandarden `200.200`.
+
+UDP har ingen tilkoblingshåndtrykk. Oppsettet validerer adresseoppløsning, ruting
+og opprettelse av den lokale mottakssokelen uten å anta at en enhet eksisterer
+ved en hard-kodet Buspro-adresse.
+
+## Enhetsstyring
+
+Åpne **Konfigurer** på integrasjonen og velg:
+
+- **Gateway-innstillinger** for å oppdatere nettverksinnstillinger og klientidentitet.
+- **Legg til enhet** for å velge enhetstype, modell, Buspro-adresse og kanal- eller
+  mulighetsnavn.
+- **Rediger enhet** for å gi nye navn til kanaler, aktivere eller deaktivere kanaler, fjerne en
+  UI-administrert enhet eller korrigere modellen på en eksisterende registreringsenhet.
+
+Fysiske adresser vises i Home Assistant som enhetens serienummer.
+Enheter som tilhører en fysisk modul er vedlagt samme Device
+Registry-oppføring.
+
+## Støttede modeller
+
+| Modell | Home Assistant-støtte |
+| --- | --- |
+| `HDL-MBUS01IP.431` | Gateway-enhetmetadata |
+| `HDL-MCLog.431` | Tilkoblingsevne, firmwareforespørsel, sist sett, logikkhendelser |
+| `HDL-MR0410.431` | 4 relé-kanaler |
+| `HDL-MR0810.432` | 8 relé-kanaler |
+| `HDL-MR1210.433` | 12 relé-kanaler |
+| `HDL-MR1610.433` | 16 relé-kanaler |
+| `HDL-MR0416.431` | 4 høyeffekt-relé-kanaler |
+| `HDL-MR0416C.431` | 4 høyeffekt-relé-kanaler |
+| `HDL-MR0416D.431` | 4 høyeffekt-relé-kanaler |
+| `HDL-MR0816.432` | 8 høyeffekt-relé-kanaler |
+| `HDL-MR0816C.232` | 8 høyeffekt-relé-kanaler |
+| `HDL-MR0816D.432` | 8 høyeffekt-relé-kanaler |
+| `HDL-MR1216.433` | 12 høyeffekt-relé-kanaler |
+| `HDL-MR1616.434` | 16 høyeffekt-relé-kanaler |
+| `HDL-MR1216D.433` | 12 høyeffekt-relé-kanaler |
+| `HDL-MR0420C.431`, `HDL-MR0820C.432`, `HDL-MR1220C.433` | 4/8/12 høystrøm-relé-kanaler |
+| `HDL-MD0206.432` | 2 dimmer-kanaler |
+| `HDL-MD0403.432` | 4 dimmer-kanaler |
+| `HDL-MD0602.432` | 6 dimmer-kanaler |
+| `HDL-MDT0203.433` | 2 trailing-edge dimmer-kanaler |
+| `HDL-MDT0203.532` | 2 trailing-edge dimmer-kanaler |
+| `HDL-MDT04015.433` | 4 trailing-edge dimmer-kanaler |
+| `HDL-MDT04015.532` | 4 trailing-edge dimmer-kanaler |
+| `HDL-MDT06015.433` | 6 trailing-edge dimmer-kanaler |
+| `HDL-MDT06015.533` | 6 trailing-edge dimmer-kanaler |
+| `HDL-MDLED0605.432` | 6 dimmer-kanaler og diagnostikk |
+| `HDL-MRDA0610.432` | 6 ballast-kontroll dimmer-kanaler |
+| `HDL-MRDA0610.433` | 6 ballast-kontroll dimmer-kanaler |
+| `SB-DN-DALI64` | Opptil 64 DALI-kanaler |
+| `HDL-MS04.432` | 4 tørt-kontakt-kanaler |
+| `HDL-MS24.232` | 24 tørt-kontakt-kanaler |
+| `HDL-MSP02.4C` | Temperatur, belysningsstyrke, bevegelse |
+| `HDL-MSP07M.4C` | Temperatur, belysningsstyrke, fuktighet, bevegelse, to kontakter |
+| `HDL-MS08M.4C` | Temperatur, belysningsstyrke, bevegelse |
+| `HDL-MS12M.4C` | Temperatur, belysningsstyrke, fuktighet, bevegelse, to kontakter |
+| `HDL-MPTL3C.48`, `HDL-MPTL4C.48` | Temperatur og paneelhandlinger |
+| `HDL-MPTL4.460` | Temperatur og paneelhandlinger |
+| `HDL-MP4S/TILE.48` | Temperatur, fire knappehendelser, paneelhandlinger |
+| `HDL-MP2B/TILE.48` | Temperatur, to knappehendelser, paneelhandlinger |
+| `HDL-MP4B-A/TILE.48` | Temperatur, fire knappehendelser, paneelhandlinger |
+| `HDL-MP4B/TILE.48` | Temperatur, fire knappehendelser, paneelhandlinger |
+| `HDL-MP2B.480` | Temperatur, to knappehendelser, paneelhandlinger |
+| `HDL-MP4B.480` | Temperatur, fire knappehendelser, paneelhandlinger |
+| `HDL-MPL8.431` | Temperatur, åtte knappehendelser, paneelhandlinger |
+| `HDL-M/PT4.1` | Temperatur, fire knappehendelser, paneelhandlinger |
+| `HDL-MFH04.432` | 4 gulvvarmekanaler |
+| `HDL-MFH06.432` | 6 gulvvarmekanaler |
+| `HDL-M/HVAC8.1` | AC klimaenheter |
+| `HDL-MPED4.431` | AC klimaenheter |
+| `HDL-MW02.431` | 2 persienne/dekkerkanaler |
+| `HDL-MWM45.431` | Persienne/dekkerentiteter (konfigurerbare kanaler) |
+
+Generiske AC, persienne, variabel hastighet vifte, av/på vifte, universal-svitsj og
+panelerprofiler er også tilgjengelige. Deres fysiske adresse og eventuelle konfigurerbare
+utgangsantall leveres av brukeren; de er ikke installasjonslager.
+
+Noen modeller legges til via familiemapping eller generisk protokollkompatibilitet.
+Under integrasjonsstart logger Buspro eksplisitt modellstøttedokumenter for disse
+modellene (for eksempel modellvalidert vs. familje-kartlagt oppførsel) sammen med
+oppdagede fysiske adresser.
+
+For eldre YAML-enheter normaliserer integrasjonen nå manglende profiler ved hjelp av
+katalogmodellmetadata. Ukjente modeller og ustøttede profilstrenger
+rapporteres som oppstartadvarsler, deretter faller tilbake til generisk `sensor_status`
+oppførsel for å holde oppsettet funksjonelt.
+
+## Hjelpemiddel for katalogvedlikehold
+
+For å sammenligne integrasjonskatalogen med den vedlikeholdt offisielle HDL-modellisten,
+kjør:
+
+```bash
+python3 custom_components/buspro/tools/check_catalog_models.py
+```
+
+Hjelpemiddelet leser `custom_components/buspro/devices/official_models.json` og
+skriver ut:
+
+- offisielle modeller som mangler i `DEVICE_CATALOG`
+- katalogmodeller som ikke finnes i den offisielle listen
+- virtuelle integrasjonsonly generiske modeller
+
+Bruk streng modus for CI-stil sjekker (ikke-null avslutning når offisielle modeller
+mangler i katalogen):
+
+```bash
+python3 custom_components/buspro/tools/check_catalog_models.py --strict
+```
+
+## Entitetsoppførsel
+
+### Relé
+
+En delt koordinator spør relestatus en gang per fysisk modul og
+distribuerer responsen til alle aktiverte kanalenheter. Deaktiverte kanaler
+abonnerer ikke på eller spør bussen.
+
+### Paneler
+
+Kjente knappepaneler oppretter en `event`-enhet per fysisk knapp, en `Action`-hendelse
+og en `Last action`-sensor. UI-knapphendelsesenheter representerer mottatt
+fysiske Buspro-knapptelegrammar; de simulerer ikke et maskinvaretrykk.
+
+### Dimmer
+
+Støttede dimmer-enheter kan eksponere tilkoblingsevne, maksimal lysstyrke per kanal,
+belastningstype og protokollrapportert minimum lyssterke. `Ikke rapportert` betyr at
+enheten returnerte protokollsentinelen i stedet for en brukbar verdi.
+
+### Logikk-styringsenhet
+
+`HDL-MCLog.431` eksponerer skrivebeskyttet tilkoblingsevne, firmwareversjon, sist sett
+og logikkhendelsesenheter. Noe firmware svarer ikke på standardfirmwareforespørselen;
+i så fall forblir firmwareenheten utilgjengelig. Logikkblokker kan ikke skrives til
+fordi endring av dem kan overskrive styringsenhetsprogrammering.
+
+## Tjenester
+
+- `buspro.activate_scene`
+- `buspro.set_universal_switch`
+- `buspro.send_message`
+
+`buspro.send_message` sender en rå protokollkommando og bør kun brukes med
+en verifisert HDL-operasjonskode og last.
+
+## YAML-konfigurasjon (eldre)
+
+YAML-enhetskonfigurasjon støttes fullstendig sammen med config-entry gateway-administrasjon. Du kan definere lys, persienner, svitsjer, vifter, klima, sensorer og binærsensorer via YAML mens gatewayen administreres av integrasjons-UI-et.
+
+**Merk**: Nye enheter bør bruke integrasjons **Konfigurer > Legg til enhet** UI i stedet for YAML, da den gir enhetgruppering, modellstyrt kapabilitet og kanaltilstandsstyring. YAML anbefales for:
+- Enheter med ikke-standard eller eldre profiler
+- Migrering fra eldre Buspro-integrasjoner
+- Kompleks automatiksering eller sensormaler
+
+### YAML syntakseksempel
+
+Legg til i `configuration.yaml`:
 
 ```yaml
 light:
   - platform: buspro
-    running_time: 3
     devices:
-      1.89.1:
-        name: Living Room Light
-        running_time: 5
-      1.89.2:
-        name: Front Door Light
-        dimmable: False
-        ack_retry_enabled: True
-```
-+ **running_time** _(int) (Valgfritt)_: Standard kjøretid i sekunder for alle enheter. Kjøretid er 0 sekunder hvis ikke satt.
-+ **ack_retry_enabled** _(boolean) (Valgfritt)_: Aktiverer engangs-kommando-retry når ingen ACK mottas innen 0,8s. Standard er `True`.
-+ **devices** _(Påkrevd)_: En liste over enheter som skal konfigureres
-  + **X.X.X** _(Påkrevd)_: Adressen til enheten på formatet `<subnet ID>.<device ID>.<channel number>`
-    + **name** _(string) (Påkrevd)_: Enhetens navn
-    + **running_time** _(int) (Valgfritt)_: Kjøretid i sekunder for enheten. Hvis utelatt, brukes standard kjøretid for alle enheter.
-    + **ack_retry_enabled** _(boolean) (Valgfritt)_: Enhetstilpasset override for ACK retry.
-    + **dimmable** _(boolean) (Valgfritt)_: Er enheten dimbar? Standard er True.
-    + **object_id** _(string) (Valgfritt)_: Enhets object_id. Standard genereres automatisk fra enhetsnavn.
-    + **unique_id** _(string) (Valgfritt)_: Stabil enhets unique_id for Home Assistant entity-register.
+      "1.5.1":
+        name: "Ceiling light"
+        dimmable: true
+      "1.5.2":
+        name: "Wall lamp"
+        dimmable: false
 
-#### Plattform for bytte
-
-For å bruke Buspro-kontakt i installasjonen, legg til følgende i configuration.yaml-filen:
-
-```yaml
-switch:
-  - platform: buspro
-    devices:
-      1.89.1:
-        name: Living Room Switch
-      1.89.2:
-        name: Front Door Switch
-```
-+ **devices** _(Påkrevd)_: En liste over enheter som skal konfigureres
-  + **X.X.X** _(Påkrevd)_: Adressen til enheten på formatet `<subnet ID>.<device ID>.<channel number>`
-    + **name** _(string) (Påkrevd)_: Enhetens navn
-    + **object_id** _(string) (Valgfritt)_: Enhets object_id. Standard genereres automatisk fra enhetsnavn.
-    + **unique_id** _(string) (Valgfritt)_: Stabil enhets unique_id for Home Assistant entity-register.
-
-#### Sensorplattform
-
-For å bruke Buspro-sensor i installasjonen, legg til følgende i configuration.yaml-filen:
-
-```yaml
-sensor:
-  - platform: buspro
-    devices:
-      - address: "1.74"
-        name: Living Room
-        type: temperature
-        unit_of_measurement: °C
-        device_class: temperature
-        device: dlp
-      - address: "1.74"
-        name: Front Door
-        type: illuminance
-        unit_of_measurement: lux
-      - address: "1.75"
-        name: Hall
-        type: humidity
-        unit_of_measurement: "%"
-        scan_interval: 30
-```
-+ **devices** _(Påkrevd)_: En liste over enheter som skal konfigureres
-  + **address** _(string) (Påkrevd)_: Adressen til sensor-enheten på formatet `<subnet ID>.<device ID>`
-  + **name** _(string) (Påkrevd)_: Enhetens navn
-  + **type** _(string) (Påkrevd)_: Type sensor som skal overvåkes.
-    + Tilgjengelige sensorer:
-     + temperature
-     + illuminance
-     + humidity
-  + **unit_of_measurement** _(string) (Valgfritt)_: Tekst som skal vises som måleenhet
-  + **object_id** _(string) (Valgfritt)_: Enhets object_id. Standard genereres automatisk fra enhetsnavn.
-  + **unique_id** _(string) (Valgfritt)_: Stabil enhets unique_id for Home Assistant entity-register.
-  + **device_class** _(string) (Valgfritt)_: Gyldig HASS sensor device class (f.eks. "temperature"). Hvis utelatt velges standard fra sensortypen.
-  + **scan_interval** _(int) (Valgfritt)_: Polling-interval i sekunder. Hvis utelatt eller `0`, oppdateringer av Buspro-meldinger.
-  (https://www.home-assistant.io/components/sensor/)
-  + **device** _(string) (Valgfritt)_: Type sensor-enhet:
-    + dlp
-
-#### Binær sensor plattform
-
-For å bruke Buspro binær sensor i installasjonen, legg til følgende i configuration.yaml-filen:
-
-```yaml
-binary_sensor:
-  - platform: buspro
-    devices:
-      - address: "1.74"
-        name: Living Room
-        type: motion
-        device_class: motion
-      - address: "1.74.100"
-        name: Front Door
-        type: universal_switch
-      - address: "1.75.3"
-        name: Kitchen switch
-        type: single_channel
-        scan_interval: 15
-```
-+ **devices** _(Påkrevd)_: En liste over enheter som skal konfigureres
-  + **address** _(string) (Påkrevd)_: Adressen til sensor-enheten på formatet `<subnet ID>.<device ID>`. Hvis
-  'type' = 'universal_switch' universell switch-nummer må legges til adressen.
-  + **name** _(string) (Påkrevd)_: Enhetens navn
-  + **object_id** _(string) (Valgfritt)_: Enhets object_id. Standard genereres automatisk fra enhetsnavn.
-  + **unique_id** _(string) (Valgfritt)_: Stabil enhets unique_id for Home Assistant entity-register.
-  + **type** _(string) (Påkrevd)_: Type sensor som skal overvåkes.
-    + Tilgjengelige sensorer:
-      + motion
-      + dry_contact_1
-      + dry_contact_2
-      + universal_switch
-      + single_channel
-      + dry_contact
-    + Adresseformat-notater:
-      + `motion`, `dry_contact_1`, `dry_contact_2`: `<subnet ID>.<device ID>`
-      + `universal_switch`, `single_channel`, `dry_contact`: `<subnet ID>.<device ID>.<number>`
-  + **device_class** _(string) (Valgfritt)_: Gyldig HASS binary sensor device class (f.eks. "motion"). Hvis utelatt, ingen device class blir tvunget.
-  + **scan_interval** _(int) (Valgfritt)_: Polling-interval i sekunder. Hvis utelatt eller `0`, oppdateringer av Buspro-meldinger.
-  (https://www.home-assistant.io/components/binary_sensor/)
-
-#### Klima plattform
-
-For å bruke Buspro panel klima kontroll i installasjonen, legg til følgende i configuration.yaml-filen:
-
-```yaml
-climate:
-  - platform: buspro
-    devices:
-      - address: "1.74"
-        name: Bedroom AC
-        type: ac
-      - address: "1.74"
-        name: Living Room
-        type: floor_heating
-        floor_heating_device_type: dlp
-        preset_modes: 
-          - none
-          - away
-          - home
-          - sleep
-      - address: "1.90"
-        type: floor_heating
-        floor_heating_device_type: module
-        channel: 1
-        unique_id: "hdl_climate_floorheat_zone_1"
-        min_temp: 22
-        max_temp: 32
-        precision: 1
-        name: Floor Heating Zone 1
-```
-+ **devices** _(Påkrevd)_: En liste over enheter som skal konfigureres
-  + **address** _(string) (Påkrevd)_: Adressen til sensor-enheten på formatet `<subnet ID>.<device ID>`
-  + **name** _(string) (Påkrevd)_: Enhetens navn
-  + **type** _(string) (Valgfritt)_: `ac` eller `floor_heating`. Standard er `floor_heating`.
-  + **floor_heating_device_type** _(string) (Valgfritt)_: `dlp` eller `module`.
-    Hvis utelatt, `module` velges automatisk når `channel` er gitt, ellers `dlp`.
-  + **relay_address** _(string) (Valgfritt)_: Relé kanal adresse i format `<subnet ID>.<device ID>.<channel>`. Brukes som ekstern relé-status tilbakemelding for HVAC-handling.
-  + **object_id** _(string) (Valgfritt)_: Enhets object_id. Standard genereres automatisk fra enhetsnavn.
-  + **unique_id** _(string) (Valgfritt)_: Stabil enhets unique_id for Home Assistant entity-register.
-  + **preset_modes** _(list) (Valgfritt)_: Liste over støttede preset-modus. Preset modus-valg er deaktivert hvis ikke satt. Mulige verdier vises i tabell nedenfor. Tilsvarende modi må aktiveres i HDL (Floor Heating > Working Settings > Mode).
-  + **channel** _(int) (Valgfritt)_: Floor heating modul kanal (`1..6`) for `floor_heating_device_type: module`.
-  + **min_temp** _(float) (Valgfritt)_: Minimum mål temperatur vist i Home Assistant UI.
-  + **max_temp** _(float) (Valgfritt)_: Maksimum mål temperatur vist i Home Assistant UI.
-  + **precision** _(float) (Valgfritt)_: Mål temperatur steg i Home Assistant UI. Tillatt verdier: `1`, `0.5`, `0.1`.
-    
-| HA preset mode | HDL mode |
-|:--------------:|:--------:|
-|      none      |  Normal  |
-|      away      |   Away   |
-|      home      |   Day    |
-|     sleep      |  Night   |
-
-
-#### Cover plattform
-
-For å bruke Buspro covers i installasjonen, legg til følgende i configuration.yaml-filen:
-
-```yaml
 cover:
   - platform: buspro
     devices:
-      1.89.1:
-        name: Living Room Curtain
-        invert: false
-        object_id: living_room_curtain
-```
-+ **devices** _(Påkrevd)_: Kartlegging av Buspro gardinkanaler
-  + **key** _(string)_: `<subnet ID>.<device ID>.<channel>`
-  + **name** _(string) (Påkrevd)_: Vennlig navn
-  + **invert** _(bool) (Valgfritt)_: Inverter åpen/lukk-retning. Standard `false`.
-  + **object_id** _(string) (Valgfritt)_: Enhets object_id. Standard genereres automatisk fra navn.
-  + **unique_id** _(string) (Valgfritt)_: Stabil enhets unique_id for Home Assistant entity-register.
+      "2.10.1":
+        name: "Living room curtain"
+        running_time: 45
 
-Støttete funksjoner:
-- open
-- close
-- stop
-- open_tilt
-- close_tilt
-- stop_tilt
-
-#### Vifte plattform
-
-For å bruke Buspro vifte i installasjonen, legg til følgende i configuration.yaml-filen:
-
-```yaml
-fan:
+climate:
   - platform: buspro
-    running_time: 3
-    ack_retry_enabled: true
     devices:
-      1.89.3:
-        name: Bedroom Fan
-        dimmable: true
-      1.89.4:
-        name: Bathroom Fan
-        dimmable: false
+      "3.1":
+        name: "Bedroom climate"
+        profile: "ac"
 ```
-+ **running_time** _(int) (Valgfritt)_: Standard kjøretid i sekunder for alle enheter. Kjøretid er `0` hvis ikke satt.
-+ **ack_retry_enabled** _(boolean) (Valgfritt)_: Aktiverer engangs-kommando-retry når ingen ACK mottas innen 0,8s. Standard er `True`.
-+ **devices** _(Påkrevd)_: En liste over enheter som skal konfigureres
-  + **X.X.X** _(Påkrevd)_: Adressen til enheten på formatet `<subnet ID>.<device ID>.<channel number>`
-    + **name** _(string) (Påkrevd)_: Enhetens navn
-    + **running_time** _(int) (Valgfritt)_: Per-enhet kjøretid i sekunder. Hvis utelatt, brukes standard kjøretid for plattformen.
-    + **ack_retry_enabled** _(boolean) (Valgfritt)_: Per-enhet override for ACK retry.
-    + **dimmable** _(boolean) (Valgfritt)_: Er viftehastighet kontrollerbar (prosent-modus). Standard er `True`.
-    + **object_id** _(string) (Valgfritt)_: Enhets object_id. Standard genereres automatisk fra enhetsnavn.
-    + **unique_id** _(string) (Valgfritt)_: Stabil enhets unique_id for Home Assistant entity-register.
 
----
-## Migreringsnotater
+### Plattformkonfigurasjon
 
-Hvis du oppgraderer fra en tidligere versjon av denne integrasjonen, sjekk følgende:
+Hver plattform (`light`, `cover`, `fan`, `climate`, `sensor`, `binary_sensor`, `switch`) aksepterer:
 
-- **v1.7.1 -> v2.0.0 klima breaking changes**
-  - Klima-modellen ble delt:
-    - `type: ac` opprett nå AC klima-oppførsel.
-    - `type: floor_heating` opprett nå floor-heating-oppførsel.
-    - Hvis `type` utelatt, standard er `floor_heating`.
-  - Ny floor-heating enhet-typing:
-    - `floor_heating_device_type: dlp | module` introdusert.
-    - Hvis `channel` er gitt og `floor_heating_device_type` utelatt, enhettype auto-bytter til `module`.
-    - For `floor_heating_device_type: module`, `channel` påkrevd (`1..6`), ellers enhet-oppsett hoppes over.
-  - HVAC mode-oppførsel endret:
-    - AC enheter viser `COOL/OFF`.
-    - Floor-heating enheter viser `HEAT/OFF` (`COOL` tilgjengelig også for module type).
-  - Handling påkrevd:
-    - Eksplisitt sett `type` for hver klima-enhet under migrasjon.
-    - Legg til `floor_heating_device_type` og `channel` for floor-heating modul enheter.
-    - Re-sjekk automasjoner/skript som antas gammel klima-mode semantikk.
+| Nøkkel | Type | Beskrivelse |
+| --- | --- | --- |
+| `devices` | dict | Obligatorisk. Kartlegging av Buspro-adresser til enhetskonfigurasjoner. |
+| `running_time` | int | Standard overgangstid i sekunder (0 = ingen overgang). Overstyrt per enhet. |
+| `ack_retry_enabled` | bool | Forsøk sending på ingen ACK (plattformstandard; per-enhet overstyringer). |
 
-- Enhet domene-rettelse:
-  - Bryt enheter bruker nå `switch.*` IDs (tidligere noen opprettet som `light.*`).
-  - Sensor enheter bruker nå `sensor.*` IDs (tidligere noen opprettet som `light.*`).
-  - Binary sensor enheter bruker nå `binary_sensor.*` IDs (tidligere noen opprettet som `light.*`).
-- Oppdater dashboards, automasjoner, skript, og hjelpere som refererte gamle enhet IDs.
-- `sensor` og `binary_sensor` validerer nå:
-  - `scan_interval` som positiv integer-sekunder (`0` holder melding-drivne oppdateringer).
-  - `device_class` som gyldig Home Assistant klasse (ugyldige verdier ignoreres for binary sensorer).
+Hver enhetsnøkkel er **Buspro-adressen** i format:
+- **Lys, persienne, vifte, svitsj**: `subnet.device.channel` (f.eks. `1.5.2`)
+- **Klima, sensor, binærsensor**: `subnet.device` (f.eks. `3.1`)
 
----
-## Tjenester
+Hver enhetskonfigurasjon støtter:
+- `name` (obligatorisk): Visningsnavn
+- `running_time`, `dimmable`, `ack_retry_enabled` (plattformspesifikk, valgfritt)
+- `profile` (valgfritt, for klimasensorer — f.eks. `"ac"`, `"floor_heating"`)
+- `object_id` (valgfritt): Entity ID-slug
+- `unique_id` (valgfritt): For manuell entity registry-kontroll
 
-#### Sende en vilkårlig melding:
+## Utvikling
+
+### Kjør testsamlingene
+
+Fra Home Assistant-konfigurasjonroten:
+
+```bash
+# Run all protocol tests (19 tests)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_protocol -v
+
+# Run all integration tests (18 tests)
+python3 -m unittest discover -s custom_components/buspro/tests/buspro_integration -v
+
+# Or run individual test files
+python3 custom_components/buspro/tests/buspro_protocol/test_sensor_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_relay_coordinator.py
+python3 custom_components/buspro/tests/buspro_protocol/test_logic_controller_protocol.py
+python3 custom_components/buspro/tests/buspro_protocol/test_config_isolation.py
+python3 custom_components/buspro/tests/buspro_protocol/test_device_lifecycle.py
+python3 custom_components/buspro/tests/buspro_integration/test_device_catalog.py
+python3 custom_components/buspro/tests/buspro_integration/test_managed_device_logic.py
+python3 custom_components/buspro/tests/buspro_integration/test_model_notes_logging.py
+python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalization.py
 ```
-Domain: buspro
-Service: send_message
-Service Data: {"address": [1,74], "operate_code": [4,78], "payload": [1,100,0,3]}
-```
-#### Aktivere en scene:
-```
-Domain: buspro
-Service: activate_scene
-Service Data: {"address": [1,74], "scene_address": [3,5]}
-```
-#### Stille en universal switch:
-```
-Domain: buspro
-Service: set_universal_switch
-Service Data: {"address": [1,74], "switch_number": 100, "status": 1}
-```
+
+Protokolltester dekker telegramparsing, enhetkoordinasjon og sikkerhet for kjerne-oppgaver/tilbakekallinger. Integrasjonsprøver dekker enhetskatalog, administrert-enhet logikk, YAML-normalisering og modellstøttesporing.
