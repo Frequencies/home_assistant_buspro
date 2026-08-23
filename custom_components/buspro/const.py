@@ -1,5 +1,0 @@
-DOMAIN = "buspro"
-CONF_HOST = "host"
-CONF_PORT = "port"
-CONF_SEND_PORT = "send_port"
-CONF_RECEIVE_PORT = "receive_port"
