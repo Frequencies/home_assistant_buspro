@@ -29,6 +29,7 @@ class Buspro:
         self.callback_all_messages = None
         self._telegram_received_cbs = []
         self._telegram_received_cbs_by_addr = {}
+        self._diagnostics = None  # Optional DiagnosticCapture instance
 
         self.gateway_address_send_receive = gateway_address_send_receive
         if client_address is None:
@@ -56,6 +57,14 @@ class Buspro:
 
         if self.telegram_logger.isEnabledFor(logging.DEBUG):
             self.telegram_logger.debug(telegram)
+
+        # Record to diagnostics (determine direction by address matching)
+        if self._diagnostics is not None:
+            from .diagnostics import Direction
+            direction = Direction.RESPONSE  # Default
+            if telegram.target_address == self.client_address:
+                direction = Direction.REQUEST
+            self._record_telegram(telegram, direction)
 
         if self.callback_all_messages is not None:
             self.callback_all_messages(telegram)
@@ -108,3 +117,12 @@ class Buspro:
             bucket.remove(entry)
             if not bucket:
                 del self._telegram_received_cbs_by_addr[key]
+
+    def set_diagnostics(self, diagnostic_capture):
+        """Attach a diagnostic capture instance."""
+        self._diagnostics = diagnostic_capture
+
+    def _record_telegram(self, telegram, direction):
+        """Record telegram to diagnostics if enabled."""
+        if self._diagnostics is not None:
+            self._diagnostics.record_telegram(telegram, direction)

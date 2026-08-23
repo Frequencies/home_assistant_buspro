@@ -409,6 +409,7 @@ class BusproModule:
         self._sensor_devices = {}
         self._dimmer_diagnostics = {}
         self._logic_controllers = {}
+        self._diagnostics = None  # Initialize diagnostics
         self.init_hdl()
 
     def get_sensor(
@@ -469,15 +470,46 @@ class BusproModule:
         return self._logic_controllers[key]
 
     def init_hdl(self):
-        """Initialize of Buspro object."""
+        """Initialize of Buspro object with diagnostics."""
         # noinspection PyUnresolvedReferences
         from .pybuspro.buspro import Buspro
+        from .pybuspro.diagnostics import (
+            DiagnosticCapture,
+            RelayDecoder,
+            DimmerDecoder,
+            ClimateDecoder,
+            SensorDecoder,
+            CoverDecoder,
+            LogicControllerDecoder,
+        )
+
         self.hdl = Buspro(
             self.gateway_address_send_receive,
             self.hass.loop,
             client_address=self._client_address,
         )
+
+        # Initialize diagnostic system
+        self._diagnostics = DiagnosticCapture(
+            max_records=5000,
+            address_aliases={},
+        )
+
+        # Register all decoders
+        self._diagnostics.register_decoder("relay", RelayDecoder())
+        self._diagnostics.register_decoder("dimmer", DimmerDecoder())
+        self._diagnostics.register_decoder("climate", ClimateDecoder())
+        self._diagnostics.register_decoder("sensor", SensorDecoder())
+        self._diagnostics.register_decoder("cover", CoverDecoder())
+        self._diagnostics.register_decoder("logic_controller", LogicControllerDecoder())
+
+        # Attach to buspro instance
+        self.hdl.set_diagnostics(self._diagnostics)
         # self.hdl.register_telegram_received_all_messages_cb(self.telegram_received_cb)
+
+    def get_diagnostics(self):
+        """Return diagnostic capture instance."""
+        return self._diagnostics
 
     async def start(self):
         """Start Buspro object. Connect to tunneling device."""
