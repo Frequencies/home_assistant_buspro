@@ -395,3 +395,49 @@ python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalizatio
 Protocoltests bestrijken telegramanalyse, apparaatcoördinatie en veiligheid van
 kerntaken/callbacks. Integratietests bestrijken apparaatcatalogus, logica voor
 beheerde apparaten, YAML-normalisatie en tracking van modelondersteuning.
+
+## Opdrachtbevestiging (NIEUW!)
+
+De integratie ondersteunt nu **optionele opdrachtbevestiging** om ervoor te zorgen dat statuswijzigingen van apparaten in Home Assistant pas worden weergegeven nadat het fysieke apparaat de ontvangst en uitvoering heeft bevestigd.
+
+### Wat is het?
+
+- **Zonder bevestiging:** Opdrachten worden verzonden en de interface wordt onmiddellijk bijgewerkt (~5ms), maar als het apparaat de opdracht niet ontvangt vanwege netwerkstoring, is de interfacestatus onjuist.
+- **Met bevestiging:** Het systeem wacht op apparaatbevestiging (100-500ms), waardoor perfecte synchronisatie tussen Home Assistant en het fysieke apparaat wordt gegarandeerd.
+
+### Wanneer te gebruiken?
+
+Schakel bevestiging in voor:
+- **Kritieke apparaten** — Noodrelais, hoofdschakelaars
+- **Onbetrouwbare netwerken** — Hoge storing, paketverlies
+- **Automatiseringsafhankelijkheden** — Wanneer automatiseringen afhankelijk zijn van nauwkeurige status
+- **Veiligheidskritieke systemen** — HVAC, vloerverwarming, belangrijke belastingen
+
+### Configuratie
+
+Voeg bevestiging toe aan elk apparaat in YAML:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Kritiek Licht"
+        enable_confirmation: true
+        confirmation_timeout: 5.0        # seconden
+        confirmation_retries: 3          # opnieuw proberen
+```
+
+**Parameters:**
+- `enable_confirmation` (boolean, standaard: `false`) — Bevestiging in-/uitschakelen
+- `confirmation_timeout` (float, standaard: `5.0`) — Time-out in seconden (0.1-60)
+- `confirmation_retries` (integer, standaard: `3`) — Aantal pogingen (0-10)
+
+**Aanbevolen instellingen per apparaattype:**
+- Relais/Schakelaar/Licht: `timeout: 5.0`, `retries: 3`
+- Jaloezie/Gordijn: `timeout: 10.0`, `retries: 2` (mechanisch, langzamer)
+- Klimaat: `timeout: 5.0`, `retries: 3`
+- Ventilator: `timeout: 5.0`, `retries: 3`
+
+Voor volledige voorbeelden en best practices raadpleegt u **[DEVICE_EXAMPLES.md](docs/nl/DEVICE_EXAMPLES.md)**.
+

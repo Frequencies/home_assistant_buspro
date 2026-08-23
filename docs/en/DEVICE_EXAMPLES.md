@@ -1,10 +1,12 @@
 # HDL Buspro Device Configuration Examples
+[🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | 🇬🇧 English | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | [🇫🇷 Français](../fr/DEVICE_EXAMPLES.md) | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
 
 [🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | 🇬🇧 English | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | [🇫🇷 Français](../fr/DEVICE_EXAMPLES.md) | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
 
 This guide provides practical UI and YAML configuration examples for all supported device types in the HDL Buspro integration.
 
 **Table of Contents:**
+- [Command Confirmation (NEW!)](#command-confirmation--new)
 - [Relay Devices](#relay-devices)
 - [Dimmer Devices](#dimmer-devices)
 - [Cover Devices (Blinds/Shutters)](#cover-devices)
@@ -12,6 +14,118 @@ This guide provides practical UI and YAML configuration examples for all support
 - [Climate Devices](#climate-devices)
 - [Sensor Devices](#sensor-devices)
 - [Binary Sensor Devices](#binary-sensor-devices)
+
+---
+
+## Command Confirmation (NEW!)
+
+### What is Command Confirmation?
+
+Command confirmation ensures that device state changes are only reflected in Home Assistant **after** the physical device confirms receipt and execution of the command. This prevents UI desynchronization when commands are lost due to network interference.
+
+**Without Confirmation:**
+- User clicks "Turn ON"
+- UI updates immediately (~5ms)
+- Device receives command after ~100ms
+- If device doesn't receive → UI shows wrong state
+
+**With Confirmation:**
+- User clicks "Turn ON"  
+- System waits for device confirmation (~100-500ms)
+- Device confirms receipt and execution
+- UI updates only after confirmation
+- If device doesn't respond → explicit timeout error
+
+### Why You Need It
+
+Enable confirmation for:
+- **Critical devices** - Emergency relays, main power switches
+- **Unreliable networks** - High interference, many collisions
+- **Automation dependencies** - Automations that need guaranteed state
+- **Safety-critical devices** - HVAC systems, floor heating
+
+### Configuration Examples
+
+#### For a Critical Relay
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Emergency Stop Relay"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+#### For Multiple Critical Devices
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      # Critical - confirm receipt
+      "1.10.1":
+        name: "Main Ceiling Light"
+        enable_confirmation: true
+      
+      # Non-critical - keep fast (default)
+      "1.10.2":
+        name: "Ambient Light"
+        # enable_confirmation defaults to false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Bedroom Curtains"
+        enable_confirmation: true
+        confirmation_timeout: 10.0  # Longer for mechanical devices
+        confirmation_retries: 2
+
+climate:
+  - platform: buspro
+    devices:
+      - address: "3.1"
+        name: "Living Room AC"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+### Configuration Parameters
+
+| Parameter | Type | Default | Range | Purpose |
+|-----------|------|---------|-------|---------|
+| `enable_confirmation` | boolean | `false` | `true`/`false` | Enable/disable confirmation |
+| `confirmation_timeout` | float | `5.0` | 0.1-60 seconds | Max wait for device response |
+| `confirmation_retries` | integer | `3` | 0-10 | Retry attempts on timeout |
+
+### Device Type Recommendations
+
+| Device Type | Timeout | Retries | Notes |
+|------------|---------|---------|-------|
+| Relay/Switch | 5.0s | 3 | Fast electronic device |
+| Light/Dimmer | 5.0s | 3 | Fast electronic device |
+| Fan | 5.0s | 3 | Fast electronic device |
+| Cover/Curtain | 10.0s | 2 | Mechanical device, slower |
+| Climate AC | 5.0s | 3 | Electronic device |
+| Floor Heating | 5.0s | 3 | Electronic device |
+
+### UI Impact
+
+When confirmation is enabled:
+- **Latency:** 100-500ms delay (vs. 5-10ms without)
+- **Feedback:** Clear success/failure indication
+- **Reliability:** Guaranteed state synchronization
+
+When confirmation is disabled (default):
+- **Latency:** ~5-10ms (unchanged)
+- **Behavior:** Fire-and-forget (current behavior)
+- **Risk:** Silent command failures possible
 
 ---
 
@@ -65,6 +179,33 @@ light:
       "1.10.3":
         name: "Living Room Wall Sconce"
         object_id: "wall_sconce"
+```
+
+**With Confirmation (Recommended for Critical Devices):**
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      # Critical device - enable confirmation
+      "1.10.1":
+        name: "Living Room Ceiling Light"
+        object_id: "ceiling_light"
+        enable_confirmation: true
+      
+      # Non-critical - use default (no confirmation)
+      "1.10.2":
+        name: "Living Room Table Lamp"
+        object_id: "table_lamp"
+      
+      # With custom timeout for unreliable network
+      "1.10.3":
+        name: "Living Room Wall Sconce"
+        object_id: "wall_sconce"
+        enable_confirmation: true
+        confirmation_timeout: 10.0
+        confirmation_retries: 5
 ```
 
 **Device-Centric (Complete device definition):**
@@ -618,6 +759,8 @@ buspro:
 
 ## Tips & Best Practices
 
+### General Configuration
+
 1. **Use UI for simple setups** - The UI provides an intuitive way to add and manage devices without needing to write YAML.
 
 2. **Use YAML for complex or programmatic configurations** - YAML is better for large installations or when you need version control.
@@ -631,5 +774,40 @@ buspro:
 6. **Object IDs** - In YAML, `object_id` is optional but recommended. It controls the entity's ID slug. If omitted, Home Assistant generates one from the channel name.
 
 7. **Unique IDs** - For advanced cases where you need to manually control entity registry entries, use `unique_id` in YAML configuration. This allows Home Assistant to track the entity reliably even if the device name changes.
+
+### Command Confirmation Best Practices
+
+8. **Start Conservative** - Begin with confirmation disabled (default) on all devices. Enable only where needed:
+   - Critical automation devices (emergency stops, main power)
+   - Devices with unreliable network connectivity
+   - HVAC/Climate systems where state accuracy is important
+
+9. **Monitor Network Quality** - If you're experiencing command failures or timeouts, it likely indicates network issues. Consider:
+   - Increasing `confirmation_timeout` (default 5.0s)
+   - Increasing `confirmation_retries` (default 3)
+   - Investigating network interference
+   - Checking device power and connectivity
+
+10. **Accept Latency Trade-off** - Confirmation adds 100-500ms latency. This is acceptable for:
+    - Manual controls (user expects slight delay)
+    - Automations (100ms is negligible)
+    - But unacceptable for real-time sensor reads (use without confirmation)
+
+11. **Device Type Considerations**:
+    - **Mechanical devices** (covers, curtains): Use longer timeout (10s) and fewer retries (2)
+    - **Electronic devices** (relays, lights): Standard settings work well (5s timeout, 3 retries)
+    - **Complex devices** (AC, floor heating): May need custom timeout based on responsiveness
+
+12. **Testing Confirmation**:
+    - Enable on one non-critical device first
+    - Verify the device responds properly
+    - Check Home Assistant logs for timeouts
+    - Gradually enable on more devices if successful
+
+13. **Troubleshooting**:
+    - **Device not responding**: Check device power and network connectivity
+    - **Frequent timeouts**: Increase timeout or retries, investigate network issues
+    - **Too slow**: Consider disabling confirmation on non-critical devices
+    - **Silent failures**: Enable confirmation to get explicit timeout errors
 
 For more detailed information on YAML configuration formats, see [../en/DUAL_MODE_YAML.md](../en/DUAL_MODE_YAML.md).

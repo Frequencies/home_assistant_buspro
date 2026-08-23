@@ -1,12 +1,12 @@
 # Exemples de configuration d'appareils HDL Buspro
-
-**Langues disponibles :** [🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | 🇫🇷 Français | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
+[🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | 🇫🇷 Français | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
 
 ---
 
 Ce guide fournit des exemples de configuration pratiques via l'interface utilisateur et YAML pour tous les types d'appareils pris en charge dans l'intégration HDL Buspro.
 
 **Table des matières :**
+- [Confirmation de Commande (NOUVEAU!)](#confirmation-de-commande-nouveau)
 - [Appareils à relais](#appareils-à-relais)
 - [Appareils gradateurs](#appareils-gradateurs)
 - [Appareils de couverture (stores/volets)](#appareils-de-couverture)
@@ -14,6 +14,118 @@ Ce guide fournit des exemples de configuration pratiques via l'interface utilisa
 - [Appareils climatiques](#appareils-climatiques)
 - [Appareils capteurs](#appareils-capteurs)
 - [Appareils capteurs binaires](#appareils-capteurs-binaires)
+
+---
+
+## Confirmation de Commande (NOUVEAU!)
+
+### Qu'est-ce que la Confirmation de Commande?
+
+La confirmation de commande garantit que les changements d'état des appareils ne sont reflétés dans Home Assistant qu'après que l'appareil physique confirme la réception et l'exécution de la commande. Cela prévient la désynchronisation de l'interface utilisateur lorsque des commandes sont perdues en raison d'interférences réseau.
+
+**Sans Confirmation:**
+- L'utilisateur clique sur "Activer"
+- L'interface se met à jour immédiatement (~5ms)
+- L'appareil reçoit la commande après ~100ms
+- Si l'appareil ne reçoit pas → L'interface affiche un état incorrect
+
+**Avec Confirmation:**
+- L'utilisateur clique sur "Activer"
+- Le système attend la confirmation de l'appareil (~100-500ms)
+- L'appareil confirme la réception et l'exécution
+- L'interface se met à jour uniquement après la confirmation
+- Si l'appareil ne répond pas → Erreur de délai d'attente explicite
+
+### Pourquoi en avez-vous besoin
+
+Activez la confirmation pour:
+- **Appareils critiques** - Relais d'urgence, disjoncteurs principaux
+- **Réseaux peu fiables** - Interférences élevées, nombreuses collisions
+- **Dépendances d'automatisation** - Automatisations nécessitant un état garanti
+- **Appareils critiques pour la sécurité** - Systèmes CVAC, chauffage au sol
+
+### Exemples de Configuration
+
+#### Pour un Relais Critique
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Relais d'Arrêt d'Urgence"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+#### Pour Plusieurs Appareils Critiques
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      # Critique - confirmer la réception
+      "1.10.1":
+        name: "Plafonnier Principal"
+        enable_confirmation: true
+      
+      # Non critique - garder rapide (par défaut)
+      "1.10.2":
+        name: "Éclairage Ambiant"
+        # enable_confirmation est false par défaut
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Rideaux de la Chambre"
+        enable_confirmation: true
+        confirmation_timeout: 10.0  # Plus long pour appareils mécaniques
+        confirmation_retries: 2
+
+climate:
+  - platform: buspro
+    devices:
+      - address: "3.1"
+        name: "Climatisation du Salon"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+### Paramètres de Configuration
+
+| Paramètre | Type | Défaut | Plage | Objectif |
+|-----------|------|---------|-------|---------| 
+| `enable_confirmation` | boolean | `false` | `true`/`false` | Activer/désactiver la confirmation |
+| `confirmation_timeout` | float | `5.0` | 0.1-60 secondes | Attente maximale pour réponse appareil |
+| `confirmation_retries` | integer | `3` | 0-10 | Tentatives de réessai à l'expiration |
+
+### Recommandations par Type d'Appareil
+
+| Type d'Appareil | Délai | Tentatives | Remarques |
+|------------|---------|---------|-------|
+| Relais/Interrupteur | 5.0s | 3 | Appareil électronique rapide |
+| Lumière/Variateur | 5.0s | 3 | Appareil électronique rapide |
+| Ventilateur | 5.0s | 3 | Appareil électronique rapide |
+| Volet/Rideau | 10.0s | 2 | Appareil mécanique, plus lent |
+| Climatisation AC | 5.0s | 3 | Appareil électronique |
+| Chauffage au Sol | 5.0s | 3 | Appareil électronique |
+
+### Impact sur l'Interface Utilisateur
+
+Lorsque la confirmation est activée:
+- **Latence:** Délai de 100-500ms (vs. 5-10ms sans)
+- **Retour d'information:** Indication claire de succès/échec
+- **Fiabilité:** Synchronisation d'état garantie
+
+Lorsque la confirmation est désactivée (par défaut):
+- **Latence:** ~5-10ms (inchangé)
+- **Comportement:** Fire-and-forget (comportement actuel)
+- **Risque:** Défaillances silencieuses de commandes possibles
 
 ---
 

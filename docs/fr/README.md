@@ -8,6 +8,51 @@ services est disponible dans la [documentation anglaise](../README.md).
 
 > **Note importante**: Pour la configuration détaillée des appareils, les exemples YAML, les services disponibles et le guide de développement, consultez la [documentation en anglais](../README.md). Cette page fournit des informations d'installation et de configuration initiale.
 
+## Confirmation de Commande (NOUVEAU!)
+
+L'intégration supporte désormais la confirmation optionnelle des commandes pour assurer que les changements d'état des appareils ne sont reflétés dans Home Assistant qu'après que l'appareil physique confirme la réception et l'exécution.
+
+### Qu'est-ce que c'est?
+
+- **Sans confirmation:** Les commandes sont envoyées et l'interface se met à jour immédiatement (~5ms), mais si l'appareil ne reçoit pas la commande en raison d'interférences réseau, l'état de l'interface sera incorrect.
+- **Avec confirmation:** Le système attend la confirmation de l'appareil (100-500ms), assurant une synchronisation parfaite entre Home Assistant et l'appareil physique.
+
+### Quand l'utiliser?
+
+Activez la confirmation pour:
+- **Appareils critiques** — Relais d'urgence, disjoncteurs principaux
+- **Réseaux peu fiables** — Interférences élevées, perte de paquets
+- **Dépendances d'automatisation** — Lorsque les automatisations dépendent d'un état exact
+- **Systèmes critiques pour la sécurité** — CVAC, chauffage au sol, charges importantes
+
+### Configuration
+
+Ajoutez la confirmation à n'importe quel appareil en YAML:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Lumière Critique"
+        enable_confirmation: true
+        confirmation_timeout: 5.0        # secondes
+        confirmation_retries: 3          # tentatives de réessai
+```
+
+**Paramètres:**
+- `enable_confirmation` (boolean, défaut: `false`) — Activer/désactiver la confirmation
+- `confirmation_timeout` (float, défaut: `5.0`) — Délai d'attente en secondes (0.1-60)
+- `confirmation_retries` (integer, défaut: `3`) — Nombre de tentatives (0-10)
+
+**Paramètres recommandés par type d'appareil:**
+- Relais/Interrupteur/Lumière: `timeout: 5.0`, `retries: 3`
+- Volet/Rideau: `timeout: 10.0`, `retries: 2` (mécanique, plus lent)
+- Climatisation: `timeout: 5.0`, `retries: 3`
+- Ventilateur: `timeout: 5.0`, `retries: 3`
+
+Pour des exemples complets et les meilleures pratiques, consultez **[DEVICE_EXAMPLES.md](docs/fr/DEVICE_EXAMPLES.md)**.
+
 ## Installation
 
 ### HACS (recommandé)

@@ -396,3 +396,49 @@ python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalizatio
 ```
 
 Protokolltests decken Telegrammanalyse, Gerätekoordination und Kernaufgaben-/Callback-Sicherheit ab. Integrationstests decken Gerätekatalog, verwaltete Gerätelogik, YAML-Normalisierung und Modellunterstützungsverfolgung ab.
+
+## Befehlsbestätigung (NEU!)
+
+Die Integration unterstützt nun **optionale Befehlsbestätigung**, um sicherzustellen, dass Gerätzustandsänderungen in Home Assistant erst nach der physikalischen Bestätigung des Geräts widergespiegelt werden.
+
+### Was ist es?
+
+- **Ohne Bestätigung:** Befehle werden gesendet und die Benutzeroberfläche aktualisiert sich sofort (~5ms), aber wenn das Gerät den Befehl aufgrund von Netzwerkstörungen nicht empfängt, ist der Zustand der Benutzeroberfläche falsch.
+- **Mit Bestätigung:** Das System wartet auf die Gerätebestätigung (100-500ms) und stellt so eine perfekte Synchronisierung zwischen Home Assistant und dem physischen Gerät sicher.
+
+### Wann sollte ich es verwenden?
+
+Aktivieren Sie die Bestätigung für:
+- **Kritische Geräte** — Notfall-Relais, Hauptschalter
+- **Unzuverlässige Netzwerke** — Hohe Störungen, Paketverluste
+- **Automatisierungsabhängigkeiten** — Wenn Automatisierungen auf genauen Zustand angewiesen sind
+- **Sicherheitskritische Systeme** — HVAC, Fußbodenheizung, wichtige Lasten
+
+### Konfiguration
+
+Fügen Sie die Bestätigung zu jedem Gerät in YAML hinzu:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Kritisches Licht"
+        enable_confirmation: true
+        confirmation_timeout: 5.0        # Sekunden
+        confirmation_retries: 3          # Wiederholungsversuche
+```
+
+**Parameter:**
+- `enable_confirmation` (boolean, Standard: `false`) — Bestätigung aktivieren/deaktivieren
+- `confirmation_timeout` (float, Standard: `5.0`) — Timeout in Sekunden (0.1-60)
+- `confirmation_retries` (integer, Standard: `3`) — Wiederholungsanzahl (0-10)
+
+**Empfohlene Einstellungen nach Gerätetyp:**
+- Relais/Schalter/Licht: `timeout: 5.0`, `retries: 3`
+- Abdeckung/Vorhang: `timeout: 10.0`, `retries: 2` (mechanisch, langsamer)
+- Klima: `timeout: 5.0`, `retries: 3`
+- Lüfter: `timeout: 5.0`, `retries: 3`
+
+Für vollständige Beispiele und Best Practices siehe **[DEVICE_EXAMPLES.md](docs/de/DEVICE_EXAMPLES.md)**.
+

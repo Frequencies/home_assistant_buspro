@@ -39,6 +39,12 @@ from .const import (
     CONF_MANAGED_DEVICES,
     DATA_BUSPRO_CONFIG,
     DEVICE_TYPE_DIMMER,
+    CONF_ENABLE_CONFIRMATION,
+    CONF_CONFIRMATION_TIMEOUT,
+    CONF_CONFIRMATION_RETRIES,
+    DEFAULT_ENABLE_CONFIRMATION,
+    DEFAULT_CONFIRMATION_TIMEOUT,
+    DEFAULT_CONFIRMATION_RETRIES,
 )
 from .managed_devices import managed_device_info
 
@@ -61,6 +67,18 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
     vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Required(CONF_NAME): cv.string,
+    vol.Optional(
+        CONF_ENABLE_CONFIRMATION,
+        default=DEFAULT_ENABLE_CONFIRMATION
+    ): cv.boolean,
+    vol.Optional(
+        CONF_CONFIRMATION_TIMEOUT,
+        default=DEFAULT_CONFIRMATION_TIMEOUT
+    ): vol.All(cv.positive_float, vol.Range(min=0.1, max=60)),
+    vol.Optional(
+        CONF_CONFIRMATION_RETRIES,
+        default=DEFAULT_CONFIRMATION_RETRIES
+    ): vol.All(cv.positive_int, vol.Range(min=0, max=10)),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -101,6 +119,20 @@ async def async_setup_platform(hass, config, async_add_entites, discovery_info=N
             channel_number,
             name,
             ack_retry_enabled=ack_retry_enabled,
+        )
+
+        # Pass confirmation configuration to device
+        light.enable_confirmation = device_config.get(
+            CONF_ENABLE_CONFIRMATION,
+            DEFAULT_ENABLE_CONFIRMATION
+        )
+        light.confirmation_timeout = device_config.get(
+            CONF_CONFIRMATION_TIMEOUT,
+            DEFAULT_CONFIRMATION_TIMEOUT
+        )
+        light.confirmation_retries = device_config.get(
+            CONF_CONFIRMATION_RETRIES,
+            DEFAULT_CONFIRMATION_RETRIES
         )
 
         object_id = device_config[CONF_OBJECT_ID]

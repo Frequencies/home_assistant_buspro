@@ -99,6 +99,51 @@ The integration supports two complementary YAML approaches:
 
 **For complete YAML documentation, examples, and best practices, see [DUAL_MODE_YAML.md](docs/en/DUAL_MODE_YAML.md)** (also available in [Беларуская](docs/be/DUAL_MODE_YAML.md) | [Deutsch](docs/de/DUAL_MODE_YAML.md) | [Español](docs/es/DUAL_MODE_YAML.md) | [Français](docs/fr/DUAL_MODE_YAML.md) | [Italiano](docs/it/DUAL_MODE_YAML.md) | [Nederlands](docs/nl/DUAL_MODE_YAML.md) | [Norsk](docs/no/DUAL_MODE_YAML.md) | [Русский](docs/ru/DUAL_MODE_YAML.md) | [Українська](docs/uk/DUAL_MODE_YAML.md))
 
+## Command Confirmation (NEW!)
+
+The integration now supports **optional command confirmation** to ensure device state changes are only reflected in Home Assistant after the physical device confirms receipt and execution.
+
+### What is it?
+
+- **Without confirmation:** Commands are sent and the UI updates immediately (~5ms), but if the device doesn't receive the command due to network interference, the UI state will be wrong.
+- **With confirmation:** The system waits for the device to confirm receipt (100-500ms), ensuring perfect synchronization between Home Assistant and the physical device.
+
+### When to use it?
+
+Enable confirmation for:
+- **Critical devices** — Emergency relays, main power switches
+- **Unreliable networks** — High interference, packet loss
+- **Automation dependencies** — When automations depend on accurate state
+- **Safety-critical systems** — HVAC, floor heating, important loads
+
+### Configuration
+
+Add confirmation to any device in YAML:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Critical Light"
+        enable_confirmation: true
+        confirmation_timeout: 5.0        # seconds
+        confirmation_retries: 3          # retry attempts
+```
+
+**Parameters:**
+- `enable_confirmation` (boolean, default: `false`) — Enable/disable confirmation
+- `confirmation_timeout` (float, default: `5.0`) — Timeout in seconds (0.1-60)
+- `confirmation_retries` (integer, default: `3`) — Retry count (0-10)
+
+**Recommended settings by device type:**
+- Relay/Switch/Light: `timeout: 5.0`, `retries: 3`
+- Cover/Curtain: `timeout: 10.0`, `retries: 2` (mechanical, slower)
+- Climate: `timeout: 5.0`, `retries: 3`
+- Fan: `timeout: 5.0`, `retries: 3`
+
+For complete examples and best practices, see **[DEVICE_EXAMPLES.md](docs/en/DEVICE_EXAMPLES.md)**.
+
 ## Breaking changes in 2.2.0
 
 Read this section before upgrading from 2.1.x.

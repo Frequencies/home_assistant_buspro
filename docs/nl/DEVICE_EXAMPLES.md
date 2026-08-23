@@ -1,12 +1,12 @@
 # HDL Buspro Apparaatconfiguratie Voorbeelden
-
-**Beschikbare talen:** [🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | [🇫🇷 Français](../fr/DEVICE_EXAMPLES.md) | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | 🇳🇱 Nederlands | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
+[🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | [🇫🇷 Français](../fr/DEVICE_EXAMPLES.md) | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | 🇳🇱 Nederlands | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
 
 ---
 
 Deze handleiding biedt praktische UI- en YAML-configuratievoorbeelden voor alle ondersteunde apparaattypen in de HDL Buspro-integratie.
 
 **Inhoudsopgave:**
+- [Opdrachtbevestiging (NIEUW!)](#opdrachtbevestiging-nieuw)
 - [Relaisapparaten](#relaisapparaten)
 - [Dimmer-apparaten](#dimmer-apparaten)
 - [Afdekking-apparaten (jaloezieën/luiken)](#afdekking-apparaten)
@@ -14,6 +14,118 @@ Deze handleiding biedt praktische UI- en YAML-configuratievoorbeelden voor alle 
 - [Klimaatapparaten](#klimaatapparaten)
 - [Sensorapparaten](#sensorapparaten)
 - [Binaire sensorapparaten](#binaire-sensorapparaten)
+
+---
+
+## Opdrachtbevestiging (NIEUW!)
+
+### Wat is Opdrachtbevestiging?
+
+Opdrachtbevestiging zorgt ervoor dat statuswijzigingen van apparaten in Home Assistant pas worden weergegeven nadat het fysieke apparaat de ontvangst en uitvoering van de opdracht heeft bevestigd. Dit voorkomt desynchronisatie van de gebruikersinterface wanneer opdrachten verloren gaan door netwerkstoring.
+
+**Zonder Bevestiging:**
+- Gebruiker klikt op "Aanzetten"
+- Interface wordt onmiddellijk bijgewerkt (~5ms)
+- Apparaat ontvangt opdracht na ~100ms
+- Als apparaat niet ontvangt → Interface toont verkeerde status
+
+**Met Bevestiging:**
+- Gebruiker klikt op "Aanzetten"
+- Systeem wacht op apparaatbevestiging (~100-500ms)
+- Apparaat bevestigt ontvangst en uitvoering
+- Interface wordt alleen na bevestiging bijgewerkt
+- Als apparaat niet reageert → Expliciete time-outfout
+
+### Waarom u dit nodig hebt
+
+Schakel bevestiging in voor:
+- **Kritieke apparaten** - Noodrelais, hoofdschakelaars
+- **Onbetrouwbare netwerken** - Hoge storing, veel botsingen
+- **Automatiseringsafhankelijkheden** - Automatiseringen die gegarandeerde status nodig hebben
+- **Veiligheidskritieke apparaten** - HVAC-systemen, vloerverwarming
+
+### Configuratievoorbeelden
+
+#### Voor een Kritiek Relais
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Noodstoprelais"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+#### Voor Meerdere Kritieke Apparaten
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      # Kritiek - ontvangst bevestigen
+      "1.10.1":
+        name: "Hoofdplafondlicht"
+        enable_confirmation: true
+      
+      # Niet-kritiek - snel houden (standaard)
+      "1.10.2":
+        name: "Omgevingslicht"
+        # enable_confirmation is standaard false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Slaapkamergordijnen"
+        enable_confirmation: true
+        confirmation_timeout: 10.0  # Langer voor mechanische apparaten
+        confirmation_retries: 2
+
+climate:
+  - platform: buspro
+    devices:
+      - address: "3.1"
+        name: "Woonkamer AC"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+### Configuratieparameters
+
+| Parameter | Type | Standaard | Bereik | Doel |
+|-----------|------|---------|-------|---------| 
+| `enable_confirmation` | boolean | `false` | `true`/`false` | Bevestiging in-/uitschakelen |
+| `confirmation_timeout` | float | `5.0` | 0.1-60 seconden | Max. wachtijd voor apparaatrespons |
+| `confirmation_retries` | integer | `3` | 0-10 | Opnieuw proberen bij time-out |
+
+### Aanbevelingen per Apparaattype
+
+| Apparaattype | Time-out | Pogingen | Opmerkingen |
+|------------|---------|---------|-------|
+| Relais/Schakelaar | 5.0s | 3 | Snel elektronisch apparaat |
+| Licht/Dimmer | 5.0s | 3 | Snel elektronisch apparaat |
+| Ventilator | 5.0s | 3 | Snel elektronisch apparaat |
+| Jaloezie/Gordijn | 10.0s | 2 | Mechanisch apparaat, langzamer |
+| Klimaat AC | 5.0s | 3 | Elektronisch apparaat |
+| Vloerverwarming | 5.0s | 3 | Elektronisch apparaat |
+
+### Impact op Gebruikersinterface
+
+Wanneer bevestiging is ingeschakeld:
+- **Latentie:** Vertraging van 100-500ms (vs. 5-10ms zonder)
+- **Feedback:** Duidelijke succes-/foutaanduiding
+- **Betrouwbaarheid:** Gegarandeerde statussynchronisatie
+
+Wanneer bevestiging is uitgeschakeld (standaard):
+- **Latentie:** ~5-10ms (ongewijzigd)
+- **Gedrag:** Fire-and-forget (huidig gedrag)
+- **Risico:** Stille opdrachtfouten mogelijk
 
 ---
 

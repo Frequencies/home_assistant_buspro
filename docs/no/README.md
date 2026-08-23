@@ -389,3 +389,49 @@ python3 custom_components/buspro/tests/buspro_integration/test_yaml_normalizatio
 Protokolltester dekker telegrammanalyse, enhetkoordinering og sikkerhet for
 kjerne-oppgaver/tilbakekall. Integrasjonstester dekker enhetskatalog,
 administrert-enhet-logikk, YAML-normalisering og modellstøttesporing.
+
+## Kommandobekreftelse (NYT!)
+
+Integrasjonen støtter nå **valgfri kommandobekreftelse** for å sikre at enhetstilstandsendringer bare reflekteres i Home Assistant etter at den fysiske enheten bekrefter mottaket og gjennomføringen.
+
+### Hva er det?
+
+- **Uten bekreftelse:** Kommandoer sendes og brukergrensesnittet oppdateres umiddelbart (~5ms), men hvis enheten ikke mottar kommandoen på grunn av nettverksstøy, vil brukergrensesnittstilstanden være feil.
+- **Med bekreftelse:** Systemet venter på enhetbekreftelse (100-500ms), og sikrer perfekt synkronisering mellom Home Assistant og den fysiske enheten.
+
+### Når brukes det?
+
+Aktiver bekreftelse for:
+- **Kritiske enheter** — Nødstopp-relé, hovedbrytere
+- **Upålitelige nettverk** — Høy interferens, paketkos
+- **Automatiseringsavhengigheter** — Når automatiseringer er avhengig av eksakt tilstand
+- **Sikkerkritiske systemer** — HVAC, gulvvarme, viktige belastninger
+
+### Konfigurasjon
+
+Legg til bekreftelse til enhver enhet i YAML:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Kritisk lys"
+        enable_confirmation: true
+        confirmation_timeout: 5.0        # sekunder
+        confirmation_retries: 3          # forsøk på nytt
+```
+
+**Parametere:**
+- `enable_confirmation` (boolean, standard: `false`) — Aktiver/deaktiver bekreftelse
+- `confirmation_timeout` (float, standard: `5.0`) — Timeout i sekunder (0.1-60)
+- `confirmation_retries` (integer, standard: `3`) — Antall forsøk (0-10)
+
+**Anbefalte innstillinger per enhettype:**
+- Relé/Bryter/Lys: `timeout: 5.0`, `retries: 3`
+- Persienne/Gardin: `timeout: 10.0`, `retries: 2` (mekanisk, saktere)
+- Klima: `timeout: 5.0`, `retries: 3`
+- Vifte: `timeout: 5.0`, `retries: 3`
+
+For fullstendige eksempler og beste praksis, se **[DEVICE_EXAMPLES.md](docs/no/DEVICE_EXAMPLES.md)**.
+

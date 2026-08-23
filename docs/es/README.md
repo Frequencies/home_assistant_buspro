@@ -8,6 +8,51 @@ servicios está en la [documentación en inglés](../README.md).
 
 > **Nota importante**: Para configuración detallada de dispositivos, ejemplos de YAML, servicios disponibles y guía de desarrollo, consulte la [documentación en inglés](../README.md). Esta página proporciona información básica de instalación y configuración inicial.
 
+## Confirmación de Comando (¡NUEVO!)
+
+La integración ahora admite confirmación opcional de comandos para garantizar que los cambios de estado del dispositivo se reflejen en Home Assistant solo después de que el dispositivo físico confirme la recepción y ejecución.
+
+### ¿Qué es?
+
+- **Sin confirmación:** Los comandos se envían y la interfaz se actualiza inmediatamente (~5ms), pero si el dispositivo no recibe el comando debido a interferencia de red, el estado de la interfaz será incorrecto.
+- **Con confirmación:** El sistema espera la confirmación del dispositivo (100-500ms), asegurando una sincronización perfecta entre Home Assistant y el dispositivo físico.
+
+### ¿Cuándo usarlo?
+
+Habilite la confirmación para:
+- **Dispositivos críticos** — Relés de emergencia, interruptores principales
+- **Redes no confiables** — Alta interferencia, pérdida de paquetes
+- **Dependencias de automatización** — Cuando las automatizaciones dependen del estado exacto
+- **Sistemas críticos para la seguridad** — HVAC, calefacción radiante, cargas importantes
+
+### Configuración
+
+Agregue confirmación a cualquier dispositivo en YAML:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Luz Crítica"
+        enable_confirmation: true
+        confirmation_timeout: 5.0        # segundos
+        confirmation_retries: 3          # intentos de reintento
+```
+
+**Parámetros:**
+- `enable_confirmation` (boolean, predeterminado: `false`) — Habilitar/deshabilitar confirmación
+- `confirmation_timeout` (float, predeterminado: `5.0`) — Tiempo agotado en segundos (0.1-60)
+- `confirmation_retries` (integer, predeterminado: `3`) — Conteo de reintentos (0-10)
+
+**Configuraciones recomendadas por tipo de dispositivo:**
+- Relé/Interruptor/Luz: `timeout: 5.0`, `retries: 3`
+- Cubierta/Cortina: `timeout: 10.0`, `retries: 2` (mecánico, más lento)
+- Clima: `timeout: 5.0`, `retries: 3`
+- Ventilador: `timeout: 5.0`, `retries: 3`
+
+Para ejemplos completos y mejores prácticas, consulte **[DEVICE_EXAMPLES.md](docs/es/DEVICE_EXAMPLES.md)**.
+
 ## Instalación
 
 ### HACS (recomendado)

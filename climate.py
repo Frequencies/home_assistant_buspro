@@ -40,6 +40,12 @@ from .const import (
     DEVICE_TYPE_AC,
     DEVICE_TYPE_FLOOR_HEATING,
     DOMAIN,
+    CONF_ENABLE_CONFIRMATION,
+    CONF_CONFIRMATION_TIMEOUT,
+    CONF_CONFIRMATION_RETRIES,
+    DEFAULT_ENABLE_CONFIRMATION,
+    DEFAULT_CONFIRMATION_TIMEOUT,
+    DEFAULT_CONFIRMATION_RETRIES,
 )
 from .device_catalog import DEVICE_CATALOG
 from .managed_devices import channel_count as managed_channel_count
@@ -108,6 +114,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                     vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
                     vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
                     vol.Optional(CONF_PRECISION): vol.In([1, 0.5, 0.1]),
+                    vol.Optional(
+                        CONF_ENABLE_CONFIRMATION,
+                        default=DEFAULT_ENABLE_CONFIRMATION
+                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_CONFIRMATION_TIMEOUT,
+                        default=DEFAULT_CONFIRMATION_TIMEOUT
+                    ): vol.All(cv.positive_float, vol.Range(min=0.1, max=60)),
+                    vol.Optional(
+                        CONF_CONFIRMATION_RETRIES,
+                        default=DEFAULT_CONFIRMATION_RETRIES
+                    ): vol.All(cv.positive_int, vol.Range(min=0, max=10)),
                 }
             )
         ],
@@ -164,6 +182,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         if climate_type == ClimateDeviceType.AC.value:
             device = Climate(hdl, device_address, name)
+            # Pass confirmation configuration to device
+            device.enable_confirmation = device_config.get(
+                CONF_ENABLE_CONFIRMATION,
+                DEFAULT_ENABLE_CONFIRMATION
+            )
+            device.confirmation_timeout = device_config.get(
+                CONF_CONFIRMATION_TIMEOUT,
+                DEFAULT_CONFIRMATION_TIMEOUT
+            )
+            device.confirmation_retries = device_config.get(
+                CONF_CONFIRMATION_RETRIES,
+                DEFAULT_CONFIRMATION_RETRIES
+            )
             devices.append(
                 BusproACClimate(
                     hass, device, relay_sensor, object_id, unique_id, min_temp, max_temp, precision
@@ -194,6 +225,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             module_state["channels"].add(int(channel_number))
 
         device = FloorHeating(hdl, device_address, name, channel_number=channel_number, device_type=fh_type)
+        # Pass confirmation configuration to device
+        device.enable_confirmation = device_config.get(
+            CONF_ENABLE_CONFIRMATION,
+            DEFAULT_ENABLE_CONFIRMATION
+        )
+        device.confirmation_timeout = device_config.get(
+            CONF_CONFIRMATION_TIMEOUT,
+            DEFAULT_CONFIRMATION_TIMEOUT
+        )
+        device.confirmation_retries = device_config.get(
+            CONF_CONFIRMATION_RETRIES,
+            DEFAULT_CONFIRMATION_RETRIES
+        )
         devices.append(BusproFloorHeatingClimate(
             hass,
             device,

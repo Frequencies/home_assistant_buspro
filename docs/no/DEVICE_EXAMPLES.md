@@ -1,12 +1,12 @@
 # HDL Buspro Enhetskonfigurasjonseksempler
-
-**Tilgjengelige språk:** [🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | [🇫🇷 Français](../fr/DEVICE_EXAMPLES.md) | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | 🇳🇴 Norsk | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
+[🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | [🇩🇪 Deutsch](../de/DEVICE_EXAMPLES.md) | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | [🇫🇷 Français](../fr/DEVICE_EXAMPLES.md) | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | 🇳🇴 Norsk | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
 
 ---
 
 Denne veiledningen gir praktiske UI- og YAML-konfigurasjonseksempler for alle støttede enhetstyper i HDL Buspro-integrasjonen.
 
 **Innholdsfortegnelse:**
+- [Kommandobekreftelse (NYT!)](#kommandobekreftelse-nyt)
 - [Relèenheter](#relèenheter)
 - [Dimmereneheter](#dimmereneheter)
 - [Dekkingsenheter (persienner/lameller)](#dekkingsenheter)
@@ -14,6 +14,118 @@ Denne veiledningen gir praktiske UI- og YAML-konfigurasjonseksempler for alle st
 - [Klimaenheter](#klimaenheter)
 - [Sensorenheter](#sensorenheter)
 - [Binære sensorenheter](#binære-sensorenheter)
+
+---
+
+## Kommandobekreftelse (NYT!)
+
+### Hva er Kommandobekreftelse?
+
+Kommandobekreftelse sikrer at tilstandsendringer for enheter bare reflekteres i Home Assistant etter at den fysiske enheten bekrefter mottaket og gjennomføringen av kommandoen. Dette forhindrer desynchronisering av brukergrensesnittet når kommandoer går tapt på grunn av nettverksstøy.
+
+**Uten Bekreftelse:**
+- Bruker klikker "Slå på"
+- Brukergrensesnittet oppdateres umiddelbart (~5ms)
+- Enheten mottar kommandoen etter ~100ms
+- Hvis enheten ikke mottar → Brukergrensesnittet viser feil tilstand
+
+**Med Bekreftelse:**
+- Bruker klikker "Slå på"
+- Systemet venter på enhetbekreftelse (~100-500ms)
+- Enheten bekrefter mottaket og gjennomføringen
+- Brukergrensesnittet oppdateres bare etter bekreftelse
+- Hvis enheten ikke svarer → Eksplisitt timeout-feil
+
+### Hvorfor trenger du det
+
+Aktiver bekreftelse for:
+- **Kritiske enheter** - Nødstopp-relé, hovedbrytere
+- **Upålitelige nettverk** - Høy interferens, mange kollisjoner
+- **Automatiseringsavhengigheter** - Automatiseringer som krever garantert tilstand
+- **Sikkerkritiske enheter** - HVAC-systemer, gulvvarme
+
+### Konfigurasjonseksempler
+
+#### For et Kritisk Relé
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Nødstopp-relé"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+#### For Flere Kritiske Enheter
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      # Kritisk - bekreft mottak
+      "1.10.1":
+        name: "Hovedtakslys"
+        enable_confirmation: true
+      
+      # Ikke-kritisk - holdt raskt (standard)
+      "1.10.2":
+        name: "Omgivelseslys"
+        # enable_confirmation er false som standard
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Soveromsgardiner"
+        enable_confirmation: true
+        confirmation_timeout: 10.0  # Lengre for mekaniske enheter
+        confirmation_retries: 2
+
+climate:
+  - platform: buspro
+    devices:
+      - address: "3.1"
+        name: "Stueromsklimaanlegg"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+### Konfigurasjonsparametere
+
+| Parameter | Type | Standard | Område | Formål |
+|-----------|------|---------|-------|---------| 
+| `enable_confirmation` | boolean | `false` | `true`/`false` | Aktiver/deaktiver bekreftelse |
+| `confirmation_timeout` | float | `5.0` | 0.1-60 sekunder | Maks ventetid for enhetrespons |
+| `confirmation_retries` | integer | `3` | 0-10 | Forsøk på nytt ved timeout |
+
+### Anbefalinger per Enhettype
+
+| Enhettype | Timeout | Forsøk | Merknadinger |
+|------------|---------|---------|-------|
+| Relé/Bryter | 5.0s | 3 | Rask elektronisk enhet |
+| Lys/Dimmer | 5.0s | 3 | Rask elektronisk enhet |
+| Vifte | 5.0s | 3 | Rask elektronisk enhet |
+| Persienne/Gardin | 10.0s | 2 | Mekanisk enhet, saktere |
+| Klima AC | 5.0s | 3 | Elektronisk enhet |
+| Gulvvarme | 5.0s | 3 | Elektronisk enhet |
+
+### Brukergrensesnitteffekt
+
+Når bekreftelse er aktivert:
+- **Latens:** Forsinkelse på 100-500ms (vs. 5-10ms uten)
+- **Tilbakemelding:** Klar indikasjon på suksess/feil
+- **Pålitelighet:** Garantert tilstandssynkronisering
+
+Når bekreftelse er deaktivert (standard):
+- **Latens:** ~5-10ms (uendret)
+- **Oppførsel:** Fire-and-forget (nåværende oppførsel)
+- **Risiko:** Stille kommandofeil mulig
 
 ---
 

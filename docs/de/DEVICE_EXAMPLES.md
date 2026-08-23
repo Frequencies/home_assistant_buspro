@@ -1,12 +1,12 @@
 # HDL Buspro Gerätekonfigurationsbeispiele
-
-**Verfügbare Sprachen:** [🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | 🇩🇪 Deutsch | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | [🇫🇷 Français](../fr/DEVICE_EXAMPLES.md) | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
+[🇧🇾 Беларуская](../be/DEVICE_EXAMPLES.md) | 🇩🇪 Deutsch | [🇬🇧 English](../en/DEVICE_EXAMPLES.md) | [🇪🇸 Español](../es/DEVICE_EXAMPLES.md) | [🇫🇷 Français](../fr/DEVICE_EXAMPLES.md) | [🇮🇹 Italiano](../it/DEVICE_EXAMPLES.md) | [🇳🇱 Nederlands](../nl/DEVICE_EXAMPLES.md) | [🇳🇴 Norsk](../no/DEVICE_EXAMPLES.md) | [🇷🇺 Русский](../ru/DEVICE_EXAMPLES.md) | [🇺🇦 Українська](../uk/DEVICE_EXAMPLES.md)
 
 ---
 
 Dieses Handbuch bietet praktische UI- und YAML-Konfigurationsbeispiele für alle unterstützten Gerätetypen in der HDL Buspro-Integration.
 
 **Inhaltsverzeichnis:**
+- [Befehlsbestätigung (NEU!)](#befehlsbestätigung-neu)
 - [Relaisgeräte](#relaisgeräte)
 - [Dimmgeräte](#dimmgeräte)
 - [Abdeckungsgeräte (Jalousien/Rollläden)](#abdeckungsgeräte)
@@ -14,6 +14,118 @@ Dieses Handbuch bietet praktische UI- und YAML-Konfigurationsbeispiele für alle
 - [Klimageräte](#klimageräte)
 - [Sensorgeräte](#sensorgeräte)
 - [Binäre Sensorgeräte](#binäre-sensorgeräte)
+
+---
+
+## Befehlsbestätigung (NEU!)
+
+### Was ist Befehlsbestätigung?
+
+Befehlsbestätigung stellt sicher, dass Gerätzustandsänderungen in Home Assistant erst nach der physikalischen Bestätigung des Geräts widergespiegelt werden. Dies verhindert eine Desynchronisierung der Benutzeroberfläche, wenn Befehle aufgrund von Netzwerkstörungen verloren gehen.
+
+**Ohne Bestätigung:**
+- Benutzer klickt „Einschalten"
+- Benutzeroberfläche aktualisiert sich sofort (~5ms)
+- Gerät empfängt Befehl nach ~100ms
+- Wenn Gerät nicht empfängt → Benutzeroberfläche zeigt falschen Zustand
+
+**Mit Bestätigung:**
+- Benutzer klickt „Einschalten"
+- System wartet auf Gerätebestätigung (~100-500ms)
+- Gerät bestätigt Empfang und Ausführung
+- Benutzeroberfläche aktualisiert sich nur nach Bestätigung
+- Wenn Gerät nicht antwortet → expliziter Timeout-Fehler
+
+### Warum Sie das brauchen
+
+Aktivieren Sie die Bestätigung für:
+- **Kritische Geräte** - Notfall-Relais, Hauptschalter
+- **Unzuverlässige Netzwerke** - Hohe Störungen, viele Kollisionen
+- **Automatisierungsabhängigkeiten** - Automatisierungen, die garantierte Zustände benötigen
+- **Sicherheitskritische Geräte** - HVAC-Systeme, Fußbodenheizung
+
+### Konfigurationsbeispiele
+
+#### Für ein kritisches Relais
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Notfall-Stopp-Relais"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+#### Für mehrere kritische Geräte
+
+```yaml
+# configuration.yaml
+light:
+  - platform: buspro
+    devices:
+      # Kritisch - Empfang bestätigen
+      "1.10.1":
+        name: "Hauptdeckenlicht"
+        enable_confirmation: true
+      
+      # Unkritisch - schnell halten (Standard)
+      "1.10.2":
+        name: "Umgebungslicht"
+        # enable_confirmation ist standardmäßig false
+
+cover:
+  - platform: buspro
+    devices:
+      "2.10.1":
+        name: "Schlafzimmervorhänge"
+        enable_confirmation: true
+        confirmation_timeout: 10.0  # Länger für mechanische Geräte
+        confirmation_retries: 2
+
+climate:
+  - platform: buspro
+    devices:
+      - address: "3.1"
+        name: "Wohnzimmer AC"
+        enable_confirmation: true
+        confirmation_timeout: 5.0
+        confirmation_retries: 3
+```
+
+### Konfigurationsparameter
+
+| Parameter | Typ | Standard | Bereich | Zweck |
+|-----------|------|---------|-------|---------| 
+| `enable_confirmation` | boolean | `false` | `true`/`false` | Bestätigung aktivieren/deaktivieren |
+| `confirmation_timeout` | float | `5.0` | 0.1-60 Sekunden | Max. Wartezeit für Gerätereaktion |
+| `confirmation_retries` | integer | `3` | 0-10 | Wiederholungsversuche bei Timeout |
+
+### Empfehlungen nach Gerätetyp
+
+| Gerätetyp | Timeout | Wiederholungen | Hinweise |
+|------------|---------|---------|-------|
+| Relais/Schalter | 5.0s | 3 | Schnelles elektronisches Gerät |
+| Licht/Dimmer | 5.0s | 3 | Schnelles elektronisches Gerät |
+| Lüfter | 5.0s | 3 | Schnelles elektronisches Gerät |
+| Abdeckung/Vorhang | 10.0s | 2 | Mechanisches Gerät, langsamer |
+| Klima AC | 5.0s | 3 | Elektronisches Gerät |
+| Fußbodenheizung | 5.0s | 3 | Elektronisches Gerät |
+
+### Auswirkungen auf die Benutzeroberfläche
+
+Wenn die Bestätigung aktiviert ist:
+- **Latenz:** 100-500ms Verzögerung (vs. 5-10ms ohne)
+- **Rückmeldung:** Klare Erfolgs-/Fehlermeldung
+- **Zuverlässigkeit:** Garantierte Statussynchronisation
+
+Wenn die Bestätigung deaktiviert ist (Standard):
+- **Latenz:** ~5-10ms (unverändert)
+- **Verhalten:** Fire-and-Forget (aktuelles Verhalten)
+- **Risiko:** Stille Befehlsfehler möglich
 
 ---
 

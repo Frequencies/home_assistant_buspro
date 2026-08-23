@@ -397,3 +397,49 @@ I test di protocollo coprono l'analisi dei telegrammi, il coordinamento dei
 dispositivi e la sicurezza di compiti/callback principali. I test di integrazione
 coprono il catalogo dei dispositivi, la logica dei dispositivi gestiti, la
 normalizzazione YAML e il tracciamento del supporto dei modelli.
+
+## Conferma del Comando (NUOVO!)
+
+L'integrazione ora supporta la **conferma facoltativa del comando** per garantire che i cambiamenti di stato del dispositivo siano riflessi in Home Assistant solo dopo che il dispositivo fisico confermi la ricezione e l'esecuzione.
+
+### Che cos'è?
+
+- **Senza conferma:** I comandi vengono inviati e l'interfaccia si aggiorna immediatamente (~5ms), ma se il dispositivo non riceve il comando a causa di interferenze di rete, lo stato dell'interfaccia sarà errato.
+- **Con conferma:** Il sistema attende la conferma del dispositivo (100-500ms), garantendo una sincronizzazione perfetta tra Home Assistant e il dispositivo fisico.
+
+### Quando usarlo?
+
+Abilita la conferma per:
+- **Dispositivi critici** — Relè di emergenza, interruttori principali
+- **Reti inaffidabili** — Interferenze elevate, perdita di pacchetti
+- **Dipendenze di automazione** — Quando le automazioni dipendono dallo stato esatto
+- **Sistemi critici per la sicurezza** — HVAC, riscaldamento a pavimento, carichi importanti
+
+### Configurazione
+
+Aggiungi la conferma a qualsiasi dispositivo in YAML:
+
+```yaml
+light:
+  - platform: buspro
+    devices:
+      "1.10.1":
+        name: "Luce Critica"
+        enable_confirmation: true
+        confirmation_timeout: 5.0        # secondi
+        confirmation_retries: 3          # tentativi di riprovazione
+```
+
+**Parametri:**
+- `enable_confirmation` (boolean, predefinito: `false`) — Abilitare/disabilitare conferma
+- `confirmation_timeout` (float, predefinito: `5.0`) — Timeout in secondi (0.1-60)
+- `confirmation_retries` (integer, predefinito: `3`) — Numero di tentativi (0-10)
+
+**Impostazioni consigliate per tipo di dispositivo:**
+- Relè/Interruttore/Luce: `timeout: 5.0`, `retries: 3`
+- Tapparella/Tenda: `timeout: 10.0`, `retries: 2` (meccanico, più lento)
+- Clima: `timeout: 5.0`, `retries: 3`
+- Ventilatore: `timeout: 5.0`, `retries: 3`
+
+Per esempi completi e migliori pratiche, consultare **[DEVICE_EXAMPLES.md](docs/it/DEVICE_EXAMPLES.md)**.
+

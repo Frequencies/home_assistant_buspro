@@ -27,6 +27,12 @@ from .const import (
     CONF_MANAGED_DEVICES,
     DATA_BUSPRO_CONFIG,
     DEVICE_TYPE_COVER,
+    CONF_ENABLE_CONFIRMATION,
+    CONF_CONFIRMATION_TIMEOUT,
+    CONF_CONFIRMATION_RETRIES,
+    DEFAULT_ENABLE_CONFIRMATION,
+    DEFAULT_CONFIRMATION_TIMEOUT,
+    DEFAULT_CONFIRMATION_RETRIES,
 )
 from .managed_devices import managed_device_info
 
@@ -44,6 +50,18 @@ DEVICE_SCHEMA = vol.Schema(
         vol.Optional(CONF_INVERT, default=DEFAULT_INVERT): cv.boolean,
         vol.Optional(CONF_OBJECT_ID, default=DEFAULT_OBJECT_ID): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(
+            CONF_ENABLE_CONFIRMATION,
+            default=DEFAULT_ENABLE_CONFIRMATION
+        ): cv.boolean,
+        vol.Optional(
+            CONF_CONFIRMATION_TIMEOUT,
+            default=DEFAULT_CONFIRMATION_TIMEOUT
+        ): vol.All(cv.positive_float, vol.Range(min=0.1, max=60)),
+        vol.Optional(
+            CONF_CONFIRMATION_RETRIES,
+            default=DEFAULT_CONFIRMATION_RETRIES
+        ): vol.All(cv.positive_int, vol.Range(min=0, max=10)),
     }
 )
 
@@ -77,6 +95,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
 
         cover = Cover(hdl, device_address, channel_number, name)
+
+        # Pass confirmation configuration to device
+        cover.enable_confirmation = device_config.get(
+            CONF_ENABLE_CONFIRMATION,
+            DEFAULT_ENABLE_CONFIRMATION
+        )
+        cover.confirmation_timeout = device_config.get(
+            CONF_CONFIRMATION_TIMEOUT,
+            DEFAULT_CONFIRMATION_TIMEOUT
+        )
+        cover.confirmation_retries = device_config.get(
+            CONF_CONFIRMATION_RETRIES,
+            DEFAULT_CONFIRMATION_RETRIES
+        )
 
         object_id = device_config[CONF_OBJECT_ID]
         if object_id == DEFAULT_OBJECT_ID:

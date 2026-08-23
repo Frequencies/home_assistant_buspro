@@ -44,3 +44,12 @@ DEVICE_TYPE_AC = "ac"
 DEVICE_TYPE_COVER = "cover"
 DEVICE_TYPE_FAN = "fan"
 DEVICE_TYPE_UNIVERSAL_SWITCH = "universal_switch"
+
+# Confirmation state pattern configuration
+CONF_ENABLE_CONFIRMATION = "enable_confirmation"
+CONF_CONFIRMATION_TIMEOUT = "confirmation_timeout"
+CONF_CONFIRMATION_RETRIES = "confirmation_retries"
+
+DEFAULT_ENABLE_CONFIRMATION = False
+DEFAULT_CONFIRMATION_TIMEOUT = 5.0
+DEFAULT_CONFIRMATION_RETRIES = 3
