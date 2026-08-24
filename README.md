@@ -21,6 +21,8 @@
 
 ### HACS (recommended)
 
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Frequencies&repository=home_assistant_buspro&category=integration)
+
 1. Open **HACS > Integrations**.
 2. Open the three-dot menu and select **Custom repositories**.
 3. Add `https://github.com/Frequencies/home_assistant_buspro` with category

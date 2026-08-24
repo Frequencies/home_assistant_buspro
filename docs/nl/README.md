@@ -2,6 +2,8 @@
 
 [🇧🇾 Беларуская](../be/README.md) | [🇩🇪 Deutsch](../de/README.md) | [🇬🇧 English](../../README.md) | [🇪🇸 Español](../es/README.md) | [🇫🇷 Français](../fr/README.md) | [🇮🇹 Italiano](../it/README.md) | 🇳🇱 Nederlands | [🇳🇴 Norsk](../no/README.md) | [🇷🇺 Русский](../ru/README.md) | [🇺🇦 Українська](../uk/README.md)
 
+---
+
 De integratie beheert de gateway en fysieke HDL Buspro-apparaten via de
 Home Assistant-interface. De volledige lijst met modellen, entiteiten en
 services staat in de [Engelse documentatie](../README.md).

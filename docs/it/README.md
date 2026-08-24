@@ -2,6 +2,8 @@
 
 [🇧🇾 Беларуская](../be/README.md) | [🇩🇪 Deutsch](../de/README.md) | [🇬🇧 English](../../README.md) | [🇪🇸 Español](../es/README.md) | [🇫🇷 Français](../fr/README.md) | 🇮🇹 Italiano | [🇳🇱 Nederlands](../nl/README.md) | [🇳🇴 Norsk](../no/README.md) | [🇷🇺 Русский](../ru/README.md) | [🇺🇦 Українська](../uk/README.md)
 
+---
+
 L'integrazione gestisce il gateway e i dispositivi fisici HDL Buspro tramite
 l'interfaccia di Home Assistant. L'elenco completo di modelli, entità e servizi
 è nella [documentazione inglese](../README.md).

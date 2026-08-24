@@ -2,6 +2,8 @@
 
 [🇧🇾 Беларуская](../be/README.md) | [🇩🇪 Deutsch](../de/README.md) | [🇬🇧 English](../../README.md) | [🇪🇸 Español](../es/README.md) | 🇫🇷 Français | [🇮🇹 Italiano](../it/README.md) | [🇳🇱 Nederlands](../nl/README.md) | [🇳🇴 Norsk](../no/README.md) | [🇷🇺 Русский](../ru/README.md) | [🇺🇦 Українська](../uk/README.md)
 
+---
+
 L'intégration gère la passerelle et les appareils physiques HDL Buspro depuis
 l'interface de Home Assistant. La liste complète des modèles, entités et
 services est disponible dans la [documentation anglaise](../README.md).

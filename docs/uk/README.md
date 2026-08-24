@@ -2,6 +2,8 @@
 
 [🇧🇾 Беларуская](../be/README.md) | [🇩🇪 Deutsch](../de/README.md) | [🇬🇧 English](../../README.md) | [🇪🇸 Español](../es/README.md) | [🇫🇷 Français](../fr/README.md) | [🇮🇹 Italiano](../it/README.md) | [🇳🇱 Nederlands](../nl/README.md) | [🇳🇴 Norsk](../no/README.md) | [🇷🇺 Русский](../ru/README.md) | 🇺🇦 Українська
 
+---
+
 Інтеграція керує шлюзом і фізичними пристроями HDL Buspro через інтерфейс
 Home Assistant. Повний перелік моделей, сутностей і сервісів наведено в
 [англійській документації](../README.md).
