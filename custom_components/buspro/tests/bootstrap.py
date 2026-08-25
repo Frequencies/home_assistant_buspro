@@ -12,12 +12,33 @@ def ensure_homeassistant_stubs():
     ha_cv.string = lambda v: v
     ha_cv.port = lambda v: v
     ha_cv.positive_int = int
+    ha_cv.positive_float = float
+    ha_cv.boolean = bool
+    ha_cv.ensure_list = lambda v: v if isinstance(v, list) else [v]
 
     ha_const = types.ModuleType('homeassistant.const')
     ha_const.CONF_HOST = 'host'
     ha_const.CONF_PORT = 'port'
     ha_const.CONF_NAME = 'name'
+    ha_const.CONF_ADDRESS = 'address'
+    ha_const.CONF_DEVICE_CLASS = 'device_class'
+    ha_const.CONF_DEVICES = 'devices'
+    ha_const.CONF_MODEL = 'model'
+    ha_const.CONF_SCAN_INTERVAL = 'scan_interval'
+    ha_const.CONF_TYPE = 'type'
+    ha_const.CONF_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
     ha_const.EVENT_HOMEASSISTANT_STOP = 'homeassistant_stop'
+
+    class _Platform:  # pragma: no cover - stub
+        LIGHT = 'light'
+        SWITCH = 'switch'
+        SENSOR = 'sensor'
+        BINARY_SENSOR = 'binary_sensor'
+        COVER = 'cover'
+        CLIMATE = 'climate'
+        FAN = 'fan'
+        EVENT = 'event'
+    ha_const.Platform = _Platform
 
     ha_core = types.ModuleType('homeassistant.core')
     ha_core.callback = lambda func: func
@@ -77,12 +98,33 @@ def ensure_homeassistant_stubs():
     vol.Optional = lambda key, default=None: key
     vol.Any = lambda *args, **kwargs: args[0] if args else None
     vol.All = lambda *args, **kwargs: args[0] if args else None
+    vol.In = lambda values: values
     vol.Length = lambda *args, **kwargs: None
+    vol.Coerce = lambda t: t
+    vol.Range = lambda *args, **kwargs: None
+    vol.Match = lambda pattern: pattern
     vol.Schema = lambda *args, **kwargs: dict
+
+    ha_dr = types.ModuleType('homeassistant.helpers.device_registry')
+    ha_dr.async_get = lambda hass: None
+    class DeviceInfo(dict):  # pragma: no cover - stub
+        pass
+    ha_dr.DeviceInfo = DeviceInfo
+    ha_er = types.ModuleType('homeassistant.helpers.entity_registry')
+    ha_er.async_get = lambda hass: None
+    ha_selector = types.ModuleType('homeassistant.helpers.selector')
+    ha_selector.selector = lambda cfg: cfg
+    ha_selector.TextSelector = lambda cfg=None: None
+    ha_selector.TextSelectorConfig = lambda **kw: kw
+    ha_selector.SelectSelector = lambda cfg=None: None
+    ha_selector.SelectSelectorConfig = lambda **kw: kw
 
     sys.modules['homeassistant'] = ha
     sys.modules['homeassistant.helpers'] = ha_helpers
     sys.modules['homeassistant.helpers.config_validation'] = ha_cv
+    sys.modules['homeassistant.helpers.device_registry'] = ha_dr
+    sys.modules['homeassistant.helpers.entity_registry'] = ha_er
+    sys.modules['homeassistant.helpers.selector'] = ha_selector
     sys.modules['homeassistant.const'] = ha_const
     sys.modules['homeassistant.core'] = ha_core
     sys.modules['homeassistant.config_entries'] = ha_config_entries
