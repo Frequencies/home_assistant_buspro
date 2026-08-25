@@ -14,7 +14,7 @@ SENSOR_MODELS = {
     },
     "HDL-MSP02.4C": {
         "device_type": DEVICE_TYPE_MULTISENSOR,
-        "profile": "12in1",
+        "profile": "sensors_in_one",
         "capabilities": ("temperature", "illuminance", "motion"),
     },
     "HDL-MSP07M.4C": {

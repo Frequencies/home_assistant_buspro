@@ -42,17 +42,18 @@ class SensorDecoder(DeviceTypeDecoder):
             }
 
         elif code_name == "ReadSensorsInOneStatusResponse":
-            if len(payload) < 9:
+            if len(payload) < 10:
                 return {}
             brightness = (payload[2] << 8) | payload[3]
+            humidity = payload[4]
             return {
                 "action": "sensors_in_one_response",
-                "temperature": payload[1],
+                "temperature": payload[1] - 20,
                 "brightness_lux": brightness,
-                "humidity": payload[4],
-                "motion_detected": bool(payload[6]),
-                "dry_contact_1": bool(payload[7]),
-                "dry_contact_2": bool(payload[8]),
+                "humidity": None if humidity == 0xFF else humidity,
+                "motion_detected": bool(payload[7]),
+                "dry_contact_1": bool(payload[8]),
+                "dry_contact_2": bool(payload[9]),
             }
 
         elif code_name in ("BroadcastSensorStatusResponse", "BroadcastSensorStatusAutoResponse"):

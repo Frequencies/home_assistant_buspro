@@ -65,8 +65,14 @@ class Sensor(Device):
             if len(telegram.payload) < 10:
                 return
             if self._is_response_for_client(telegram):
-                self._current_temperature = telegram.payload[1]
-            self._current_humidity = telegram.payload[4]
+                # The sensors-in-one frame encodes temperature with a +20
+                # offset (20 == 0 C, allowing negatives). The 0xE3E5 broadcast
+                # sends the actual value, so only this polled frame subtracts
+                # it. Confirmed on HDL-MSP02.4C: raw 49 -> 29 C.
+                self._current_temperature = telegram.payload[1] - 20
+            # 0xFF marks "no humidity sensor" on this frame (e.g. MSP02.4C).
+            humidity = telegram.payload[4]
+            self._current_humidity = None if humidity == 0xFF else humidity
             self._motion_sensor = telegram.payload[7]
             self._dry_contact_1_status = telegram.payload[8]
             self._dry_contact_2_status = telegram.payload[9]

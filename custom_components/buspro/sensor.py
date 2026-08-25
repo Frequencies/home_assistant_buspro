@@ -418,12 +418,18 @@ def _managed_sensor_entities(hass, module, config_entry):
             sensor_type = channel[CONF_CHANNEL_NUMBER]
             if sensor_type not in SENSOR_TYPES:
                 continue
+            # sensors-in-one lux/humidity only arrive in the polled 0x1605
+            # response, so one entity has to keep asking. Bus telegrams are
+            # dispatched to every device object at this address, so a single
+            # illuminance poll refreshes temperature, humidity and motion on
+            # all sibling entities too — only this channel needs to poll.
+            scan_interval = 1 if sensor_type == ILLUMINANCE else 0
             entities.append(
                 BusproSensor(
                     hass,
                     sensor,
                     sensor_type,
-                    0,
+                    scan_interval,
                     "0",
                     channel[CONF_OBJECT_ID],
                     channel[CONF_UNIQUE_ID],

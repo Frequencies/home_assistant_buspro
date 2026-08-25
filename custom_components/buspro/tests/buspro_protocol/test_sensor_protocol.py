@@ -81,7 +81,8 @@ class SensorProtocolTest(unittest.IsolatedAsyncioTestCase):
         telegram = Telegram()
         telegram.operate_code = OperateCode.ReadSensorsInOneStatusResponse
         telegram.target_address = bus.client_address
-        telegram.payload = [0xF8, 21, 0x00, 0x7B, 46, 0, 0, 1, 0, 1]
+        # payload[1] carries temperature with a +20 offset (41 -> 21 C).
+        telegram.payload = [0xF8, 41, 0x00, 0x7B, 46, 0, 0, 1, 0, 1]
 
         sensor._telegram_received_cb(telegram)
         await asyncio.sleep(0)
@@ -92,6 +93,30 @@ class SensorProtocolTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(sensor.movement)
         self.assertFalse(sensor.dry_contact_1_is_on)
         self.assertTrue(sensor.dry_contact_2_is_on)
+        sensor.close()
+
+    async def test_sensors_in_one_decodes_real_msp02_frame(self):
+        """Regression for the captured HDL-MSP02.4C 0x1605 response.
+
+        Real frame observed while polling 2/14 with ReadSensorsInOneStatus:
+        temperature raw 49 -> 29 C (matches the device's 0xE3E5 broadcast),
+        lux in payload[2..3], motion in payload[7], and 0xFF humidity because
+        this model has no humidity sensor.
+        """
+        bus = _Bus(asyncio.get_running_loop())
+        sensor = Sensor(bus, (2, 14), device="sensors_in_one")
+        telegram = Telegram()
+        telegram.operate_code = OperateCode.ReadSensorsInOneStatusResponse
+        telegram.target_address = bus.client_address
+        telegram.payload = [248, 49, 0, 6, 255, 255, 255, 1, 0, 0, 0, 0, 255]
+
+        sensor._telegram_received_cb(telegram)
+        await asyncio.sleep(0)
+
+        self.assertEqual(sensor.temperature, 29)
+        self.assertEqual(sensor.brightness, 6)
+        self.assertIsNone(sensor.humidity)
+        self.assertTrue(sensor.movement)
         sensor.close()
 
 
