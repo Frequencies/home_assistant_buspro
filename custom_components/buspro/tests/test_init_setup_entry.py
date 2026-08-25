@@ -5,7 +5,14 @@ from tests.bootstrap import ensure_homeassistant_stubs
 ensure_homeassistant_stubs()
 
 import custom_components.buspro as buspro_init
-from custom_components.buspro.const import CONF_HOST, CONF_PORT, CONF_SEND_PORT, CONF_RECEIVE_PORT
+from custom_components.buspro.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SEND_PORT,
+    CONF_RECEIVE_PORT,
+    CONF_CLIENT_ADDRESS,
+    DEFAULT_CLIENT_ADDRESS,
+)
 
 
 class _FakeConfigEntry:
@@ -14,21 +21,47 @@ class _FakeConfigEntry:
         self.options = options or {}
         self.entry_id = entry_id
 
+    def async_on_unload(self, listener):
+        pass
+
+    def add_update_listener(self, listener):
+        return lambda: None
+
+
+class _FakeConfigEntries:
+    def __init__(self):
+        self.updated = []
+
+    def async_update_entry(self, entry, data=None, options=None):
+        if data is not None:
+            entry.data = data
+        if options is not None:
+            entry.options = options
+        self.updated.append(entry.entry_id)
+
+    async def async_forward_entry_setups(self, entry, platforms):
+        pass
+
+    async def async_reload(self, entry_id):
+        pass
+
 
 class _FakeHass:
     def __init__(self):
         self.data = {}
+        self.config_entries = _FakeConfigEntries()
 
 
 class _FakeModule:
     created = []
 
-    def __init__(self, hass, host, port, send_port=None, receive_port=None):
+    def __init__(self, hass, host, port, send_port=None, receive_port=None, client_address=None):
         self.hass = hass
         self.host = host
         self.port = port
         self.send_port = send_port
         self.receive_port = receive_port
+        self.client_address = client_address
         self.started = False
         self.services_registered = False
         _FakeModule.created.append(self)
@@ -53,12 +86,14 @@ class SetupEntryTests(unittest.IsolatedAsyncioTestCase):
                     CONF_PORT: 6000,
                     CONF_SEND_PORT: 6000,
                     CONF_RECEIVE_PORT: 6000,
+                    CONF_CLIENT_ADDRESS: DEFAULT_CLIENT_ADDRESS,
                 },
                 options={
                     CONF_HOST: '2.2.2.2',
                     CONF_PORT: 6001,
                     CONF_SEND_PORT: 6002,
                     CONF_RECEIVE_PORT: 6003,
+                    CONF_CLIENT_ADDRESS: DEFAULT_CLIENT_ADDRESS,
                 },
             )
 

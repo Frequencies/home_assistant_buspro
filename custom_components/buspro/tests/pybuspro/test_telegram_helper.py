@@ -8,10 +8,13 @@ from custom_components.buspro.pybuspro.core.telegram import Telegram
 from custom_components.buspro.pybuspro.helpers.enums import DeviceType, OperateCode
 from custom_components.buspro.pybuspro.helpers.telegram_helper import TelegramHelper
 
+_CLIENT_ADDRESS = (200, 200)
+_ADVERTISED_IP = "127.0.0.1"
+
 
 class TelegramHelperTests(unittest.TestCase):
     def setUp(self):
-        self.th = TelegramHelper()
+        self.th = TelegramHelper(_CLIENT_ADDRESS, _ADVERTISED_IP)
 
     def _sample_telegram(self):
         telegram = Telegram()
@@ -45,7 +48,7 @@ class TelegramHelperTests(unittest.TestCase):
         telegram = Telegram()
         replaced = self.th.replace_none_values(telegram)
         self.assertEqual(replaced.payload, [])
-        self.assertEqual(replaced.source_address, [200, 200])
+        self.assertEqual(replaced.source_address, list(_CLIENT_ADDRESS))
         self.assertEqual(replaced.source_device_type, DeviceType.PyBusPro)
 
 

@@ -23,10 +23,6 @@ class _FakeBuspro:
 
 
 class ControlDedupTests(unittest.IsolatedAsyncioTestCase):
-    async def asyncSetUp(self):
-        from custom_components.buspro.pybuspro.devices import control as control_module
-        control_module._last_queries.clear()
-
     async def test_query_deduplicates_within_window(self):
         buspro = _FakeBuspro(asyncio.get_running_loop())
         ctrl = _ReadStatusOfChannels(buspro)
@@ -45,10 +41,9 @@ class ControlDedupTests(unittest.IsolatedAsyncioTestCase):
         ctrl.device_id = 1
 
         await ctrl.send()
-        # bypass wall-clock dependency by tweaking module-level timestamp cache
-        from custom_components.buspro.pybuspro.devices import control as control_module
-
-        control_module._last_queries.clear()
+        # Clear per-instance dedup cache to simulate the window expiring.
+        if hasattr(buspro, "_query_dedup"):
+            buspro._query_dedup["last_queries"].clear()
 
         await ctrl.send()
         self.assertEqual(len(buspro.network_interface.sent), 2)

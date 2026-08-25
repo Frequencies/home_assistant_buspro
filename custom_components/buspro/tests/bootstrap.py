@@ -85,12 +85,20 @@ def ensure_homeassistant_stubs():
         def async_show_form(self, step_id, data_schema=None, errors=None):
             return {'type': 'form', 'step_id': step_id, 'data_schema': data_schema, 'errors': errors or {}}
 
+        def async_show_menu(self, step_id, menu_options=None):
+            return {'type': 'menu', 'step_id': step_id, 'menu_options': menu_options or []}
+
     ha_config_entries.ConfigFlow = ConfigFlow
     ha_config_entries.OptionsFlow = OptionsFlow
 
     class ConfigEntry:  # pragma: no cover - stub
         pass
     ha_config_entries.ConfigEntry = ConfigEntry
+
+    class ConfigEntryState:  # pragma: no cover - stub
+        LOADED = 'loaded'
+        NOT_LOADED = 'not_loaded'
+    ha_config_entries.ConfigEntryState = ConfigEntryState
 
     vol = types.ModuleType('voluptuous')
     vol.ALLOW_EXTRA = object()
@@ -106,12 +114,20 @@ def ensure_homeassistant_stubs():
     vol.Schema = lambda *args, **kwargs: dict
 
     ha_dr = types.ModuleType('homeassistant.helpers.device_registry')
-    ha_dr.async_get = lambda hass: None
+    class _FakeRegistry:  # pragma: no cover - stub
+        def __init__(self):
+            self.devices = {}
+        def async_get_or_create(self, **kwargs):
+            return None
+    ha_dr.async_get = lambda hass: _FakeRegistry()
     class DeviceInfo(dict):  # pragma: no cover - stub
         pass
     ha_dr.DeviceInfo = DeviceInfo
     ha_er = types.ModuleType('homeassistant.helpers.entity_registry')
-    ha_er.async_get = lambda hass: None
+    class _FakeEntityRegistry:  # pragma: no cover - stub
+        def __init__(self):
+            self.entities = {}
+    ha_er.async_get = lambda hass: _FakeEntityRegistry()
     ha_selector = types.ModuleType('homeassistant.helpers.selector')
     ha_selector.selector = lambda cfg: cfg
     ha_selector.TextSelector = lambda cfg=None: None

@@ -6,7 +6,22 @@ from tests.bootstrap import ensure_homeassistant_stubs
 ensure_homeassistant_stubs()
 
 from custom_components.buspro import config_flow as cf
-from custom_components.buspro.const import CONF_HOST, CONF_PORT, CONF_SEND_PORT, CONF_RECEIVE_PORT
+from custom_components.buspro.const import (
+    CONF_HOST,
+    CONF_PORT,
+    CONF_SEND_PORT,
+    CONF_RECEIVE_PORT,
+    CONF_CLIENT_ADDRESS,
+    DEFAULT_CLIENT_ADDRESS,
+)
+
+_VALID_INPUT = {
+    CONF_HOST: '192.168.1.10',
+    CONF_PORT: 6000,
+    CONF_SEND_PORT: 6000,
+    CONF_RECEIVE_PORT: 6000,
+    CONF_CLIENT_ADDRESS: DEFAULT_CLIENT_ADDRESS,
+}
 
 
 class _FakeEntry:
@@ -14,6 +29,7 @@ class _FakeEntry:
         self.entry_id = entry_id
         self.data = data or {}
         self.options = options or {}
+        self.state = None  # not ConfigEntryState.LOADED → probe_socket=True in reconfigure
 
 
 class _FakeConfigEntries:
@@ -54,26 +70,21 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
         cf._async_validate_connectivity = self.orig_validate
 
     async def test_user_step_success_creates_entry(self):
-        async def ok_validate(hass, data):
+        async def ok_validate(hass, data, probe_socket=True):
             return None
 
         cf._async_validate_connectivity = ok_validate
         flow = cf.ConfigFlow()
         flow.hass = _FakeHass()
 
-        result = await flow.async_step_user({
-            CONF_HOST: '192.168.1.10',
-            CONF_PORT: 6000,
-            CONF_SEND_PORT: 6000,
-            CONF_RECEIVE_PORT: 6000,
-        })
+        result = await flow.async_step_user({**_VALID_INPUT})
 
         self.assertEqual(result['type'], 'create_entry')
         self.assertEqual(result['title'], 'Buspro (192.168.1.10)')
         self.assertEqual(result['data'][CONF_HOST], '192.168.1.10')
 
     async def test_user_step_invalid_host_shows_error(self):
-        async def bad_validate(hass, data):
+        async def bad_validate(hass, data, probe_socket=True):
             raise cf.InvalidHost()
 
         cf._async_validate_connectivity = bad_validate
@@ -83,13 +94,24 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
         result = await flow.async_step_user({
             CONF_HOST: 'bad-host',
             CONF_PORT: 6000,
+            CONF_CLIENT_ADDRESS: DEFAULT_CLIENT_ADDRESS,
         })
 
         self.assertEqual(result['type'], 'form')
         self.assertEqual(result['errors'].get('base'), 'invalid_host')
 
-    async def test_options_flow_saves_data(self):
-        async def ok_validate(hass, data):
+    async def test_options_flow_init_shows_menu(self):
+        entry = _FakeEntry(data={CONF_HOST: '1.1.1.1', CONF_PORT: 6000})
+        flow = cf.BusproOptionsFlow(entry)
+        flow.hass = _FakeHass()
+
+        result = await flow.async_step_init(None)
+
+        self.assertEqual(result['type'], 'menu')
+        self.assertIn('gateway', result['menu_options'])
+
+    async def test_options_flow_gateway_saves_data(self):
+        async def ok_validate(hass, data, probe_socket=True):
             return None
 
         cf._async_validate_connectivity = ok_validate
@@ -97,11 +119,12 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
         flow = cf.BusproOptionsFlow(entry)
         flow.hass = _FakeHass()
 
-        result = await flow.async_step_init({
+        result = await flow.async_step_gateway({
             CONF_HOST: '2.2.2.2',
             CONF_PORT: 6001,
             CONF_SEND_PORT: 6001,
             CONF_RECEIVE_PORT: 6001,
+            CONF_CLIENT_ADDRESS: DEFAULT_CLIENT_ADDRESS,
         })
 
         self.assertEqual(result['type'], 'create_entry')
@@ -109,7 +132,7 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result['data'][CONF_PORT], 6001)
 
     async def test_reconfigure_updates_and_reloads(self):
-        async def ok_validate(hass, data):
+        async def ok_validate(hass, data, probe_socket=True):
             return None
 
         cf._async_validate_connectivity = ok_validate
@@ -130,6 +153,7 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
             CONF_PORT: 6002,
             CONF_SEND_PORT: 6002,
             CONF_RECEIVE_PORT: 6002,
+            CONF_CLIENT_ADDRESS: DEFAULT_CLIENT_ADDRESS,
         })
 
         self.assertEqual(result['type'], 'abort')
