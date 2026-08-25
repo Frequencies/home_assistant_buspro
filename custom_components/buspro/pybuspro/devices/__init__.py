@@ -1,4 +1,4 @@
-﻿from .climate import Climate, FloorHeating, ControlFloorHeatingStatus, ControlPanelAC
+from .climate import Climate, FloorHeating, ControlFloorHeatingStatus, ControlPanelAC
 from .control import *
 from .device import Device
 from .dimmer import DimmerDiagnostics
