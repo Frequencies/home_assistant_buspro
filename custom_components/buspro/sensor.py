@@ -43,16 +43,16 @@ from .const import (
     DATA_BUSPRO_CONFIG,
     DEVICE_TYPE_MULTISENSOR,
 )
-from .dimmer_entities import dimmer_diagnostic_definitions
-from .entity_helpers import (
+from .helpers.dimmer import dimmer_diagnostic_definitions
+from .helpers.entity import (
     attach_entity_to_physical_device,
     build_device_info,
     device_info_for_address,
     parse_device_address,
 )
-from .device_catalog import DEVICE_CATALOG
-from .managed_devices import managed_device_info
-from .logic_controller import (
+from .catalog import DEVICE_CATALOG
+from .managed import managed_device_info
+from .helpers.logic_controller import (
     logic_controller_coordinator,
     logic_controller_definitions,
 )

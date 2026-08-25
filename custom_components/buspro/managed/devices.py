@@ -8,7 +8,7 @@ from copy import deepcopy
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import (
+from ..const import (
     CONF_CHANNEL_COUNT,
     CONF_CHANNELS,
     CONF_DEVICE_TYPE,
@@ -25,8 +25,8 @@ from .const import (
     DEVICE_TYPE_UNIVERSAL_SWITCH,
     DOMAIN,
 )
-from .managed_device_logic import build_channel_records
-from .device_catalog import DEVICE_CATALOG
+from .logic import build_channel_records
+from ..catalog import DEVICE_CATALOG
 
 
 DEVICE_TYPE_LABELS = {

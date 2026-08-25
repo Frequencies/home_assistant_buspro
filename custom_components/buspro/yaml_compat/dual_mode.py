@@ -11,7 +11,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 
-from .const import (
+from ..const import (
     CONF_CHANNEL_COUNT,
     CONF_CHANNEL_ENABLED,
     CONF_CHANNEL_NUMBER,
@@ -163,7 +163,7 @@ def _normalize_entity_centric(
 
     This format focuses on the entities within a device.
     """
-    from .yaml_normalization import KNOWN_SENSOR_PROFILES
+    from .normalization import KNOWN_SENSOR_PROFILES
 
     normalized = dict(device)
     address = normalized.get(CONF_ADDRESS, "unknown")

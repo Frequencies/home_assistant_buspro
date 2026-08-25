@@ -24,20 +24,18 @@ from .const import (
     CONF_RECEIVE_PORT,
     DEFAULT_CLIENT_ADDRESS,
 )
-from .device_catalog import DEVICE_CATALOG
-from .managed_devices import (
+from .catalog import DEVICE_CATALOG
+from .managed import (
     DEVICE_TYPE_LABELS,
     build_channels,
     managed_devices,
     models_for_type,
     validate_physical_address,
-)
-from .managed_device_logic import (
     fixed_channel_count,
     removed_managed_unique_ids,
 )
-from .entity_helpers import channel_number_from_unique_id
-from .network_helpers import local_ip_for_gateway
+from .helpers.entity import channel_number_from_unique_id
+from .helpers.network import local_ip_for_gateway
 
 _LOGGER = logging.getLogger(__name__)
 CONF_REMOVE_DEVICE = "remove_device"

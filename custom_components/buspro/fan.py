@@ -22,7 +22,7 @@ from homeassistant.helpers.restore_state import (
 )
 
 from ..buspro import DATA_BUSPRO
-from .entity_helpers import attach_entity_to_physical_device, device_info_for_address
+from .helpers.entity import attach_entity_to_physical_device, device_info_for_address
 from .const import (
     CONF_CHANNELS,
     CONF_CHANNEL_NUMBER,
@@ -37,8 +37,8 @@ from .const import (
     DEFAULT_CONFIRMATION_TIMEOUT,
     DEFAULT_CONFIRMATION_RETRIES,
 )
-from .device_catalog import DEVICE_CATALOG
-from .managed_devices import managed_device_info
+from .catalog import DEVICE_CATALOG
+from .managed import managed_device_info
 
 _LOGGER = logging.getLogger(__name__)
 

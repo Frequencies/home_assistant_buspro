@@ -1,20 +1,27 @@
 """Regression tests for Buspro managed-device option handling."""
 
+import importlib.util
 import sys
 import unittest
 from pathlib import Path
 
 
-sys.path.insert(0, str(Path(__file__).parents[2]))
+BUSPRO_PATH = Path(__file__).parents[2]
 
-from managed_device_logic import (  # noqa: E402
-    build_channel_records,
-    fixed_channel_count,
-    is_channel_configured,
-    is_runtime_channel,
-    registry_disabled_update,
-    removed_managed_unique_ids,
+spec = importlib.util.spec_from_file_location(
+    "_buspro_managed_logic_test",
+    BUSPRO_PATH / "managed" / "logic.py",
 )
+_module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = _module
+spec.loader.exec_module(_module)
+
+build_channel_records = _module.build_channel_records
+fixed_channel_count = _module.fixed_channel_count
+is_channel_configured = _module.is_channel_configured
+is_runtime_channel = _module.is_runtime_channel
+registry_disabled_update = _module.registry_disabled_update
+removed_managed_unique_ids = _module.removed_managed_unique_ids
 
 
 def _device(address, *unique_ids):

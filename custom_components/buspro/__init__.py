@@ -50,13 +50,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
-from .network_helpers import local_ip_for_gateway
-from .device_catalog import MODEL_NOTES
-from .devices import DEVICE_CATALOG
-from .entity_helpers import registry_device_definitions
-from .model_notes import emit_model_support_notes
-from .yaml_normalization import normalize_yaml_devices
-from .dual_mode_yaml import normalize_dual_mode, is_device_centric
+from .helpers.network import local_ip_for_gateway
+from .catalog import MODEL_NOTES, DEVICE_CATALOG, emit_model_support_notes
+from .helpers.entity import registry_device_definitions
+from .yaml_compat import normalize_yaml_devices, normalize_dual_mode, is_device_centric
 
 _LOGGER = logging.getLogger(__name__)
 

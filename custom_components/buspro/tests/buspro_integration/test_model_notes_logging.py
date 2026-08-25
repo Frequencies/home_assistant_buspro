@@ -10,16 +10,42 @@ from pathlib import Path
 
 BUSPRO_PATH = Path(__file__).parents[2]
 PACKAGE = "_buspro_model_notes_test"
+
+# --- set up fake top-level package ---
 package = types.ModuleType(PACKAGE)
 package.__path__ = [str(BUSPRO_PATH)]
 sys.modules.setdefault(PACKAGE, package)
-spec = importlib.util.spec_from_file_location(
-    f"{PACKAGE}.model_notes",
-    BUSPRO_PATH / "model_notes.py",
+
+
+def _load_module(module_name, file_path):
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _make_package(module_name, dir_path):
+    pkg = types.ModuleType(module_name)
+    pkg.__path__ = [str(dir_path)]
+    pkg.__package__ = module_name
+    sys.modules.setdefault(module_name, pkg)
+    return pkg
+
+
+# yaml_compat.normalization (needed by catalog.model_notes)
+_make_package(f"{PACKAGE}.yaml_compat", BUSPRO_PATH / "yaml_compat")
+_load_module(
+    f"{PACKAGE}.yaml_compat.normalization",
+    BUSPRO_PATH / "yaml_compat" / "normalization.py",
 )
-module = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = module
-spec.loader.exec_module(module)
+
+# catalog.model_notes
+_make_package(f"{PACKAGE}.catalog", BUSPRO_PATH / "catalog")
+module = _load_module(
+    f"{PACKAGE}.catalog.model_notes",
+    BUSPRO_PATH / "catalog" / "model_notes.py",
+)
 
 emit_model_support_notes = module.emit_model_support_notes
 

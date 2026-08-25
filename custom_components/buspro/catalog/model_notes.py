@@ -1,23 +1,10 @@
-"""Buspro device-catalog category modules."""
+"""Model-support notes and diagnostic logging for HDL Buspro devices."""
 
-from .climate import CLIMATE_MODELS
-from .dimmer import DIMMER_MODELS
-from .infrastructure import INFRASTRUCTURE_MODELS
-from .output import OUTPUT_MODELS
-from .panel import PANEL_MODELS
-from .relay import RELAY_MODELS
-from .sensor import SENSOR_MODELS
+from __future__ import annotations
 
+import logging
 
-DEVICE_CATALOG = {
-    **INFRASTRUCTURE_MODELS,
-    **RELAY_MODELS,
-    **DIMMER_MODELS,
-    **SENSOR_MODELS,
-    **PANEL_MODELS,
-    **CLIMATE_MODELS,
-    **OUTPUT_MODELS,
-}
+from ..yaml_compat.normalization import compact_addresses
 
 
 MODEL_NOTES = {
@@ -134,3 +121,40 @@ MODEL_NOTES = {
         ),
     },
 }
+
+
+def emit_model_support_notes(
+    logger: logging.Logger,
+    model_addresses: dict[str, set[str]],
+    model_notes: dict[str, dict],
+) -> tuple[int, int]:
+    """Emit per-model support notes and a grouped summary.
+
+    Returns a tuple of (warning_models, info_models).
+    """
+    info_models = 0
+    warning_models = 0
+
+    for model in sorted(model_addresses):
+        note = model_notes.get(model)
+        if note is None:
+            continue
+        addresses = compact_addresses(model_addresses[model], limit=8)
+        message = note["note"]
+        if addresses:
+            message = f"{message} Addresses: {addresses}."
+        if note.get("level") == "warning":
+            warning_models += 1
+            logger.warning("Model support note for %s: %s", model, message)
+        else:
+            info_models += 1
+            logger.info("Model support note for %s: %s", model, message)
+
+    if warning_models or info_models:
+        logger.info(
+            "Model support notes summary: %s warning, %s info",
+            warning_models,
+            info_models,
+        )
+
+    return warning_models, info_models

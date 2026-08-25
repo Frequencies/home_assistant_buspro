@@ -5,10 +5,10 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import CONF_MANAGED_DEVICES, DATA_BUSPRO_CONFIG, DOMAIN
-from .device_catalog import DEVICE_CATALOG
-from .entity_helpers import registry_device_definitions, registry_device_metadata
-from .managed_devices import managed_device_info
-from .logic_controller import (
+from .catalog import DEVICE_CATALOG
+from .helpers.entity import registry_device_definitions, registry_device_metadata
+from .managed import managed_device_info
+from .helpers.logic_controller import (
     logic_controller_coordinator,
     logic_controller_definitions,
 )

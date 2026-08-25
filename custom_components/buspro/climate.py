@@ -29,7 +29,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
 
 from ..buspro import DATA_BUSPRO
-from .entity_helpers import attach_entity_to_physical_device, device_info_for_address
+from .helpers.entity import attach_entity_to_physical_device, device_info_for_address
 from .const import (
     CONF_CHANNELS,
     CONF_CHANNEL_NUMBER,
@@ -47,11 +47,11 @@ from .const import (
     DEFAULT_CONFIRMATION_TIMEOUT,
     DEFAULT_CONFIRMATION_RETRIES,
 )
-from .device_catalog import DEVICE_CATALOG
-from .managed_devices import channel_count as managed_channel_count
-from .managed_devices import managed_device_info
-from .managed_devices import build_channels as build_managed_channels
-from .managed_device_logic import is_runtime_channel, registry_disabled_update
+from .catalog import DEVICE_CATALOG
+from .managed import channel_count as managed_channel_count
+from .managed import managed_device_info
+from .managed import build_channels as build_managed_channels
+from .managed import is_runtime_channel, registry_disabled_update
 from .pybuspro.devices.climate import ControlFloorHeatingStatus, ControlPanelAC
 from .pybuspro.helpers.enums import (
     OnOffStatus,

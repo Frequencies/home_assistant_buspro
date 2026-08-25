@@ -1,6 +1,6 @@
 """Shared helpers for HDL logic-controller entities."""
 
-from .entity_helpers import parse_device_address, registry_device_definitions
+from .entity import parse_device_address, registry_device_definitions
 
 
 LOGIC_CONTROLLER_MODEL = "HDL-MCLog.431"

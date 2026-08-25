@@ -16,7 +16,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 BUSPRO_PATH = REPO_ROOT / "custom_components" / "buspro"
-OFFICIAL_LIST_PATH = BUSPRO_PATH / "devices" / "official_models.json"
+OFFICIAL_LIST_PATH = BUSPRO_PATH / "catalog" / "official_models.json"
 
 VIRTUAL_MODELS = {
     "HDL panel",

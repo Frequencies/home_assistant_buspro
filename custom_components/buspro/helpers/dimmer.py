@@ -1,9 +1,9 @@
 """Helpers shared by HDL dimmer diagnostic platforms."""
 
-from .const import CONF_MANAGED_DEVICES
-from .device_catalog import DEVICE_CATALOG
-from .entity_helpers import registry_device_definitions
-from .managed_devices import managed_device_info
+from ..const import CONF_MANAGED_DEVICES
+from ..catalog import DEVICE_CATALOG
+from .entity import registry_device_definitions
+from ..managed import managed_device_info
 
 
 def dimmer_diagnostic_definitions(hass, config_entry):

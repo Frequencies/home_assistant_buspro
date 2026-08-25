@@ -6,7 +6,7 @@ import re
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import (
+from ..const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     DEFAULT_MANUFACTURER,

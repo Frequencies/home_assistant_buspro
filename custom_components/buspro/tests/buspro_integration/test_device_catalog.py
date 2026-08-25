@@ -10,16 +10,55 @@ from pathlib import Path
 
 BUSPRO_PATH = Path(__file__).parents[2]
 PACKAGE = "_buspro_catalog_test"
+
+# --- set up the top-level fake package ---
 package = types.ModuleType(PACKAGE)
 package.__path__ = [str(BUSPRO_PATH)]
 sys.modules.setdefault(PACKAGE, package)
-spec = importlib.util.spec_from_file_location(
-    f"{PACKAGE}.device_catalog",
-    BUSPRO_PATH / "device_catalog.py",
+
+
+def _load_module(module_name, file_path):
+    """Load a single .py file as the given module name."""
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def _make_package(module_name, dir_path):
+    """Register a directory as a package in sys.modules."""
+    pkg = types.ModuleType(module_name)
+    pkg.__path__ = [str(dir_path)]
+    pkg.__package__ = module_name
+    sys.modules.setdefault(module_name, pkg)
+    return pkg
+
+
+# 1. const (needed by catalog sub-modules via `from ..const import ...`)
+_load_module(f"{PACKAGE}.const", BUSPRO_PATH / "const.py")
+
+# 2. yaml_compat package stub + normalization (needed by catalog.model_notes)
+_make_package(f"{PACKAGE}.yaml_compat", BUSPRO_PATH / "yaml_compat")
+_load_module(
+    f"{PACKAGE}.yaml_compat.normalization",
+    BUSPRO_PATH / "yaml_compat" / "normalization.py",
 )
-catalog_module = importlib.util.module_from_spec(spec)
-sys.modules[spec.name] = catalog_module
-spec.loader.exec_module(catalog_module)
+
+# 3. catalog package
+_make_package(f"{PACKAGE}.catalog", BUSPRO_PATH / "catalog")
+
+# 4. catalog sub-modules (relative imports resolved via sys.modules entries above)
+for _sub in ("climate", "dimmer", "infrastructure", "output", "panel", "relay", "sensor"):
+    _load_module(f"{PACKAGE}.catalog.{_sub}", BUSPRO_PATH / "catalog" / f"{_sub}.py")
+
+_load_module(f"{PACKAGE}.catalog.model_notes", BUSPRO_PATH / "catalog" / "model_notes.py")
+
+# 5. catalog __init__
+catalog_module = _load_module(
+    f"{PACKAGE}.catalog",
+    BUSPRO_PATH / "catalog" / "__init__.py",
+)
 DEVICE_CATALOG = catalog_module.DEVICE_CATALOG
 MODEL_NOTES = catalog_module.MODEL_NOTES
 

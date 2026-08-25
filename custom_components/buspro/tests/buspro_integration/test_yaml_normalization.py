@@ -3,19 +3,15 @@
 import importlib.util
 import logging
 import sys
-import types
 import unittest
 from pathlib import Path
 
 
 BUSPRO_PATH = Path(__file__).parents[2]
-PACKAGE = "_buspro_yaml_norm_test"
-package = types.ModuleType(PACKAGE)
-package.__path__ = [str(BUSPRO_PATH)]
-sys.modules.setdefault(PACKAGE, package)
+
 spec = importlib.util.spec_from_file_location(
-    f"{PACKAGE}.yaml_normalization",
-    BUSPRO_PATH / "yaml_normalization.py",
+    "_buspro_yaml_norm_test",
+    BUSPRO_PATH / "yaml_compat" / "normalization.py",
 )
 module = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = module
