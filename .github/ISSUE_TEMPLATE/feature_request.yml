@@ -1,0 +1,35 @@
+name: Feature request
+description: Suggest an idea or improvement
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before requesting, check the [open issues](https://github.com/Frequencies/home_assistant_buspro/issues) — it may already be planned.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: What's missing or frustrating today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like to happen?
+      description: Describe the feature or behaviour you'd like to see.
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered (optional)
+      description: Any workarounds you've tried or other approaches that could work.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context (optional)
+      description: Hardware model, HDL Buspro Setup Tool version, screenshots, links — anything that helps.

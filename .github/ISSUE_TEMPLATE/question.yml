@@ -1,0 +1,45 @@
+name: Question / Support
+description: Need help with setup, configuration, or usage — not a bug
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [README](https://github.com/Frequencies/home_assistant_buspro#readme) and [existing issues](https://github.com/Frequencies/home_assistant_buspro/issues?q=is%3Aissue) first — your question may already be answered.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: What do you need help with?
+      description: Describe your setup and what you're trying to achieve.
+    validations:
+      required: true
+
+  - type: input
+    id: integration-version
+    attributes:
+      label: Integration version
+      placeholder: "3.4.1"
+    validations:
+      required: true
+
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.8.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-tried
+    attributes:
+      label: What have you already tried?
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs (optional)
+      description: Any `buspro` log output that might be relevant.
+      render: shell
