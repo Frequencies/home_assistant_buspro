@@ -30,6 +30,7 @@ class _FakeEntry:
         self.data = data or {}
         self.options = options or {}
         self.state = None  # not ConfigEntryState.LOADED → probe_socket=True in reconfigure
+        self.unique_id = None
 
 
 class _FakeConfigEntries:
@@ -41,7 +42,7 @@ class _FakeConfigEntries:
     def async_get_entry(self, entry_id):
         return self.entries.get(entry_id)
 
-    def async_update_entry(self, entry, data=None, options=None):
+    def async_update_entry(self, entry, data=None, options=None, **kwargs):
         if data is not None:
             entry.data = data
         if options is not None:
@@ -77,7 +78,7 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
         flow = cf.ConfigFlow()
         flow.hass = _FakeHass()
 
-        result = await flow.async_step_user({**_VALID_INPUT})
+        result = await flow.async_step_manual({**_VALID_INPUT})
 
         self.assertEqual(result['type'], 'create_entry')
         self.assertEqual(result['title'], 'Buspro (192.168.1.10)')
@@ -91,7 +92,7 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
         flow = cf.ConfigFlow()
         flow.hass = _FakeHass()
 
-        result = await flow.async_step_user({
+        result = await flow.async_step_manual({
             CONF_HOST: 'bad-host',
             CONF_PORT: 6000,
             CONF_CLIENT_ADDRESS: DEFAULT_CLIENT_ADDRESS,
@@ -128,8 +129,9 @@ class ConfigFlowTests(unittest.IsolatedAsyncioTestCase):
         })
 
         self.assertEqual(result['type'], 'create_entry')
-        self.assertEqual(result['data'][CONF_HOST], '2.2.2.2')
-        self.assertEqual(result['data'][CONF_PORT], 6001)
+        self.assertEqual(entry.data[CONF_HOST], '2.2.2.2')
+        self.assertEqual(entry.data[CONF_PORT], 6001)
+        self.assertNotIn(CONF_HOST, result['data'])
 
     async def test_reconfigure_updates_and_reloads(self):
         async def ok_validate(hass, data, probe_socket=True):

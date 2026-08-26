@@ -170,9 +170,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         relay_address = device_config[CONF_RELAY_ADDRESS]
         if relay_address:
             relay_address2 = relay_address.split(".")
-            relay_device_address = (int(relay_address2[0]), int(relay_address2[1]))
-            relay_channel_number = int(relay_address2[2])
-            relay_sensor = Sensor(hdl, relay_device_address, channel_number=relay_channel_number)
+            if len(relay_address2) < 3:
+                _LOGGER.warning(
+                    "Ignoring malformed relay_address %r — expected subnet.device.channel",
+                    relay_address,
+                )
+            else:
+                relay_device_address = (int(relay_address2[0]), int(relay_address2[1]))
+                relay_channel_number = int(relay_address2[2])
+                relay_sensor = Sensor(hdl, relay_device_address, channel_number=relay_channel_number)
 
         object_id = device_config[CONF_OBJECT_ID] or name
         unique_id = device_config.get(CONF_UNIQUE_ID)
@@ -319,6 +325,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     max_temp=30,
                     precision=1,
                     device_info=info,
+                    module=module,
                 )
             )
             continue
@@ -383,6 +390,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     device_info=info,
                     channel_enabled=channel_enabled,
                     channel_number=int(channel[CONF_CHANNEL_NUMBER]),
+                    module=module,
                 )
             )
     async_add_entities(entities)
@@ -423,9 +431,11 @@ class _BusproClimateBase(ClimateEntity):
         precision=None,
         device_info=None,
         channel_enabled=True,
+        module=None,
     ):
         self._hass = hass
         self._device = device
+        self._module = module
         self._relay_sensor = relay_sensor
         self._relay_sensor_is_on = relay_sensor.single_channel_is_on if relay_sensor is not None else None
         self._device_update_cb = None
@@ -446,7 +456,6 @@ class _BusproClimateBase(ClimateEntity):
     @callback
     def async_register_callbacks(self):
         async def after_update_callback(device):
-            self._device = device
             self.async_write_ha_state()
 
         self._device_update_cb = after_update_callback
@@ -470,7 +479,7 @@ class _BusproClimateBase(ClimateEntity):
         # Register update callbacks and the staggered poll timer only once the
         # entity is added to hass (not from __init__).
         self.async_register_callbacks()
-        stagger = hash(str(self._device._device_address)) % 300
+        stagger = hash(str(self._device.device_address)) % 300
 
         @callback
         def _start_polling(_now):
@@ -521,7 +530,11 @@ class _BusproClimateBase(ClimateEntity):
 
     @property
     def available(self):
-        return self._channel_enabled and self._hass.data[DATA_BUSPRO].connected
+        connected = bool(
+            self._module.connected if self._module is not None
+            else self._hass.data[DATA_BUSPRO].connected
+        )
+        return self._channel_enabled and connected
 
     @property
     def temperature_unit(self):
@@ -570,6 +583,7 @@ class BusproACClimate(_BusproClimateBase):
         max_temp=None,
         precision=None,
         device_info=None,
+        module=None,
     ):
         super().__init__(
             hass,
@@ -582,6 +596,7 @@ class BusproACClimate(_BusproClimateBase):
             precision,
             device_info,
             channel_enabled=True,
+            module=module,
         )
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -651,6 +666,7 @@ class BusproFloorHeatingClimate(_BusproClimateBase):
         device_info=None,
         channel_enabled=True,
         channel_number=None,
+        module=None,
     ):
         super().__init__(
             hass,
@@ -663,6 +679,7 @@ class BusproFloorHeatingClimate(_BusproClimateBase):
             precision,
             device_info,
             channel_enabled,
+            module=module,
         )
         self._attr_entity_registry_enabled_default = channel_enabled
         self._attr_extra_state_attributes = {
@@ -725,7 +742,7 @@ class BusproFloorHeatingClimate(_BusproClimateBase):
 
     @property
     def hvac_modes(self):
-        if self._device._device_type == FloorHeatingDeviceType.Module:
+        if self._device.device_type == FloorHeatingDeviceType.Module:
             return [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
         return [HVACMode.HEAT, HVACMode.OFF]
 
@@ -745,7 +762,7 @@ class BusproFloorHeatingClimate(_BusproClimateBase):
         elif hvac_mode == HVACMode.HEAT:
             control.status = OnOffStatus.ON.value
             control.work_type = WorkType.Heating
-        elif hvac_mode == HVACMode.COOL and self._device._device_type == FloorHeatingDeviceType.Module:
+        elif hvac_mode == HVACMode.COOL and self._device.device_type == FloorHeatingDeviceType.Module:
             control.status = OnOffStatus.ON.value
             control.work_type = WorkType.Cooling
         else:

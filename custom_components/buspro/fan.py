@@ -182,6 +182,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     channel[CONF_OBJECT_ID],
                     channel[CONF_UNIQUE_ID],
                     device_info=info,
+                    module=module,
                 )
             )
     async_add_entities(entities)
@@ -199,9 +200,11 @@ class BusproFan(RestoreEntity, FanEntity):
         object_id,
         unique_id=None,
         device_info=None,
+        module=None,
     ):
         self._hass = hass
         self._device = device
+        self._module = module
         self._running_time = running_time
         self._dimmable = dimmable
         self._configured_unique_id = unique_id
@@ -268,7 +271,10 @@ class BusproFan(RestoreEntity, FanEntity):
 
     @property
     def available(self):
-        return self._hass.data[DATA_BUSPRO].connected
+        return bool(
+            self._module.connected if self._module is not None
+            else self._hass.data[DATA_BUSPRO].connected
+        )
 
     @property
     def percentage(self) -> Optional[int]:
@@ -298,7 +304,7 @@ class BusproFan(RestoreEntity, FanEntity):
 
         # Register update callback and staggered poll timer only once added.
         self.async_register_callbacks()
-        stagger = hash(str(self._device._device_address)) % 300
+        stagger = hash(str(self._device.device_address)) % 300
 
         @callback
         def _start_polling(_now):

@@ -29,7 +29,7 @@ class Device(object):
         self._pending_tasks = set()
 
     def _spawn(self, coro):
-        task = asyncio.ensure_future(coro, loop=self._buspro.loop)
+        task = asyncio.ensure_future(coro)
         self._pending_tasks.add(task)
         task.add_done_callback(self._pending_tasks.discard)
         return task

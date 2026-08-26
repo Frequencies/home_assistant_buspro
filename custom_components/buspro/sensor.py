@@ -192,6 +192,7 @@ def _logic_controller_diagnostic_entities(hass, module, config_entry):
                     "firmware",
                     "Firmware version",
                     device_info,
+                    module=module,
                 ),
                 BusproLogicControllerDiagnosticSensor(
                     coordinator,
@@ -199,6 +200,7 @@ def _logic_controller_diagnostic_entities(hass, module, config_entry):
                     "last_seen",
                     "Last seen",
                     device_info,
+                    module=module,
                 ),
             )
         )
@@ -212,9 +214,10 @@ class BusproLogicControllerDiagnosticSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
-    def __init__(self, coordinator, address, sensor_type, name, device_info):
+    def __init__(self, coordinator, address, sensor_type, name, device_info, module=None):
         self._coordinator = coordinator
         self._sensor_type = sensor_type
+        self._module = module
         self._device_update_cb = None
         self._attr_name = name
         self._attr_device_info = device_info
@@ -241,7 +244,8 @@ class BusproLogicControllerDiagnosticSensor(SensorEntity):
 
     @property
     def available(self):
-        return self.native_value is not None
+        connected = self._module.connected if self._module is not None else True
+        return connected and self.native_value is not None
 
     @property
     def native_value(self):
@@ -272,6 +276,7 @@ def _dimmer_diagnostic_entities(hass, module, config_entry):
                 "minimum_brightness",
                 "Minimum brightness",
                 device_info,
+                module=module,
             )
         )
         for channel in range(1, channel_count + 1):
@@ -284,6 +289,7 @@ def _dimmer_diagnostic_entities(hass, module, config_entry):
                     f"Channel {channel} maximum brightness",
                     device_info,
                     channel,
+                    module=module,
                 )
             )
             entities.append(
@@ -295,6 +301,7 @@ def _dimmer_diagnostic_entities(hass, module, config_entry):
                     f"Channel {channel} load type",
                     device_info,
                     channel,
+                    module=module,
                 )
             )
     return entities
@@ -316,11 +323,13 @@ class BusproDimmerDiagnosticSensor(SensorEntity):
         name,
         device_info,
         channel=None,
+        module=None,
     ):
         self._hass = hass
         self._diagnostics = diagnostics
         self._sensor_type = sensor_type
         self._channel = channel
+        self._module = module
         self._device_update_cb = None
         self._attr_name = name
         self._attr_device_info = device_info
@@ -346,7 +355,8 @@ class BusproDimmerDiagnosticSensor(SensorEntity):
 
     @property
     def available(self):
-        return self.native_value is not None
+        connected = self._module.connected if self._module is not None else True
+        return connected and self.native_value is not None
 
     @property
     def native_value(self):
@@ -395,6 +405,7 @@ def _compound_sensor_entities(hass, module):
                     entity_config.get(CONF_DEVICE_CLASS),
                     name=entity_config[CONF_NAME],
                     device_info=device_info,
+                    module=module,
                 )
             )
     return devices
@@ -435,6 +446,7 @@ def _managed_sensor_entities(hass, module, config_entry):
                     channel[CONF_UNIQUE_ID],
                     name=channel[CONF_NAME],
                     device_info=info,
+                    module=module,
                 )
             )
     return entities
@@ -457,9 +469,11 @@ class BusproSensor(SensorEntity):
         configured_device_class=None,
         name=None,
         device_info=None,
+        module=None,
     ):
         self._hass = hass
         self._device = device
+        self._module = module
         self._sensor_type = sensor_type
         self._configured_unique_id = unique_id
         self._configured_unit_of_measurement = configured_unit_of_measurement
@@ -506,14 +520,17 @@ class BusproSensor(SensorEntity):
 
     async def async_will_remove_from_hass(self):
         if self._device_update_cb is not None:
-            self._device.unregister_device_updated_cb(self._device_update_cb)
+            try:
+                self._device.unregister_device_updated_cb(self._device_update_cb)
+            except ValueError:
+                pass
             self._device_update_cb = None
         await super().async_will_remove_from_hass()
 
     @property
     def should_poll(self):
         """No polling needed within Buspro unless explicitly set."""
-        return self._should_poll or self.native_value is None
+        return self._should_poll
 
     async def async_update(self):
         await self._device.read_sensor_status()
@@ -526,21 +543,21 @@ class BusproSensor(SensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        connected = self._hass.data[DATA_BUSPRO].connected
+        connected = bool(
+            self._module.connected if self._module is not None
+            else self._hass.data[DATA_BUSPRO].connected
+        )
 
         if self._sensor_type == TEMPERATURE:
             return connected and self._current_temperature is not None
 
         if self._sensor_type == ILLUMINANCE:
             return connected and self._brightness is not None
-        
+
         if self._sensor_type == "humidity":
             return connected and self._humidity is not None
 
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.native_value
+        return connected
 
     @property
     def native_value(self):
@@ -577,11 +594,6 @@ class BusproSensor(SensorEntity):
         if self._sensor_type == "humidity":
             return "humidity"
         return None
-
-    @property
-    def unit_of_measurement(self):
-        """Return the configured unit for backward compatibility."""
-        return self.native_unit_of_measurement
 
     @property
     def native_unit_of_measurement(self):

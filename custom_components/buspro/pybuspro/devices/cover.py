@@ -47,13 +47,21 @@ class Cover(Device):
         await self._send_command(self._channel, 0)
 
     async def open_cover_tilt(self):
-        await self._send_command(self._channel + 2, 1)
+        await self._send_command(self._tilt_channel, 1)
 
     async def close_cover_tilt(self):
-        await self._send_command(self._channel + 2, 2)
+        await self._send_command(self._tilt_channel, 2)
 
     async def stop_cover_tilt(self):
-        await self._send_command(self._channel + 2, 0)
+        await self._send_command(self._tilt_channel, 0)
+
+    @property
+    def _tilt_channel(self):
+        # HDL tilt control uses the paired channel (channel + 2 in the curtain bank).
+        # Guard against out-of-range values; if the offset overflows, fall back to
+        # the main channel so the command at least reaches the right device.
+        tilt = self._channel + 2
+        return tilt if tilt <= 0xFF else self._channel
 
     async def read_status(self):
         gc = _GenericControl(self._buspro)

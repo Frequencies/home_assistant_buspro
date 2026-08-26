@@ -21,9 +21,7 @@ class DimmerDiagnostics(Device):
         self._last_online_response = 0.0
         self._closed = False
         self.register_telegram_received_cb(self._telegram_received_cb)
-        self._refresh_task = asyncio.ensure_future(
-            self._refresh_loop(), loop=self._buspro.loop
-        )
+        self._refresh_task = asyncio.ensure_future(self._refresh_loop())
 
     def _telegram_received_cb(self, telegram):
         payload = list(telegram.payload or ())

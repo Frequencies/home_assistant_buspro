@@ -50,8 +50,9 @@ class Light(Device):
         #    print("==== {}".format(str(telegram)))
 
         if telegram.operate_code == OperateCode.SingleChannelControlResponse:
+            if len(telegram.payload) < 3:
+                return
             channel = telegram.payload[0]
-            # success = telegram.payload[1]
             brightness = telegram.payload[2]
             if channel == self._channel:
                 self._awaiting_ack = False
@@ -59,8 +60,9 @@ class Light(Device):
                 self._set_previous_brightness(self._brightness)
                 self._call_device_updated()
         elif telegram.operate_code == OperateCode.ReadStatusOfChannelsResponse:
-            if self._channel <= telegram.payload[0]:
-                self._brightness = telegram.payload[self._channel]
+            payload = telegram.payload
+            if payload and self._channel <= payload[0] and self._channel < len(payload):
+                self._brightness = payload[self._channel]
                 self._set_previous_brightness(self._brightness)
                 self._call_device_updated()
         elif telegram.operate_code == OperateCode.SceneControlResponse:

@@ -35,14 +35,11 @@
       "cannot_connect": "Failed to connect to the Buspro gateway.",
       "invalid_host": "Invalid host.",
       "invalid_client_address": "Use a valid subnet.device address for this Home Assistant client.",
-      "unknown": "An error occured."
+      "unknown": "An error occurred."
     },
     "abort": {
       "reconfigure_not_supported": "Reconfiguration is not available for this entry.",
       "reconfigure_successful": "Buspro gateway was reconfigured."
-    },
-    "selector": {
-      "gateway_manual": "Enter IP manually"
     }
   },
   "options": {

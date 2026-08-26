@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/...
 """
 
+import asyncio
 import logging
 
 import homeassistant.helpers.config_validation as cv
@@ -23,6 +24,7 @@ from homeassistant.const import (
     Platform,
 )
 from .const import (
+    DOMAIN,
     COMPOUND_SENSOR_TYPES,
     CONF_ENTITIES,
     CONF_CLIENT_ADDRESS,
@@ -49,7 +51,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
 from .helpers.network import local_ip_for_gateway
 from .catalog import MODEL_NOTES, DEVICE_CATALOG, emit_model_support_notes
 from .helpers.entity import registry_device_definitions
@@ -57,7 +59,6 @@ from .yaml_compat import normalize_yaml_devices, normalize_dual_mode, is_device_
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "buspro"
 DATA_BUSPRO = "buspro"
 DEPENDENCIES = []
 
@@ -287,7 +288,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     _entry_modules(hass)[config_entry.entry_id] = module
     _set_active_module(hass, module)
-    await module.start()
+    try:
+        await module.start()
+    except OSError as err:
+        _entry_modules(hass).pop(config_entry.entry_id, None)
+        _set_active_module(hass, _get_any_module(hass))
+        raise ConfigEntryNotReady("Cannot connect to Buspro gateway") from err
     module.register_services(force=True)
 
     _set_device_addresses(hass, config_entry)
@@ -482,7 +488,7 @@ class BusproModule:
 
         self.hdl = Buspro(
             self.gateway_address_send_receive,
-            self.hass.loop,
+            asyncio.get_running_loop(),
             client_address=self._client_address,
         )
 

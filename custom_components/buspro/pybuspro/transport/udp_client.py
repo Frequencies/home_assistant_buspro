@@ -116,7 +116,7 @@ class UDPClient:
             return
         if self._reconnect_task is not None and not self._reconnect_task.done():
             return
-        self._reconnect_task = asyncio.ensure_future(self._reconnect(), loop=self.buspro.loop)
+        self._reconnect_task = asyncio.ensure_future(self._reconnect())
 
     async def _reconnect(self):
         if self._reconnecting or self._stopping:
@@ -158,17 +158,21 @@ class UDPClient:
         self._stopping = False
         await self._connect()
         if self._watchdog_task is None or self._watchdog_task.done():
-            self._watchdog_task = asyncio.ensure_future(self._watchdog(), loop=self.buspro.loop)
+            self._watchdog_task = asyncio.ensure_future(self._watchdog())
         if self.transport is None:
             self._schedule_reconnect()
 
     async def stop(self):
         self._stopping = True
+        tasks_to_cancel = []
         for attr in ("_watchdog_task", "_reconnect_task"):
             task = getattr(self, attr)
-            if task is not None:
+            if task is not None and not task.done():
                 task.cancel()
-                setattr(self, attr, None)
+                tasks_to_cancel.append(task)
+            setattr(self, attr, None)
+        if tasks_to_cancel:
+            await asyncio.gather(*tasks_to_cancel, return_exceptions=True)
         self._close_transport()
 
     async def send_message(self, message):

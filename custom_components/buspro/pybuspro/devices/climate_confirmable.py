@@ -141,6 +141,10 @@ class FloorHeating(ConfirmableDevice, Device):
         self.register_telegram_received_cb(self._telegram_received_cb)
         self._call_read_current_status(run_from_init=True)
 
+    @property
+    def device_type(self):
+        return self._device_type
+
     def close(self):
         """Detach from the bus and cancel pending tasks."""
         if self._closed:

@@ -216,16 +216,21 @@ class BusScanner:
 
         duration = max(float(duration), 1.0)
         previous_cb = buspro.callback_all_messages
-        buspro.register_telegram_received_all_messages_cb(self._on_telegram)
+
+        def _chained_cb(telegram):
+            if previous_cb is not None:
+                previous_cb(telegram)
+            self._on_telegram(telegram)
+
+        buspro.register_telegram_received_all_messages_cb(_chained_cb)
         try:
-            elapsed = 0.0
-            while elapsed < duration:
+            deadline = time.monotonic() + duration
+            while True:
                 await self._broadcast_provocations()
-                step = min(_POLL_INTERVAL, duration - elapsed)
-                if step <= 0:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
                     break
-                await asyncio.sleep(step)
-                elapsed += step
+                await asyncio.sleep(min(_POLL_INTERVAL, remaining))
             await self._directed_channel_reads()
         finally:
             buspro.callback_all_messages = previous_cb

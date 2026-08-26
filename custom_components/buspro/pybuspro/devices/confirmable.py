@@ -156,8 +156,8 @@ class ConfirmableDevice:
                 return False
 
         # Confirmation mode: send, wait, retry on timeout
-        timeout = timeout or self.confirmation_timeout
-        retries = retries or self.confirmation_retries
+        timeout = self.confirmation_timeout if timeout is None else timeout
+        retries = self.confirmation_retries if retries is None else retries
         attempts = 0
 
         while attempts <= retries:
@@ -326,7 +326,7 @@ class ConfirmableDevice:
 
         # Schedule async marking (may be called from sync context)
         if hasattr(self, "_buspro") and hasattr(self._buspro, "loop"):
-            asyncio.ensure_future(_mark(), loop=self._buspro.loop)
+            asyncio.ensure_future(_mark())
 
     def _cleanup_confirmation_state(self):
         """Clean up all pending confirmation states (on device close)."""

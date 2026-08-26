@@ -34,9 +34,7 @@ class LogicControllerDiagnostics(Device):
         self._telegram_cbs = []
         self._closed = False
         self.register_telegram_received_cb(self._telegram_received_cb)
-        self._refresh_task = asyncio.ensure_future(
-            self._refresh_loop(initial_refresh_delay), loop=self._buspro.loop
-        )
+        self._refresh_task = asyncio.ensure_future(self._refresh_loop(initial_refresh_delay))
 
     def register_telegram_cb(self, callback):
         """Register a listener for telegrams transmitted by the controller."""

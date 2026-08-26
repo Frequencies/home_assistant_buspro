@@ -77,9 +77,7 @@ class RelayModule:
             except asyncio.CancelledError:
                 pass
 
-        self._refresh_task = asyncio.ensure_future(
-            _refresh(), loop=self._buspro.loop
-        )
+        self._refresh_task = asyncio.ensure_future(_refresh())
 
     def _telegram_received_cb(self, telegram):
         payload = telegram.payload or []

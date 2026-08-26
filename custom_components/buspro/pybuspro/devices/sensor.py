@@ -263,4 +263,4 @@ class Sensor(Device):
                 await asyncio.sleep(startup_read_delay(self._device_address, base=5))
             await self.read_sensor_status()
 
-        return asyncio.ensure_future(read_current_status_of_sensor(), loop=self._buspro.loop)
+        return asyncio.ensure_future(read_current_status_of_sensor())

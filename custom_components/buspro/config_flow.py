@@ -196,7 +196,7 @@ async def _async_validate_connectivity(hass, data, probe_socket=True):
         )
         buspro = Buspro(
             ((host, send_port), ("", receive_port)),
-            hass.loop,
+            asyncio.get_running_loop(),
             client_address=tuple(
                 int(part) for part in client_address.split(".")
             ),
@@ -230,7 +230,6 @@ class InvalidClientAddress(Exception):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @staticmethod
     @callback
@@ -329,14 +328,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(title=f"Buspro ({host})", data=data)
 
-            default_port = 6000
+            default_port = user_input.get(CONF_PORT, 6000) if user_input else 6000
             return self.async_show_form(
                 step_id="manual",
                 data_schema=_form_schema(
-                    default_host=prefill_host,
+                    default_host=user_input.get(CONF_HOST, prefill_host) if user_input else prefill_host,
                     default_port=default_port,
-                    default_send_port=default_port,
-                    default_receive_port=default_port,
+                    default_send_port=user_input.get(CONF_SEND_PORT, default_port) if user_input else default_port,
+                    default_receive_port=user_input.get(CONF_RECEIVE_PORT, default_port) if user_input else default_port,
+                    default_client_address=user_input.get(CONF_CLIENT_ADDRESS, DEFAULT_CLIENT_ADDRESS) if user_input else DEFAULT_CLIENT_ADDRESS,
                 ),
                 errors=errors,
             )
@@ -403,6 +403,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
                 try:
+                    # Skip UDP socket probe when entry is loaded — binding the
+                    # same receive port twice would fail, but host/client validation
+                    # is always safe and useful to run.
                     await _async_validate_connectivity(
                         self.hass,
                         data,
@@ -448,8 +451,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     for key, value in entry.options.items()
                     if key == CONF_MANAGED_DEVICES
                 }
+                new_unique_id = f"{host.lower()}:{port}"
+                if entry.unique_id != new_unique_id:
+                    await self.async_set_unique_id(new_unique_id)
+                    self._abort_if_unique_id_configured()
                 self.hass.config_entries.async_update_entry(
-                    entry, data=data, options=preserved_options
+                    entry,
+                    title=f"Buspro ({host})",
+                    unique_id=new_unique_id,
+                    data=data,
+                    options=preserved_options,
                 )
                 await self.hass.config_entries.async_reload(entry.entry_id)
                 return self.async_abort(reason="reconfigure_successful")
@@ -503,6 +514,9 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_scan_bus(self, user_input=None):
         """Scan the HDL bus and offer discovered devices for import."""
+        if user_input is None:
+            # Discard stale candidates when the user navigates back to this step.
+            self.__dict__.pop("_scan_candidates", None)
         if not hasattr(self, "_scan_candidates"):
             modules = self.hass.data.get(DATA_BUSPRO_CONFIG, {}).get("entry_modules", {})
             module = modules.get(self._config_entry.entry_id)
@@ -562,7 +576,7 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
                     if dev.key in selected_keys
                 ]
                 return self._save_devices(managed_devices(self._config_entry) + new_devices)
-            return self.async_create_entry(title="", data=dict(self._config_entry.options))
+            return self.async_abort(reason="scan_no_new_devices")
 
         options = [
             selector.SelectOptionDict(
@@ -639,9 +653,21 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
                         errors["base"] = "unknown"
 
                 if not errors:
-                    options = dict(self._config_entry.options)
-                    options.update(data)
-                    return self.async_create_entry(title="", data=options)
+                    entry = self._config_entry
+                    new_data = {**entry.data, **data}
+                    network_keys = {
+                        CONF_HOST, CONF_PORT, CONF_SEND_PORT,
+                        CONF_RECEIVE_PORT, CONF_CLIENT_ADDRESS,
+                    }
+                    clean_options = {
+                        k: v for k, v in entry.options.items()
+                        if k not in network_keys
+                    }
+                    self.hass.config_entries.async_update_entry(
+                        entry, data=new_data, title=f"Buspro ({host})",
+                        options=clean_options,
+                    )
+                    return self.async_create_entry(title="", data=clean_options)
 
             return self.async_show_form(
                 step_id="gateway",
@@ -962,13 +988,6 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
                     entry.entity_id, name=user_input[entry.entity_id].strip()
                 )
 
-            async def _reload_entry():
-                await asyncio.sleep(0)
-                await self.hass.config_entries.async_reload(
-                    self._config_entry.entry_id
-                )
-
-            self.hass.async_create_task(_reload_entry())
             return self.async_create_entry(
                 title="", data=dict(self._config_entry.options)
             )

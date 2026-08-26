@@ -38,6 +38,7 @@ class TaskTrackingTest(unittest.TestCase):
     def test_spawn_stores_task_reference(self):
         """Task spawned via _spawn is stored in _pending_tasks."""
         loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         try:
             device = Device(
                 _MockBuspro(loop),
@@ -53,6 +54,7 @@ class TaskTrackingTest(unittest.TestCase):
             # Task completion removes itself from _pending_tasks
             self.assertEqual(len(device._pending_tasks), 0)
         finally:
+            asyncio.set_event_loop(None)
             loop.close()
 
     def test_close_cancels_pending_tasks(self):

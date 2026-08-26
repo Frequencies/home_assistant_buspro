@@ -186,7 +186,8 @@ def _logic_controller_connectivity_entities(hass, module, config_entry):
     """Create connectivity diagnostics for registered logic controllers."""
     return [
         BusproLogicControllerConnectivitySensor(
-            logic_controller_coordinator(module, address), address, device_info
+            logic_controller_coordinator(module, address), address, device_info,
+            module=module,
         )
         for address, device_info in logic_controller_definitions(
             hass, config_entry
@@ -203,8 +204,9 @@ class BusproLogicControllerConnectivitySensor(BinarySensorEntity):
     _attr_name = "Connectivity"
     _attr_should_poll = False
 
-    def __init__(self, coordinator, address, device_info):
+    def __init__(self, coordinator, address, device_info, module=None):
         self._coordinator = coordinator
+        self._module = module
         self._device_update_cb = None
         self._attr_device_info = device_info
         self._attr_unique_id = f"buspro-{address}-logic-connectivity"
@@ -228,7 +230,8 @@ class BusproLogicControllerConnectivitySensor(BinarySensorEntity):
 
     @property
     def available(self):
-        return self._coordinator.online is not None
+        connected = self._module.connected if self._module is not None else True
+        return connected and self._coordinator.online is not None
 
     @property
     def is_on(self):
@@ -246,7 +249,7 @@ def _dimmer_connectivity_entities(hass, module, config_entry):
         )
         entities.append(
             BusproDimmerConnectivitySensor(
-                hass, diagnostics, address, device_info
+                hass, diagnostics, address, device_info, module=module,
             )
         )
     return entities
@@ -261,9 +264,10 @@ class BusproDimmerConnectivitySensor(BinarySensorEntity):
     _attr_name = "Connectivity"
     _attr_should_poll = False
 
-    def __init__(self, hass, diagnostics, address, device_info):
+    def __init__(self, hass, diagnostics, address, device_info, module=None):
         self._hass = hass
         self._diagnostics = diagnostics
+        self._module = module
         self._device_update_cb = None
         self._attr_device_info = device_info
         self._attr_unique_id = f"buspro-{address}-dimmer-connectivity"
@@ -285,7 +289,8 @@ class BusproDimmerConnectivitySensor(BinarySensorEntity):
 
     @property
     def available(self):
-        return self._diagnostics.online is not None
+        connected = self._module.connected if self._module is not None else True
+        return connected and self._diagnostics.online is not None
 
     @property
     def is_on(self):
@@ -319,6 +324,7 @@ def _compound_binary_sensor_entities(hass, module):
                     entity_config.get(CONF_UNIQUE_ID),
                     name=entity_config[CONF_NAME],
                     device_info=device_info,
+                    module=module,
                 )
             )
     return devices
@@ -351,6 +357,7 @@ def _managed_binary_sensor_entities(hass, module, config_entry):
                         channel[CONF_UNIQUE_ID],
                         name=channel[CONF_NAME],
                         device_info=info,
+                        module=module,
                     )
                 )
             continue
@@ -374,6 +381,7 @@ def _managed_binary_sensor_entities(hass, module, config_entry):
                         channel[CONF_UNIQUE_ID],
                         name=channel[CONF_NAME],
                         device_info=info,
+                        module=module,
                     )
                 )
             continue
@@ -405,6 +413,7 @@ def _managed_binary_sensor_entities(hass, module, config_entry):
                     channel[CONF_UNIQUE_ID],
                     name=channel[CONF_NAME],
                     device_info=info,
+                    module=module,
                 )
             )
     return entities
@@ -425,9 +434,11 @@ class BusproBinarySensor(BinarySensorEntity):
         unique_id=None,
         name=None,
         device_info=None,
+        module=None,
     ):
         self._hass = hass
         self._device = device
+        self._module = module
         self._sensor_type = sensor_type
         self._configured_unique_id = unique_id
         self._configured_name = name
@@ -500,7 +511,10 @@ class BusproBinarySensor(BinarySensorEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._hass.data[DATA_BUSPRO].connected
+        return bool(
+            self._module.connected if self._module is not None
+            else self._hass.data[DATA_BUSPRO].connected
+        )
 
     @property
     def device_class(self):

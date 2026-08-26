@@ -154,6 +154,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     channel[CONF_OBJECT_ID],
                     channel[CONF_UNIQUE_ID],
                     device_info=info,
+                    module=module,
                 )
             )
     async_add_entities(entities)
@@ -170,9 +171,11 @@ class BusproCover(CoverEntity):
         object_id,
         unique_id=None,
         device_info=None,
+        module=None,
     ):
         self._hass = hass
         self._device = device
+        self._module = module
         self._invert = invert
         self._configured_unique_id = unique_id
         self._attr_device_info = device_info or device_info_for_address(
@@ -182,6 +185,11 @@ class BusproCover(CoverEntity):
         self._unsub_start_poll = None
         self._unsub_poll_interval = None
         self._polling_interval = timedelta(minutes=60)
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.STOP
+        )
         self.entity_id = generate_entity_id("cover.{}", object_id, None, hass)
 
     @callback
@@ -201,7 +209,7 @@ class BusproCover(CoverEntity):
 
         # Register update callback and staggered poll timer only once added.
         self.async_register_callbacks()
-        stagger = hash(str(self._device._device_address)) % 300
+        stagger = hash(str(self._device.device_address)) % 300
 
         @callback
         def _start_polling(_now):
@@ -241,7 +249,10 @@ class BusproCover(CoverEntity):
 
     @property
     def available(self):
-        return self._hass.data[DATA_BUSPRO].connected
+        return bool(
+            self._module.connected if self._module is not None
+            else self._hass.data[DATA_BUSPRO].connected
+        )
 
     @property
     def is_opening(self):
@@ -255,17 +266,6 @@ class BusproCover(CoverEntity):
     def is_closed(self):
         # Buspro curtain status feedback does not expose absolute position/closed state.
         return None
-
-    @property
-    def supported_features(self):
-        return (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.STOP
-            | CoverEntityFeature.OPEN_TILT
-            | CoverEntityFeature.CLOSE_TILT
-            | CoverEntityFeature.STOP_TILT
-        )
 
     async def async_open_cover(self, **kwargs):
         if self._invert:

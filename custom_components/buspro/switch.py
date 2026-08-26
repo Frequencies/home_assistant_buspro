@@ -149,6 +149,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     channel[CONF_UNIQUE_ID],
                     device_info=info,
                     channel_enabled=channel_enabled,
+                    module=module,
                 )
             )
     async_add_entities(entities)
@@ -190,9 +191,11 @@ class BusproSwitch(SwitchEntity):
         unique_id=None,
         device_info=None,
         channel_enabled=True,
+        module=None,
     ):
         self._hass = hass
         self._device = device
+        self._module = module
         self._configured_unique_id = unique_id
         self._attr_device_info = device_info or device_info_for_address(
             hass, device.device_address
@@ -251,7 +254,11 @@ class BusproSwitch(SwitchEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._channel_enabled and self._hass.data[DATA_BUSPRO].connected
+        connected = bool(
+            self._module.connected if self._module is not None
+            else self._hass.data[DATA_BUSPRO].connected
+        )
+        return self._channel_enabled and connected
 
     @property
     def is_on(self):

@@ -100,6 +100,10 @@ def ensure_homeassistant_stubs():
         NOT_LOADED = 'not_loaded'
     ha_config_entries.ConfigEntryState = ConfigEntryState
 
+    class ConfigEntryNotReady(Exception):  # pragma: no cover - stub
+        pass
+    ha_config_entries.ConfigEntryNotReady = ConfigEntryNotReady
+
     vol = types.ModuleType('voluptuous')
     vol.ALLOW_EXTRA = object()
     vol.Required = lambda key, default=None: key
@@ -135,12 +139,21 @@ def ensure_homeassistant_stubs():
     ha_selector.SelectSelector = lambda cfg=None: None
     ha_selector.SelectSelectorConfig = lambda **kw: kw
 
+    ha_translation = types.ModuleType('homeassistant.helpers.translation')
+
+    async def _stub_get_translations(hass, language, category, integrations=None):
+        return {}
+
+    ha_translation.async_get_translations = _stub_get_translations
+    ha_helpers.translation = ha_translation
+
     sys.modules['homeassistant'] = ha
     sys.modules['homeassistant.helpers'] = ha_helpers
     sys.modules['homeassistant.helpers.config_validation'] = ha_cv
     sys.modules['homeassistant.helpers.device_registry'] = ha_dr
     sys.modules['homeassistant.helpers.entity_registry'] = ha_er
     sys.modules['homeassistant.helpers.selector'] = ha_selector
+    sys.modules['homeassistant.helpers.translation'] = ha_translation
     sys.modules['homeassistant.const'] = ha_const
     sys.modules['homeassistant.core'] = ha_core
     sys.modules['homeassistant.config_entries'] = ha_config_entries
