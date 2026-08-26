@@ -611,7 +611,7 @@ class BusproSensor(SensorEntity):
         if self._sensor_type == TEMPERATURE:
             return "°C"
         if self._is_illuminance():
-            return "lux"
+            return "lx"
         if self._sensor_type == "humidity":
             return "%"
         return ""
