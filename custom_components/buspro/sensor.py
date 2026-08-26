@@ -74,6 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     ILLUMINANCE,
+    "illuminance",  # catalog capability key; ILLUMINANCE const may equal "lux"
     TEMPERATURE,
     "humidity",
 }
@@ -422,6 +423,7 @@ def _managed_sensor_entities(hass, module, config_entry):
         sensor = module.get_sensor(
             address,
             profile=spec["profile"],
+            motion_uv_switch=spec.get("motion_uv_switch"),
             name=device_config["name"],
         )
         info = managed_device_info(device_config)
@@ -434,7 +436,7 @@ def _managed_sensor_entities(hass, module, config_entry):
             # dispatched to every device object at this address, so a single
             # illuminance poll refreshes temperature, humidity and motion on
             # all sibling entities too — only this channel needs to poll.
-            scan_interval = 1 if sensor_type == ILLUMINANCE else 0
+            scan_interval = 1 if sensor_type in (ILLUMINANCE, "illuminance") else 0
             entities.append(
                 BusproSensor(
                     hass,
@@ -551,7 +553,7 @@ class BusproSensor(SensorEntity):
         if self._sensor_type == TEMPERATURE:
             return connected and self._current_temperature is not None
 
-        if self._sensor_type == ILLUMINANCE:
+        if self._sensor_type in (ILLUMINANCE, "illuminance"):
             return connected and self._brightness is not None
 
         if self._sensor_type == "humidity":
@@ -559,15 +561,18 @@ class BusproSensor(SensorEntity):
 
         return connected
 
+    def _is_illuminance(self):
+        return self._sensor_type in (ILLUMINANCE, "illuminance")
+
     @property
     def native_value(self):
         """Return the native value of the sensor."""
         if self._sensor_type == TEMPERATURE:
             return self._current_temperature
 
-        if self._sensor_type == ILLUMINANCE:
+        if self._is_illuminance():
             return self._brightness
-        
+
         if self._sensor_type == "humidity":
             return self._humidity
 
@@ -589,7 +594,7 @@ class BusproSensor(SensorEntity):
             return self._configured_device_class
         if self._sensor_type == TEMPERATURE:
             return "temperature"
-        if self._sensor_type == ILLUMINANCE:
+        if self._is_illuminance():
             return "illuminance"
         if self._sensor_type == "humidity":
             return "humidity"
@@ -602,7 +607,7 @@ class BusproSensor(SensorEntity):
             return self._configured_unit_of_measurement
         if self._sensor_type == TEMPERATURE:
             return "°C"
-        if self._sensor_type == ILLUMINANCE:
+        if self._is_illuminance():
             return "lux"
         if self._sensor_type == "humidity":
             return "%"
@@ -611,7 +616,7 @@ class BusproSensor(SensorEntity):
     @property
     def state_class(self):
         """All Buspro sensor readings are point-in-time measurements."""
-        if self._sensor_type in (TEMPERATURE, ILLUMINANCE, "humidity"):
+        if self._sensor_type in (TEMPERATURE, ILLUMINANCE, "illuminance", "humidity"):
             return SensorStateClass.MEASUREMENT
         return None
 

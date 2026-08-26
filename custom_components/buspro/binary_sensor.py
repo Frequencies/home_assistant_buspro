@@ -392,6 +392,7 @@ def _managed_binary_sensor_entities(hass, module, config_entry):
         sensor = module.get_sensor(
             address,
             profile=spec["profile"],
+            motion_uv_switch=spec.get("motion_uv_switch"),
             name=device_config["name"],
         )
         for channel in device_config[CONF_CHANNELS]:

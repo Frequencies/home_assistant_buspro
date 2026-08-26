@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class Sensor(Device):
     def __init__(self, buspro, device_address, universal_switch_number=None, channel_number=None, device=None,
-                 switch_number=None, name="", delay_read_current_state_seconds=0):
+                 switch_number=None, motion_uv_switch=None, name="", delay_read_current_state_seconds=0):
         super().__init__(buspro, device_address, name)
 
         self._buspro = buspro
@@ -21,6 +21,7 @@ class Sensor(Device):
         self._name = name
         self._device = device
         self._switch_number = switch_number
+        self._motion_uv_switch = motion_uv_switch
 
         self._current_temperature = None
         self._current_humidity = None
@@ -133,6 +134,13 @@ class Sensor(Device):
 
             if switch_number == self._universal_switch_number:
                 self._universal_switch_status = universal_switch_status
+                self._call_device_updated()
+            elif switch_number == self._motion_uv_switch:
+                # Some multisensors (e.g. HDL-MSP02.4C) broadcast motion via a
+                # UV switch rather than in the 0x1605 polled frame exclusively.
+                # Update _motion_sensor so the movement property reflects the
+                # change immediately without waiting for the next poll.
+                self._motion_sensor = universal_switch_status
                 self._call_device_updated()
 
         elif telegram.operate_code == OperateCode.ReadStatusOfChannelsResponse:

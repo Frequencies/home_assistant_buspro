@@ -5,6 +5,31 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.1] - 2026-08-26
+
+### Fixed
+
+- **HDL-MSP02.4C motion now updates in real time.** The device broadcasts PIR
+  state as a Universal Switch event (switch #201, opcode `0xE01D`) in addition
+  to the polled `0x1605` sensors-in-one frame. The integration now subscribes
+  to that UV switch broadcast, so the motion binary sensor flips immediately on
+  occupancy change instead of waiting up to one poll interval. The catalog entry
+  for `HDL-MSP02.4C` records `motion_uv_switch: 201`; the `Sensor` device, the
+  `BusproModule.get_sensor()` factory, and the managed sensor/binary-sensor
+  setup all thread the value through.
+
+- **Illuminance sensors now poll, report `available`, and carry correct
+  metadata.** The catalog uses `"illuminance"` as the capability key, but the
+  `ILLUMINANCE` constant equals `"lux"`. The string comparison
+  `sensor_type == ILLUMINANCE` therefore never matched for catalog-managed
+  devices, causing four silent failures: the poll flag was not set (lux froze
+  after the first reading), `available` always returned `True` even when no
+  value had arrived, `device_class` and `native_unit_of_measurement` fell
+  through to `None`, and `state_class` was not set. All comparisons now accept
+  both `ILLUMINANCE` and `"illuminance"` via a small `_is_illuminance()` helper.
+
+[3.5.1]: https://github.com/Frequencies/home_assistant_buspro/releases/tag/3.5.1
+
 ## [3.5.0] - 2026-08-26
 
 Introduces automatic gateway discovery and bus scanning for device import.

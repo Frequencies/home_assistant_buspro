@@ -423,6 +423,7 @@ class BusproModule:
         universal_switch_number=None,
         channel_number=None,
         switch_number=None,
+        motion_uv_switch=None,
         name="",
     ):
         """Return one shared protocol object for a physical sensor endpoint."""
@@ -444,6 +445,7 @@ class BusproModule:
                 channel_number=channel_number,
                 device=protocol_profile,
                 switch_number=switch_number,
+                motion_uv_switch=motion_uv_switch,
                 name=name,
             )
         return self._sensor_devices[key]

@@ -119,6 +119,28 @@ class SensorProtocolTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(sensor.movement)
         sensor.close()
 
+    async def test_motion_uv_switch_updates_movement_in_real_time(self):
+        """UV#201 broadcast should update movement without waiting for the next poll."""
+        bus = _Bus(asyncio.get_running_loop())
+        sensor = Sensor(bus, (2, 14), device="sensors_in_one", motion_uv_switch=201)
+
+        telegram = Telegram()
+        telegram.operate_code = OperateCode.UniversalSwitchControlResponse
+        telegram.target_address = None
+        telegram.payload = [201, 1]  # switch 201, status ON
+
+        sensor._telegram_received_cb(telegram)
+        await asyncio.sleep(0)
+
+        self.assertTrue(sensor.movement)
+
+        telegram.payload = [201, 0]  # switch 201, status OFF
+        sensor._telegram_received_cb(telegram)
+        await asyncio.sleep(0)
+
+        self.assertFalse(sensor.movement)
+        sensor.close()
+
 
 if __name__ == "__main__":
     unittest.main()
