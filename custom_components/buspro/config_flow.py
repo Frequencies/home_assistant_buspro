@@ -249,7 +249,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         t = await _flow_translations(self.hass, "selector")
-        manual_label = _t(t, "selector.gateway_selection.options.__manual__", "Enter IP manually")
+        manual_label = _t(t, "selector.gateway_selection.options.manual", "Enter IP manually")
         options = [
             selector.SelectOptionDict(value=gw.ip, label=gw.label)
             for gw in self._discovered_gateways

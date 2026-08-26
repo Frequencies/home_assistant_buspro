@@ -232,7 +232,7 @@
     },
     "gateway_selection": {
       "options": {
-        "__manual__": "Skriv inn IP manuelt"
+        "manual": "Skriv inn IP manuelt"
       }
     }
   }

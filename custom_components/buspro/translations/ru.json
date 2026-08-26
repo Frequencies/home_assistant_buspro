@@ -232,7 +232,7 @@
     },
     "gateway_selection": {
       "options": {
-        "__manual__": "Ввести IP вручную"
+        "manual": "Ввести IP вручную"
       }
     }
   }

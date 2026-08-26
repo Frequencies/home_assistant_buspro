@@ -232,7 +232,7 @@
     },
     "gateway_selection": {
       "options": {
-        "__manual__": "Introducir IP manualmente"
+        "manual": "Introducir IP manualmente"
       }
     }
   }
