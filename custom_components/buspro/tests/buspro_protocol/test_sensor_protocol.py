@@ -119,6 +119,23 @@ class SensorProtocolTest(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(sensor.movement)
         sensor.close()
 
+    async def test_lux_broadcast_updates_brightness_without_polling(self):
+        """0xE441 broadcast should update brightness immediately (no poll required)."""
+        bus = _Bus(asyncio.get_running_loop())
+        sensor = Sensor(bus, (2, 14), device="sensors_in_one")
+
+        telegram = Telegram()
+        telegram.operate_code = OperateCode.BroadcastLuminanceResponse
+        telegram.target_address = None
+        # payload = [0, 1, HIGH, LOW, 0, 0]; (0<<8)|51 = 51 lux
+        telegram.payload = [0, 1, 0, 51, 0, 0]
+
+        sensor._telegram_received_cb(telegram)
+        await asyncio.sleep(0)
+
+        self.assertEqual(sensor.brightness, 51)
+        sensor.close()
+
     async def test_motion_uv_switch_updates_movement_in_real_time(self):
         """UV#201 broadcast should update movement without waiting for the next poll."""
         bus = _Bus(asyncio.get_running_loop())

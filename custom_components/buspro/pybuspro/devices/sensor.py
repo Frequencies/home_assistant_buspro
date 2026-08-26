@@ -115,6 +115,13 @@ class Sensor(Device):
             self._current_temperature = telegram.payload[1]
             self._call_device_updated()
 
+        elif telegram.operate_code == OperateCode.BroadcastLuminanceResponse:
+            # 0xE441: periodic lux broadcast from sensors-in-one devices.
+            # payload = [?, 1, HIGH, LOW, ?, ?]; lux = (HIGH<<8)|LOW.
+            if len(telegram.payload) >= 4:
+                self._brightness = (telegram.payload[2] << 8) | telegram.payload[3]
+                self._call_device_updated()
+
         elif telegram.operate_code == OperateCode.ReadStatusOfUniversalSwitchResponse:
             switch_number = telegram.payload[0]
             universal_switch_status = telegram.payload[1]

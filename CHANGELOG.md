@@ -5,6 +5,19 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.5.2] - 2026-08-26
+
+### Fixed
+
+- **Lux now updates in real time via the `0xE441` broadcast.** The MSP02.4C
+  (and other sensors-in-one devices) automatically broadcast illuminance every
+  ~60 s as opcode `0xE441` (`[?, 1, HIGH, LOW, ?, ?]`). The opcode was
+  previously unmapped (`operate_code: None` in debug logs). It is now registered
+  as `BroadcastLuminanceResponse` in the `OperateCode` enum and handled in the
+  `Sensor` device: `brightness = (payload[2] << 8) | payload[3]`. Lux becomes
+  available immediately on first broadcast without any poll.
+
+
 ## [3.5.1] - 2026-08-26
 
 ### Fixed
