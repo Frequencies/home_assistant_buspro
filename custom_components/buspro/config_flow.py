@@ -59,13 +59,6 @@ def _t(translations: dict[str, str], key: str, default: str) -> str:
     return translations.get(f"component.{DOMAIN}.{key}", default)
 
 
-def _device_type_labels_t(translations: dict[str, str]) -> dict[str, str]:
-    """Return DEVICE_TYPE_LABELS mapped to the active language."""
-    return {
-        dt: _t(translations, f"options.device_type.{dt}", eng)
-        for dt, eng in DEVICE_TYPE_LABELS.items()
-    }
-
 
 # --- bus-scan helpers --------------------------------------------------------
 
@@ -255,8 +248,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._prefill_host = selected
             return await self.async_step_manual()
 
-        t = await _flow_translations(self.hass, "config")
-        manual_label = _t(t, "config.selector.gateway_manual", "Enter IP manually")
+        t = await _flow_translations(self.hass, "selector")
+        manual_label = _t(t, "selector.gateway_selection.options.__manual__", "Enter IP manually")
         options = [
             selector.SelectOptionDict(value=gw.ip, label=gw.label)
             for gw in self._discovered_gateways
@@ -563,15 +556,13 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
         if not candidates:
             return self.async_abort(reason="scan_no_new_devices")
 
-        t = await _flow_translations(self.hass, "options")
-        dt_labels = _device_type_labels_t(t)
-        ch_fmt = _t(t, "options.scan.ch_suffix", "{count} ch")
+        ch_fmt = "{count} ch"
 
         if user_input is not None:
             selected_keys = set(user_input.get("devices") or [])
             if selected_keys:
                 new_devices = [
-                    _build_managed_device(dev, device_type, model, dt_labels.get(device_type, device_type))
+                    _build_managed_device(dev, device_type, model, DEVICE_TYPE_LABELS.get(device_type, device_type))
                     for dev, device_type, model in candidates
                     if dev.key in selected_keys
                 ]
@@ -581,7 +572,7 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
         options = [
             selector.SelectOptionDict(
                 value=dev.key,
-                label=_scan_device_label(dev, dt_labels.get(device_type, device_type), model, ch_fmt),
+                label=_scan_device_label(dev, DEVICE_TYPE_LABELS.get(device_type, device_type), model, ch_fmt),
             )
             for dev, device_type, model in candidates
         ]
@@ -702,19 +693,14 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
             self._editing_address = None
             return await self.async_step_device_details()
 
-        t = await _flow_translations(self.hass, "options")
-        dt_labels = _device_type_labels_t(t)
-        options = [
-            selector.SelectOptionDict(value=value, label=dt_labels.get(value, value))
-            for value in DEVICE_TYPE_LABELS
-        ]
         return self.async_show_form(
             step_id="add_device",
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_DEVICE_TYPE): selector.SelectSelector(
                         selector.SelectSelectorConfig(
-                            options=options,
+                            options=list(DEVICE_TYPE_LABELS.keys()),
+                            translation_key="device_type",
                             mode=selector.SelectSelectorMode.DROPDOWN,
                         )
                     )
@@ -777,12 +763,11 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
             default_model = models[0]
         spec = DEVICE_CATALOG[default_model]
         t = await _flow_translations(self.hass, "options")
-        dt_labels = _device_type_labels_t(t)
         schema = {
             vol.Required(
                 CONF_NAME,
                 default=form_values.get(
-                    CONF_NAME, dt_labels.get(device_type, device_type)
+                    CONF_NAME, DEVICE_TYPE_LABELS.get(device_type, device_type)
                 ),
             ): selector.TextSelector(),
             vol.Required(

@@ -40,9 +40,6 @@
     "abort": {
       "reconfigure_not_supported": "La reconfiguration n'est pas disponible pour cette entrée.",
       "reconfigure_successful": "La passerelle Buspro a été reconfigurée."
-    },
-    "selector": {
-      "gateway_manual": "Saisir l'IP manuellement"
     }
   },
   "options": {
@@ -217,21 +214,26 @@
       "not_loaded": "Scan impossible : l'intégration Buspro n'est pas en cours d'exécution.",
       "scan_failed": "Le scan du bus a échoué de manière inattendue.",
       "scan_no_new_devices": "Aucun nouvel appareil trouvé. Tous les appareils détectés sont déjà configurés."
-    },
+    }
+  },
+  "selector": {
     "device_type": {
-      "relay": "Relais",
-      "dimmer": "Variateur",
-      "dry_contact": "Module contact sec",
-      "multisensor": "Multicapteur / capteur de panneau",
-      "floor_heating": "Module plancher chauffant",
-      "ac": "Contrôleur de climatisation",
-      "cover": "Contrôleur de volet / store",
-      "fan": "Sortie ventilateur",
-      "universal_switch": "Entrées commutateur universel"
+      "options": {
+        "relay": "Relais",
+        "dimmer": "Variateur",
+        "dry_contact": "Module contact sec",
+        "multisensor": "Multicapteur / capteur de panneau",
+        "floor_heating": "Module plancher chauffant",
+        "ac": "Contrôleur de climatisation",
+        "cover": "Contrôleur de volet / store",
+        "fan": "Sortie ventilateur",
+        "universal_switch": "Entrées commutateur universel"
+      }
     },
-    "scan": {
-      "ch_suffix": "{count} can.",
-      "unknown_model": "Appareil inconnu"
+    "gateway_selection": {
+      "options": {
+        "__manual__": "Saisir l'IP manuellement"
+      }
     }
   }
 }

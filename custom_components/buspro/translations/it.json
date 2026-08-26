@@ -40,9 +40,6 @@
     "abort": {
       "reconfigure_not_supported": "La riconfigurazione non è disponibile per questa voce.",
       "reconfigure_successful": "Il gateway Buspro è stato riconfigurato."
-    },
-    "selector": {
-      "gateway_manual": "Inserisci IP manualmente"
     }
   },
   "options": {
@@ -217,21 +214,26 @@
       "not_loaded": "Impossibile eseguire la scansione: l'integrazione Buspro non è in esecuzione.",
       "scan_failed": "La scansione del bus non è riuscita in modo imprevisto.",
       "scan_no_new_devices": "Nessun nuovo dispositivo trovato. Tutti i dispositivi rilevati sono già configurati."
-    },
+    }
+  },
+  "selector": {
     "device_type": {
-      "relay": "Relè",
-      "dimmer": "Dimmer",
-      "dry_contact": "Modulo contatto pulito",
-      "multisensor": "Multisensore / sensore di pannello",
-      "floor_heating": "Modulo riscaldamento a pavimento",
-      "ac": "Controllore condizionatore",
-      "cover": "Controllore tende / copertura",
-      "fan": "Uscita ventilatore",
-      "universal_switch": "Ingressi interruttore universale"
+      "options": {
+        "relay": "Relè",
+        "dimmer": "Dimmer",
+        "dry_contact": "Modulo contatto pulito",
+        "multisensor": "Multisensore / sensore di pannello",
+        "floor_heating": "Modulo riscaldamento a pavimento",
+        "ac": "Controllore condizionatore",
+        "cover": "Controllore tende / copertura",
+        "fan": "Uscita ventilatore",
+        "universal_switch": "Ingressi interruttore universale"
+      }
     },
-    "scan": {
-      "ch_suffix": "{count} can.",
-      "unknown_model": "Dispositivo sconosciuto"
+    "gateway_selection": {
+      "options": {
+        "__manual__": "Inserisci IP manualmente"
+      }
     }
   }
 }

@@ -40,9 +40,6 @@
     "abort": {
       "reconfigure_not_supported": "La reconfiguración no está disponible para esta entrada.",
       "reconfigure_successful": "La puerta de enlace Buspro se ha reconfigurado."
-    },
-    "selector": {
-      "gateway_manual": "Introducir IP manualmente"
     }
   },
   "options": {
@@ -217,21 +214,26 @@
       "not_loaded": "No se puede escanear: la integración Buspro no está en ejecución.",
       "scan_failed": "El escaneo del bus falló inesperadamente.",
       "scan_no_new_devices": "No se encontraron dispositivos nuevos. Todos los detectados ya están configurados."
-    },
+    }
+  },
+  "selector": {
     "device_type": {
-      "relay": "Relé",
-      "dimmer": "Regulador de luz",
-      "dry_contact": "Módulo de contacto seco",
-      "multisensor": "Multisensor / sensor de panel",
-      "floor_heating": "Módulo de calefacción de suelo",
-      "ac": "Controlador de aire acondicionado",
-      "cover": "Controlador de persianas / cubierta",
-      "fan": "Salida de ventilador",
-      "universal_switch": "Entradas de interruptor universal"
+      "options": {
+        "relay": "Relé",
+        "dimmer": "Regulador de luz",
+        "dry_contact": "Módulo de contacto seco",
+        "multisensor": "Multisensor / sensor de panel",
+        "floor_heating": "Módulo de calefacción de suelo",
+        "ac": "Controlador de aire acondicionado",
+        "cover": "Controlador de persianas / cubierta",
+        "fan": "Salida de ventilador",
+        "universal_switch": "Entradas de interruptor universal"
+      }
     },
-    "scan": {
-      "ch_suffix": "{count} can.",
-      "unknown_model": "Dispositivo desconocido"
+    "gateway_selection": {
+      "options": {
+        "__manual__": "Introducir IP manualmente"
+      }
     }
   }
 }

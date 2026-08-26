@@ -40,9 +40,6 @@
     "abort": {
       "reconfigure_not_supported": "Omkonfigurering er ikke tilgjengelig for denne oppføringen.",
       "reconfigure_successful": "Buspro-gatewayen ble konfigurert på nytt."
-    },
-    "selector": {
-      "gateway_manual": "Skriv inn IP manuelt"
     }
   },
   "options": {
@@ -217,21 +214,26 @@
       "not_loaded": "Kan ikke skanne: Buspro-integrasjonen kjører ikke.",
       "scan_failed": "Buss-skanningen mislyktes uventet.",
       "scan_no_new_devices": "Ingen nye enheter ble funnet. Alle oppdagede enheter er allerede konfigurert."
-    },
+    }
+  },
+  "selector": {
     "device_type": {
-      "relay": "Rele",
-      "dimmer": "Dimmer",
-      "dry_contact": "Tørrkontaktmodul",
-      "multisensor": "Multisensor / panelsensor",
-      "floor_heating": "Gulvvarmemodul",
-      "ac": "Klimaanleggstyring",
-      "cover": "Gardin-/rulleskoddstyring",
-      "fan": "VifteUtgang",
-      "universal_switch": "Universalbryterinngang"
+      "options": {
+        "relay": "Rele",
+        "dimmer": "Dimmer",
+        "dry_contact": "Tørrkontaktmodul",
+        "multisensor": "Multisensor / panelsensor",
+        "floor_heating": "Gulvvarmemodul",
+        "ac": "Klimaanleggstyring",
+        "cover": "Gardin-/rulleskoddstyring",
+        "fan": "VifteUtgang",
+        "universal_switch": "Universalbryterinngang"
+      }
     },
-    "scan": {
-      "ch_suffix": "{count} kan.",
-      "unknown_model": "Ukjent enhet"
+    "gateway_selection": {
+      "options": {
+        "__manual__": "Skriv inn IP manuelt"
+      }
     }
   }
 }

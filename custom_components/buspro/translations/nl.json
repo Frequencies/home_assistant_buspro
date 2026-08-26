@@ -40,9 +40,6 @@
     "abort": {
       "reconfigure_not_supported": "Herconfiguratie is niet beschikbaar voor deze invoer.",
       "reconfigure_successful": "Buspro-gateway is opnieuw geconfigureerd."
-    },
-    "selector": {
-      "gateway_manual": "IP handmatig invoeren"
     }
   },
   "options": {
@@ -217,21 +214,26 @@
       "not_loaded": "Kan niet scannen: de Buspro-integratie is niet actief.",
       "scan_failed": "De busscan is onverwacht mislukt.",
       "scan_no_new_devices": "Geen nieuwe apparaten gevonden. Alle gevonden apparaten zijn al geconfigureerd."
-    },
+    }
+  },
+  "selector": {
     "device_type": {
-      "relay": "Relais",
-      "dimmer": "Dimmer",
-      "dry_contact": "Droogcontactmodule",
-      "multisensor": "Multisensor / paneelsensor",
-      "floor_heating": "Vloerverwarmingsmodule",
-      "ac": "Airconditioning-regelaar",
-      "cover": "Gordijn-/rolluikregelaar",
-      "fan": "Ventilatoruitgang",
-      "universal_switch": "Universele schakelaaringangen"
+      "options": {
+        "relay": "Relais",
+        "dimmer": "Dimmer",
+        "dry_contact": "Droogcontactmodule",
+        "multisensor": "Multisensor / paneelsensor",
+        "floor_heating": "Vloerverwarmingsmodule",
+        "ac": "Airconditioning-regelaar",
+        "cover": "Gordijn-/rolluikregelaar",
+        "fan": "Ventilatoruitgang",
+        "universal_switch": "Universele schakelaaringangen"
+      }
     },
-    "scan": {
-      "ch_suffix": "{count} kan.",
-      "unknown_model": "Onbekend apparaat"
+    "gateway_selection": {
+      "options": {
+        "__manual__": "IP handmatig invoeren"
+      }
     }
   }
 }

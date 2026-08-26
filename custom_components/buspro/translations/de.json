@@ -40,9 +40,6 @@
     "abort": {
       "reconfigure_not_supported": "Die Neukonfiguration ist für diesen Eintrag nicht verfügbar.",
       "reconfigure_successful": "Das Buspro-Gateway wurde neu konfiguriert."
-    },
-    "selector": {
-      "gateway_manual": "IP manuell eingeben"
     }
   },
   "options": {
@@ -217,21 +214,26 @@
       "not_loaded": "Scan nicht möglich: Die Buspro-Integration läuft nicht.",
       "scan_failed": "Bus-Scan ist unerwartet fehlgeschlagen.",
       "scan_no_new_devices": "Keine neuen Geräte gefunden. Alle erkannten Geräte sind bereits konfiguriert."
-    },
+    }
+  },
+  "selector": {
     "device_type": {
-      "relay": "Relais",
-      "dimmer": "Dimmer",
-      "dry_contact": "Trockenkontaktmodul",
-      "multisensor": "Multisensor / Panelsensor",
-      "floor_heating": "Fußbodenheizungsmodul",
-      "ac": "Klimaanlagesteuerung",
-      "cover": "Jalousie-/Rolladensteuerung",
-      "fan": "Lüfterausgang",
-      "universal_switch": "Universalschalter-Eingänge"
+      "options": {
+        "relay": "Relais",
+        "dimmer": "Dimmer",
+        "dry_contact": "Trockenkontaktmodul",
+        "multisensor": "Multisensor / Panelsensor",
+        "floor_heating": "Fußbodenheizungsmodul",
+        "ac": "Klimaanlagesteuerung",
+        "cover": "Jalousie-/Rolladensteuerung",
+        "fan": "Lüfterausgang",
+        "universal_switch": "Universalschalter-Eingänge"
+      }
     },
-    "scan": {
-      "ch_suffix": "{count} Kan.",
-      "unknown_model": "Unbekanntes Gerät"
+    "gateway_selection": {
+      "options": {
+        "__manual__": "IP manuell eingeben"
+      }
     }
   }
 }
