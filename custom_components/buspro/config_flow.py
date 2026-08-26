@@ -8,7 +8,7 @@ from homeassistant.const import CONF_ADDRESS, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers import selector
+from homeassistant.helpers import selector, translation as ha_translation
 
 from .const import (
     CONF_CHANNEL_COUNT,
@@ -16,6 +16,11 @@ from .const import (
     CONF_CHANNEL_NUMBER,
     CONF_CHANNELS,
     CONF_DEVICE_TYPE,
+    DATA_BUSPRO_CONFIG,
+    DEVICE_TYPE_COVER,
+    DEVICE_TYPE_DIMMER,
+    DEVICE_TYPE_RELAY,
+    DEVICE_TYPE_UNIVERSAL_SWITCH,
     DOMAIN,
     CONF_HOST,
     CONF_MANAGED_DEVICES,
@@ -39,6 +44,105 @@ from .helpers.network import local_ip_for_gateway
 
 _LOGGER = logging.getLogger(__name__)
 CONF_REMOVE_DEVICE = "remove_device"
+_MANUAL_ENTRY = "__manual__"
+
+
+async def _flow_translations(hass, category: str) -> dict[str, str]:
+    """Fetch flow translations for the active HA language."""
+    return await ha_translation.async_get_translations(
+        hass, hass.config.language, category, {DOMAIN}
+    )
+
+
+def _t(translations: dict[str, str], key: str, default: str) -> str:
+    """Return translated string or English default."""
+    return translations.get(f"component.{DOMAIN}.{key}", default)
+
+
+def _device_type_labels_t(translations: dict[str, str]) -> dict[str, str]:
+    """Return DEVICE_TYPE_LABELS mapped to the active language."""
+    return {
+        dt: _t(translations, f"options.device_type.{dt}", eng)
+        for dt, eng in DEVICE_TYPE_LABELS.items()
+    }
+
+
+# --- bus-scan helpers --------------------------------------------------------
+
+def _infer_device_type(dev) -> str | None:
+    """Map scan traffic patterns to a managed device type, or None if unknown."""
+    op = dev.op_codes
+    if "ReadStatusofCurtainSwitchResponse" in op or "CurtainSwitchControlResponse" in op:
+        return DEVICE_TYPE_COVER
+    if "ReadStatusOfUniversalSwitchResponse" in op:
+        return DEVICE_TYPE_UNIVERSAL_SWITCH
+    if "ReadStatusOfChannelsResponse" in op or "SingleChannelControlResponse" in op:
+        return DEVICE_TYPE_DIMMER if dev.dimmer_evidence else DEVICE_TYPE_RELAY
+    return None
+
+
+def _pick_model(device_type: str, channel_count: int | None) -> str | None:
+    """Pick the best-fit catalog model for a discovered device."""
+    _GENERIC_MODELS = {
+        DEVICE_TYPE_COVER: "HDL Buspro Curtain Controller",
+        DEVICE_TYPE_UNIVERSAL_SWITCH: "HDL Buspro Universal Switch",
+    }
+    if device_type in _GENERIC_MODELS:
+        return _GENERIC_MODELS[device_type]
+
+    # For relay/dimmer: pick smallest fixed model with channels >= discovered count.
+    candidates = [
+        (model, spec)
+        for model, spec in DEVICE_CATALOG.items()
+        if spec.get(CONF_DEVICE_TYPE) == device_type
+        and not spec.get("configurable_channels", False)
+        and not spec.get("generic", False)
+        and "channels" in spec
+    ]
+    if not candidates:
+        return None
+    if channel_count:
+        fitting = [
+            (m, s) for m, s in candidates
+            if int(s["channels"]) >= channel_count
+        ]
+        if fitting:
+            return min(fitting, key=lambda ms: int(ms[1]["channels"]))[0]
+    return min(candidates, key=lambda ms: int(ms[1]["channels"]))[0]
+
+
+def _scan_device_label(dev, type_label: str, model: str, ch_fmt: str) -> str:
+    """One-line label for the scan checklist."""
+    ch = f", {ch_fmt.format(count=dev.channel_count)}" if dev.channel_count else ""
+    return f"{dev.address} — {type_label}{ch} ({model})"
+
+
+def _build_managed_device(dev, device_type: str, model: str, type_label: str) -> dict:
+    """Build a managed-device record from a discovered device."""
+    spec = DEVICE_CATALOG[model]
+    name = f"{type_label} {dev.address}"
+
+    if "capabilities" in spec:
+        channel_keys = list(spec["capabilities"])
+        channel_count = len(channel_keys)
+    elif spec.get("configurable_channels", False):
+        channel_count = dev.channel_count or 1
+        channel_keys = list(range(1, channel_count + 1))
+    else:
+        channel_count = int(spec["channels"])
+        channel_keys = list(range(1, channel_count + 1))
+
+    names = {key: f"{name} {key}" for key in channel_keys}
+    channels = build_channels(dev.address, device_type, name, channel_keys, names, {})
+
+    return {
+        CONF_ADDRESS: dev.address,
+        CONF_NAME: name,
+        CONF_MODEL: model,
+        CONF_DEVICE_TYPE: device_type,
+        CONF_CHANNEL_COUNT: channel_count,
+        CONF_CHANNELS: channels,
+    }
 
 
 def _form_schema(
@@ -122,6 +226,7 @@ class InvalidHost(Exception):
 class InvalidClientAddress(Exception):
     """Error to indicate the Buspro client identity is invalid."""
 
+
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
@@ -133,8 +238,56 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return BusproOptionsFlow(config_entry)
 
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
+        """Discover gateways on the LAN and let the user pick one or enter manually."""
+        if not hasattr(self, "_discovered_gateways"):
+            from .gateway_discovery import async_discover_gateways
+            try:
+                self._discovered_gateways = await async_discover_gateways(self.hass)
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("Gateway discovery failed", exc_info=True)
+                self._discovered_gateways = []
+
+        if not self._discovered_gateways:
+            return await self.async_step_manual()
+
+        if user_input is not None:
+            selected = user_input.get("gateway", _MANUAL_ENTRY)
+            if selected != _MANUAL_ENTRY:
+                self._prefill_host = selected
+            return await self.async_step_manual()
+
+        t = await _flow_translations(self.hass, "config")
+        manual_label = _t(t, "config.selector.gateway_manual", "Enter IP manually")
+        options = [
+            selector.SelectOptionDict(value=gw.ip, label=gw.label)
+            for gw in self._discovered_gateways
+        ]
+        options.append(
+            selector.SelectOptionDict(value=_MANUAL_ENTRY, label=manual_label)
+        )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "gateway", default=self._discovered_gateways[0].ip
+                    ): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=options,
+                            mode=selector.SelectSelectorMode.LIST,
+                        )
+                    )
+                }
+            ),
+            description_placeholders={
+                "count": str(len(self._discovered_gateways))
+            },
+        )
+
+    async def async_step_manual(self, user_input=None):
+        """Handle manual gateway address entry."""
         errors = {}
+        prefill_host = getattr(self, "_prefill_host", "")
         try:
             if user_input is not None:
                 host = user_input[CONF_HOST].strip()
@@ -174,14 +327,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if not errors:
                     await self.async_set_unique_id(f"{host.lower()}:{port}")
                     self._abort_if_unique_id_configured()
-
                     return self.async_create_entry(title=f"Buspro ({host})", data=data)
 
             default_port = 6000
             return self.async_show_form(
-                step_id="user",
+                step_id="manual",
                 data_schema=_form_schema(
-                    default_host="",
+                    default_host=prefill_host,
                     default_port=default_port,
                     default_send_port=default_port,
                     default_receive_port=default_port,
@@ -189,10 +341,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors=errors,
             )
         except Exception:  # pragma: no cover - last-resort guard for HA UI stability
-            _LOGGER.exception("Failed to render Buspro user config step")
+            _LOGGER.exception("Failed to render Buspro manual config step")
             return self.async_show_form(
-                step_id="user",
-                data_schema=_form_schema(),
+                step_id="manual",
+                data_schema=_form_schema(default_host=prefill_host),
                 errors={"base": "unknown"},
             )
 
@@ -344,10 +496,94 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Show the Buspro management menu."""
-        menu_options = ["gateway", "add_device"]
+        menu_options = ["gateway", "add_device", "scan_bus"]
         if managed_devices(self._config_entry) or self._registry_devices():
             menu_options.append("edit_device")
         return self.async_show_menu(step_id="init", menu_options=menu_options)
+
+    async def async_step_scan_bus(self, user_input=None):
+        """Scan the HDL bus and offer discovered devices for import."""
+        if not hasattr(self, "_scan_candidates"):
+            modules = self.hass.data.get(DATA_BUSPRO_CONFIG, {}).get("entry_modules", {})
+            module = modules.get(self._config_entry.entry_id)
+            if module is None or module.hdl is None:
+                return self.async_abort(reason="not_loaded")
+
+            from .bus_scanner import BusScanner
+            try:
+                discovered = await BusScanner(module.hdl).scan(duration=12.0)
+            except Exception:
+                _LOGGER.exception("Bus scan failed")
+                return self.async_abort(reason="scan_failed")
+
+            # Collect all addresses already known (managed + YAML registry + raw YAML config)
+            existing: set[str] = {
+                d[CONF_ADDRESS] for d in managed_devices(self._config_entry)
+            }
+            for dev in self._registry_devices():
+                addr = self._device_address(dev)
+                if addr:
+                    existing.add(addr)
+            # Belt-and-suspenders: also exclude YAML-configured addresses even if
+            # their entities haven't been loaded into the device registry yet.
+            for yaml_dev in self.hass.data.get(DATA_BUSPRO_CONFIG, {}).get("configured_devices", []):
+                addr = yaml_dev.get(CONF_ADDRESS)
+                if addr:
+                    existing.add(addr)
+
+            candidates = []
+            for dev in discovered:
+                if dev.address in existing or dev.looks_like_keypad:
+                    continue
+                device_type = _infer_device_type(dev)
+                if device_type is None:
+                    continue
+                model = _pick_model(device_type, dev.channel_count)
+                if model is None:
+                    continue
+                candidates.append((dev, device_type, model))
+
+            self._scan_candidates = candidates
+
+        candidates = self._scan_candidates
+        if not candidates:
+            return self.async_abort(reason="scan_no_new_devices")
+
+        t = await _flow_translations(self.hass, "options")
+        dt_labels = _device_type_labels_t(t)
+        ch_fmt = _t(t, "options.scan.ch_suffix", "{count} ch")
+
+        if user_input is not None:
+            selected_keys = set(user_input.get("devices") or [])
+            if selected_keys:
+                new_devices = [
+                    _build_managed_device(dev, device_type, model, dt_labels.get(device_type, device_type))
+                    for dev, device_type, model in candidates
+                    if dev.key in selected_keys
+                ]
+                return self._save_devices(managed_devices(self._config_entry) + new_devices)
+            return self.async_create_entry(title="", data=dict(self._config_entry.options))
+
+        options = [
+            selector.SelectOptionDict(
+                value=dev.key,
+                label=_scan_device_label(dev, dt_labels.get(device_type, device_type), model, ch_fmt),
+            )
+            for dev, device_type, model in candidates
+        ]
+        return self.async_show_form(
+            step_id="scan_bus",
+            data_schema=vol.Schema({
+                vol.Optional("devices", default=list): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=options,
+                        multiple=True,
+                        mode=selector.SelectSelectorMode.LIST,
+                    )
+                )
+            }),
+            description_placeholders={"count": str(len(candidates))},
+        )
 
     async def async_step_gateway(self, user_input=None):
         """Update gateway network settings."""
@@ -440,9 +676,11 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
             self._editing_address = None
             return await self.async_step_device_details()
 
+        t = await _flow_translations(self.hass, "options")
+        dt_labels = _device_type_labels_t(t)
         options = [
-            selector.SelectOptionDict(value=value, label=label)
-            for value, label in DEVICE_TYPE_LABELS.items()
+            selector.SelectOptionDict(value=value, label=dt_labels.get(value, value))
+            for value in DEVICE_TYPE_LABELS
         ]
         return self.async_show_form(
             step_id="add_device",
@@ -512,11 +750,13 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
         if default_model not in models:
             default_model = models[0]
         spec = DEVICE_CATALOG[default_model]
+        t = await _flow_translations(self.hass, "options")
+        dt_labels = _device_type_labels_t(t)
         schema = {
             vol.Required(
                 CONF_NAME,
                 default=form_values.get(
-                    CONF_NAME, DEVICE_TYPE_LABELS[device_type]
+                    CONF_NAME, dt_labels.get(device_type, device_type)
                 ),
             ): selector.TextSelector(),
             vol.Required(
@@ -733,7 +973,9 @@ class BusproOptionsFlow(config_entries.OptionsFlow):
                 title="", data=dict(self._config_entry.options)
             )
 
-        current_model = self._legacy_device.model or "Buspro device"
+        t = await _flow_translations(self.hass, "options")
+        unknown_model = _t(t, "options.scan.unknown_model", "Unknown device")
+        current_model = self._legacy_device.model or unknown_model
         current_spec = DEVICE_CATALOG.get(current_model, {})
         device_type = current_spec.get(CONF_DEVICE_TYPE)
         model_options = (

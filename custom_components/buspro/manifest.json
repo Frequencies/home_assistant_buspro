@@ -1,9 +1,9 @@
 {
   "domain": "buspro",
   "name": "HDL Buspro",
-  "codeowners": ["@eyesoft", "@Frequencies"],
+  "codeowners": ["@eyesoft", "@Frequencies", "@marsh4200"],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": ["network"],
   "documentation": "https://github.com/Frequencies/home_assistant_buspro",
   "homekit": {},
   "iot_class": "local_polling",

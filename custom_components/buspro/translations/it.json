@@ -2,6 +2,13 @@
   "config": {
     "step": {
       "user": {
+        "title": "Rileva gateway Buspro",
+        "description": "Trovato/i {count} gateway HDL sulla rete. Selezionane uno da configurare o inserisci manualmente l'indirizzo IP.",
+        "data": {
+          "gateway": "Gateway"
+        }
+      },
+      "manual": {
         "title": "Configurazione gateway Buspro",
         "description": "Inserisci l'indirizzo IP e il numero di porta del gateway.",
         "data": {
@@ -33,6 +40,9 @@
     "abort": {
       "reconfigure_not_supported": "La riconfigurazione non è disponibile per questa voce.",
       "reconfigure_successful": "Il gateway Buspro è stato riconfigurato."
+    },
+    "selector": {
+      "gateway_manual": "Inserisci IP manualmente"
     }
   },
   "options": {
@@ -43,6 +53,7 @@
         "menu_options": {
           "gateway": "Impostazioni gateway",
           "add_device": "Aggiungi dispositivo",
+          "scan_bus": "Cerca dispositivi sul bus",
           "edit_device": "Modifica dispositivo"
         }
       },
@@ -55,6 +66,13 @@
           "send_port": "Porta UDP di invio",
           "receive_port": "Porta UDP di ricezione",
           "client_address": "Indirizzo Buspro di Home Assistant"
+        }
+      },
+      "scan_bus": {
+        "title": "Risultati scansione bus",
+        "description": "Trovato/i {count} nuovo/i dispositivo/i sul bus. Seleziona quelli da importare. I dispositivi già configurati tramite YAML o interfaccia sono esclusi.",
+        "data": {
+          "devices": "Dispositivi da importare"
         }
       },
       "add_device": {
@@ -194,6 +212,26 @@
       "invalid_channel_count": "Il numero di canali supera il limite del modello.",
       "name_required": "Inserisci un nome per il dispositivo.",
       "unknown": "Si è verificato un errore imprevisto."
+    },
+    "abort": {
+      "not_loaded": "Impossibile eseguire la scansione: l'integrazione Buspro non è in esecuzione.",
+      "scan_failed": "La scansione del bus non è riuscita in modo imprevisto.",
+      "scan_no_new_devices": "Nessun nuovo dispositivo trovato. Tutti i dispositivi rilevati sono già configurati."
+    },
+    "device_type": {
+      "relay": "Relè",
+      "dimmer": "Dimmer",
+      "dry_contact": "Modulo contatto pulito",
+      "multisensor": "Multisensore / sensore di pannello",
+      "floor_heating": "Modulo riscaldamento a pavimento",
+      "ac": "Controllore condizionatore",
+      "cover": "Controllore tende / copertura",
+      "fan": "Uscita ventilatore",
+      "universal_switch": "Ingressi interruttore universale"
+    },
+    "scan": {
+      "ch_suffix": "{count} can.",
+      "unknown_model": "Dispositivo sconosciuto"
     }
   }
 }

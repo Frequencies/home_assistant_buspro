@@ -2,6 +2,13 @@
   "config": {
     "step": {
       "user": {
+        "title": "Detectar puerta de enlace Buspro",
+        "description": "Se encontraron {count} puerta(s) de enlace HDL en la red. Seleccione una para configurar o introduzca la dirección IP manualmente.",
+        "data": {
+          "gateway": "Puerta de enlace"
+        }
+      },
+      "manual": {
         "title": "Configuración de la puerta de enlace Buspro",
         "description": "Introduzca la dirección IP y el número de puerto de la puerta de enlace.",
         "data": {
@@ -33,6 +40,9 @@
     "abort": {
       "reconfigure_not_supported": "La reconfiguración no está disponible para esta entrada.",
       "reconfigure_successful": "La puerta de enlace Buspro se ha reconfigurado."
+    },
+    "selector": {
+      "gateway_manual": "Introducir IP manualmente"
     }
   },
   "options": {
@@ -43,6 +53,7 @@
         "menu_options": {
           "gateway": "Ajustes de la puerta de enlace",
           "add_device": "Añadir dispositivo",
+          "scan_bus": "Buscar dispositivos en el bus",
           "edit_device": "Editar dispositivo"
         }
       },
@@ -55,6 +66,13 @@
           "send_port": "Puerto UDP de envío",
           "receive_port": "Puerto UDP de recepción",
           "client_address": "Dirección Buspro de Home Assistant"
+        }
+      },
+      "scan_bus": {
+        "title": "Resultados del escaneo del bus",
+        "description": "Se encontraron {count} dispositivo(s) nuevo(s) en el bus. Seleccione los que desea importar. Los ya configurados mediante YAML o la interfaz están excluidos.",
+        "data": {
+          "devices": "Dispositivos a importar"
         }
       },
       "add_device": {
@@ -194,6 +212,26 @@
       "invalid_channel_count": "El número de canales supera el límite del modelo.",
       "name_required": "Introduzca un nombre de dispositivo.",
       "unknown": "Se produjo un error inesperado."
+    },
+    "abort": {
+      "not_loaded": "No se puede escanear: la integración Buspro no está en ejecución.",
+      "scan_failed": "El escaneo del bus falló inesperadamente.",
+      "scan_no_new_devices": "No se encontraron dispositivos nuevos. Todos los detectados ya están configurados."
+    },
+    "device_type": {
+      "relay": "Relé",
+      "dimmer": "Regulador de luz",
+      "dry_contact": "Módulo de contacto seco",
+      "multisensor": "Multisensor / sensor de panel",
+      "floor_heating": "Módulo de calefacción de suelo",
+      "ac": "Controlador de aire acondicionado",
+      "cover": "Controlador de persianas / cubierta",
+      "fan": "Salida de ventilador",
+      "universal_switch": "Entradas de interruptor universal"
+    },
+    "scan": {
+      "ch_suffix": "{count} can.",
+      "unknown_model": "Dispositivo desconocido"
     }
   }
 }

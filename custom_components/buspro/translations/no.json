@@ -2,6 +2,13 @@
   "config": {
     "step": {
       "user": {
+        "title": "Oppdag Buspro-gateway",
+        "description": "Fant {count} HDL-gateway(er) på nettverket. Velg en å konfigurere eller skriv inn IP-adressen manuelt.",
+        "data": {
+          "gateway": "Gateway"
+        }
+      },
+      "manual": {
         "title": "Buspro gateway konfigurasjon",
         "description": "Tast inn IP-adresse og portnummer til gateway.",
         "data": {
@@ -33,6 +40,9 @@
     "abort": {
       "reconfigure_not_supported": "Omkonfigurering er ikke tilgjengelig for denne oppføringen.",
       "reconfigure_successful": "Buspro-gatewayen ble konfigurert på nytt."
+    },
+    "selector": {
+      "gateway_manual": "Skriv inn IP manuelt"
     }
   },
   "options": {
@@ -43,6 +53,7 @@
         "menu_options": {
           "gateway": "Gateway-innstillinger",
           "add_device": "Legg til enhet",
+          "scan_bus": "Skann buss etter enheter",
           "edit_device": "Rediger enhet"
         }
       },
@@ -55,6 +66,13 @@
           "send_port": "UDP sendeport",
           "receive_port": "UDP mottaksport",
           "client_address": "Home Assistant sin Buspro-adresse"
+        }
+      },
+      "scan_bus": {
+        "title": "Buss-skanningsresultater",
+        "description": "Fant {count} ny(e) enhet(er) på bussen. Velg de du vil importere. Enheter som allerede er konfigurert via YAML eller grensesnittet, er utelatt.",
+        "data": {
+          "devices": "Enheter som skal importeres"
         }
       },
       "add_device": {
@@ -194,6 +212,26 @@
       "invalid_channel_count": "Antall kanaler overskrider modellens grense.",
       "name_required": "Skriv inn et enhetsnavn.",
       "unknown": "Det oppstod en uventet feil."
+    },
+    "abort": {
+      "not_loaded": "Kan ikke skanne: Buspro-integrasjonen kjører ikke.",
+      "scan_failed": "Buss-skanningen mislyktes uventet.",
+      "scan_no_new_devices": "Ingen nye enheter ble funnet. Alle oppdagede enheter er allerede konfigurert."
+    },
+    "device_type": {
+      "relay": "Rele",
+      "dimmer": "Dimmer",
+      "dry_contact": "Tørrkontaktmodul",
+      "multisensor": "Multisensor / panelsensor",
+      "floor_heating": "Gulvvarmemodul",
+      "ac": "Klimaanleggstyring",
+      "cover": "Gardin-/rulleskoddstyring",
+      "fan": "VifteUtgang",
+      "universal_switch": "Universalbryterinngang"
+    },
+    "scan": {
+      "ch_suffix": "{count} kan.",
+      "unknown_model": "Ukjent enhet"
     }
   }
 }

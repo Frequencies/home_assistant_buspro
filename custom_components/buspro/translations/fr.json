@@ -2,6 +2,13 @@
   "config": {
     "step": {
       "user": {
+        "title": "Détecter la passerelle Buspro",
+        "description": "{count} passerelle(s) HDL trouvée(s) sur le réseau. Sélectionnez-en une à configurer ou saisissez l'adresse IP manuellement.",
+        "data": {
+          "gateway": "Passerelle"
+        }
+      },
+      "manual": {
         "title": "Configuration de la passerelle Buspro",
         "description": "Saisissez l'adresse IP et le numéro de port de la passerelle.",
         "data": {
@@ -33,6 +40,9 @@
     "abort": {
       "reconfigure_not_supported": "La reconfiguration n'est pas disponible pour cette entrée.",
       "reconfigure_successful": "La passerelle Buspro a été reconfigurée."
+    },
+    "selector": {
+      "gateway_manual": "Saisir l'IP manuellement"
     }
   },
   "options": {
@@ -43,6 +53,7 @@
         "menu_options": {
           "gateway": "Paramètres de la passerelle",
           "add_device": "Ajouter un appareil",
+          "scan_bus": "Rechercher des appareils sur le bus",
           "edit_device": "Modifier un appareil"
         }
       },
@@ -55,6 +66,13 @@
           "send_port": "Port UDP d'envoi",
           "receive_port": "Port UDP de réception",
           "client_address": "Adresse Buspro de Home Assistant"
+        }
+      },
+      "scan_bus": {
+        "title": "Résultats du scan du bus",
+        "description": "{count} nouvel/nouveaux appareil(s) trouvé(s) sur le bus. Sélectionnez ceux à importer. Les appareils déjà configurés via YAML ou l'interface sont exclus.",
+        "data": {
+          "devices": "Appareils à importer"
         }
       },
       "add_device": {
@@ -194,6 +212,26 @@
       "invalid_channel_count": "Le nombre de canaux dépasse la limite du modèle.",
       "name_required": "Saisissez un nom d’appareil.",
       "unknown": "Une erreur inattendue s’est produite."
+    },
+    "abort": {
+      "not_loaded": "Scan impossible : l'intégration Buspro n'est pas en cours d'exécution.",
+      "scan_failed": "Le scan du bus a échoué de manière inattendue.",
+      "scan_no_new_devices": "Aucun nouvel appareil trouvé. Tous les appareils détectés sont déjà configurés."
+    },
+    "device_type": {
+      "relay": "Relais",
+      "dimmer": "Variateur",
+      "dry_contact": "Module contact sec",
+      "multisensor": "Multicapteur / capteur de panneau",
+      "floor_heating": "Module plancher chauffant",
+      "ac": "Contrôleur de climatisation",
+      "cover": "Contrôleur de volet / store",
+      "fan": "Sortie ventilateur",
+      "universal_switch": "Entrées commutateur universel"
+    },
+    "scan": {
+      "ch_suffix": "{count} can.",
+      "unknown_model": "Appareil inconnu"
     }
   }
 }

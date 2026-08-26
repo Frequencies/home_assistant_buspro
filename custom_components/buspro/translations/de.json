@@ -2,6 +2,13 @@
   "config": {
     "step": {
       "user": {
+        "title": "Buspro-Gateway erkennen",
+        "description": "{count} HDL-Gateway(s) im Netzwerk gefunden. Wählen Sie eines zur Konfiguration oder geben Sie die IP-Adresse manuell ein.",
+        "data": {
+          "gateway": "Gateway"
+        }
+      },
+      "manual": {
         "title": "Buspro-Gateway-Konfiguration",
         "description": "Geben Sie die IP-Adresse und die Portnummer des Gateways ein.",
         "data": {
@@ -33,6 +40,9 @@
     "abort": {
       "reconfigure_not_supported": "Die Neukonfiguration ist für diesen Eintrag nicht verfügbar.",
       "reconfigure_successful": "Das Buspro-Gateway wurde neu konfiguriert."
+    },
+    "selector": {
+      "gateway_manual": "IP manuell eingeben"
     }
   },
   "options": {
@@ -43,6 +53,7 @@
         "menu_options": {
           "gateway": "Gateway-Einstellungen",
           "add_device": "Gerät hinzufügen",
+          "scan_bus": "Bus nach Geräten durchsuchen",
           "edit_device": "Gerät bearbeiten"
         }
       },
@@ -55,6 +66,13 @@
           "send_port": "UDP-Sendeport",
           "receive_port": "UDP-Empfangsport",
           "client_address": "Buspro-Adresse von Home Assistant"
+        }
+      },
+      "scan_bus": {
+        "title": "Bus-Scan-Ergebnisse",
+        "description": "{count} neues/neue Gerät(e) auf dem Bus gefunden. Wählen Sie die zu importierenden aus. Bereits über YAML oder die UI konfigurierte Geräte sind ausgeschlossen.",
+        "data": {
+          "devices": "Zu importierende Geräte"
         }
       },
       "add_device": {
@@ -194,6 +212,26 @@
       "invalid_channel_count": "Die Kanalanzahl überschreitet das Limit des Modells.",
       "name_required": "Geben Sie einen Gerätenamen ein.",
       "unknown": "Ein unerwarteter Fehler ist aufgetreten."
+    },
+    "abort": {
+      "not_loaded": "Scan nicht möglich: Die Buspro-Integration läuft nicht.",
+      "scan_failed": "Bus-Scan ist unerwartet fehlgeschlagen.",
+      "scan_no_new_devices": "Keine neuen Geräte gefunden. Alle erkannten Geräte sind bereits konfiguriert."
+    },
+    "device_type": {
+      "relay": "Relais",
+      "dimmer": "Dimmer",
+      "dry_contact": "Trockenkontaktmodul",
+      "multisensor": "Multisensor / Panelsensor",
+      "floor_heating": "Fußbodenheizungsmodul",
+      "ac": "Klimaanlagesteuerung",
+      "cover": "Jalousie-/Rolladensteuerung",
+      "fan": "Lüfterausgang",
+      "universal_switch": "Universalschalter-Eingänge"
+    },
+    "scan": {
+      "ch_suffix": "{count} Kan.",
+      "unknown_model": "Unbekanntes Gerät"
     }
   }
 }

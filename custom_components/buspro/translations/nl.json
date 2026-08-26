@@ -2,6 +2,13 @@
   "config": {
     "step": {
       "user": {
+        "title": "Buspro-gateway detecteren",
+        "description": "{count} HDL-gateway(s) gevonden op het netwerk. Selecteer er een om te configureren of voer het IP-adres handmatig in.",
+        "data": {
+          "gateway": "Gateway"
+        }
+      },
+      "manual": {
         "title": "Buspro gateway-configuratie",
         "description": "Voer het IP-adres en poortnummer van de gateway in.",
         "data": {
@@ -33,6 +40,9 @@
     "abort": {
       "reconfigure_not_supported": "Herconfiguratie is niet beschikbaar voor deze invoer.",
       "reconfigure_successful": "Buspro-gateway is opnieuw geconfigureerd."
+    },
+    "selector": {
+      "gateway_manual": "IP handmatig invoeren"
     }
   },
   "options": {
@@ -43,6 +53,7 @@
         "menu_options": {
           "gateway": "Gateway-instellingen",
           "add_device": "Apparaat toevoegen",
+          "scan_bus": "Bus scannen op apparaten",
           "edit_device": "Apparaat bewerken"
         }
       },
@@ -55,6 +66,13 @@
           "send_port": "UDP-verzendpoort",
           "receive_port": "UDP-ontvangstpoort",
           "client_address": "Buspro-adres van Home Assistant"
+        }
+      },
+      "scan_bus": {
+        "title": "Resultaten busscan",
+        "description": "{count} nieuw(e) apparaat/apparaten gevonden op de bus. Selecteer de te importeren apparaten. Apparaten die al via YAML of de UI zijn geconfigureerd, zijn uitgesloten.",
+        "data": {
+          "devices": "Te importeren apparaten"
         }
       },
       "add_device": {
@@ -194,6 +212,26 @@
       "invalid_channel_count": "Het aantal kanalen overschrijdt de limiet van het model.",
       "name_required": "Voer een apparaatnaam in.",
       "unknown": "Er is een onverwachte fout opgetreden."
+    },
+    "abort": {
+      "not_loaded": "Kan niet scannen: de Buspro-integratie is niet actief.",
+      "scan_failed": "De busscan is onverwacht mislukt.",
+      "scan_no_new_devices": "Geen nieuwe apparaten gevonden. Alle gevonden apparaten zijn al geconfigureerd."
+    },
+    "device_type": {
+      "relay": "Relais",
+      "dimmer": "Dimmer",
+      "dry_contact": "Droogcontactmodule",
+      "multisensor": "Multisensor / paneelsensor",
+      "floor_heating": "Vloerverwarmingsmodule",
+      "ac": "Airconditioning-regelaar",
+      "cover": "Gordijn-/rolluikregelaar",
+      "fan": "Ventilatoruitgang",
+      "universal_switch": "Universele schakelaaringangen"
+    },
+    "scan": {
+      "ch_suffix": "{count} kan.",
+      "unknown_model": "Onbekend apparaat"
     }
   }
 }

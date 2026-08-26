@@ -2,6 +2,13 @@
   "config": {
     "step": {
       "user": {
+        "title": "Discover Buspro gateway",
+        "description": "Found {count} HDL gateway(s) on the network. Select one to configure or enter an IP address manually.",
+        "data": {
+          "gateway": "Gateway"
+        }
+      },
+      "manual": {
         "title": "Buspro gateway configuration",
         "description": "Enter the gateway network settings and an unused Buspro subnet.device address for Home Assistant.",
         "data": {
@@ -33,6 +40,9 @@
     "abort": {
       "reconfigure_not_supported": "Reconfiguration is not available for this entry.",
       "reconfigure_successful": "Buspro gateway was reconfigured."
+    },
+    "selector": {
+      "gateway_manual": "Enter IP manually"
     }
   },
   "options": {
@@ -43,7 +53,15 @@
         "menu_options": {
           "gateway": "Gateway settings",
           "add_device": "Add device",
+          "scan_bus": "Scan bus for devices",
           "edit_device": "Edit device"
+        }
+      },
+      "scan_bus": {
+        "title": "Bus scan results",
+        "description": "Found {count} new device(s) on the bus. Select the ones to import. Devices already configured via YAML or the UI are excluded.",
+        "data": {
+          "devices": "Devices to import"
         }
       },
       "gateway": {
@@ -194,6 +212,26 @@
       "invalid_channel_count": "The channel count exceeds the selected model's limit.",
       "name_required": "Enter a device name.",
       "unknown": "An unexpected error occurred."
+    },
+    "abort": {
+      "not_loaded": "Cannot scan: the Buspro integration is not running.",
+      "scan_failed": "Bus scan failed unexpectedly.",
+      "scan_no_new_devices": "No new devices were found. All discovered devices are already configured."
+    },
+    "device_type": {
+      "relay": "Relay",
+      "dimmer": "Dimmer",
+      "dry_contact": "Dry contact module",
+      "multisensor": "Multisensor / panel sensor",
+      "floor_heating": "Floor heating module",
+      "ac": "AC controller",
+      "cover": "Curtain / cover controller",
+      "fan": "Fan output",
+      "universal_switch": "Universal switch inputs"
+    },
+    "scan": {
+      "ch_suffix": "{count} ch",
+      "unknown_model": "Unknown device"
     }
   }
 }
