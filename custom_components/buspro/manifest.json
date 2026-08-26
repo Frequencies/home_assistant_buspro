@@ -10,6 +10,6 @@
   "issue_tracker": "https://github.com/Frequencies/home_assistant_buspro/issues",
   "requirements": [],
   "ssdp": [],
-  "version": "3.5.2",
+  "version": "3.5.3",
   "zeroconf": []
 }

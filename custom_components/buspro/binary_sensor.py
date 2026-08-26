@@ -301,9 +301,12 @@ def _compound_binary_sensor_entities(hass, module):
     devices = []
     for device_config in hass.data[DATA_BUSPRO_CONFIG].get("configured_devices", []):
         device_address = parse_device_address(device_config[CONF_ADDRESS])
+        catalog_spec = DEVICE_CATALOG.get(device_config.get("model", ""), {})
+        effective_profile = catalog_spec.get("profile") or device_config[CONF_PROFILE]
         sensor = module.get_sensor(
             device_address,
-            profile=device_config[CONF_PROFILE],
+            profile=effective_profile,
+            motion_uv_switch=catalog_spec.get("motion_uv_switch"),
             name=device_config[CONF_NAME],
         )
         device_info = build_device_info(device_config)
